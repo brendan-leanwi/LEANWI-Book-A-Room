@@ -1,0 +1,171 @@
+:root {
+    --highlighted-button-bg: #ffe0b3; /* Default background color */
+    --highlighted-button-border: #ff9800; /* Default border color */
+    --highlighted-button-text: #000000; /* Default border color */
+}
+
+/* Add this to your main CSS file */
+.calendar-day.highlighted {
+    background-color: var(--highlighted-button-bg) !important;
+    border: 2px solid var(--highlighted-button-border) !important;
+    color: var(--highlighted-button-text) !important;
+}
+
+#calendar {
+    border: 2px solid #ccc; /* Adjust the border color and width as needed */
+    padding: 10px; /* Optional: add some padding */
+    border-radius: 5px; /* Optional: add rounded corners */
+}
+.calendar-day {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin: 5px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.calendar-day.unavailable {
+    background-color: #f0f0f0;
+    color: #ccc;
+    pointer-events: none; /* Make the greyed-out days unclickable */
+}
+
+.calendar-day.available {
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.calendar-day.available:hover {
+    background-color: #e0e0e0;
+}
+
+/* Weekday headers */
+.calendar-header {
+    font-weight: bold;
+    text-align: center;
+}
+
+.available-time {
+    padding: 5px;
+    margin: 2px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+#calendar-navigation {
+    display: flex; /* Use flexbox for layout */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically if needed */
+    margin: 20px 0; /* Optional: add vertical space */
+    gap: 30px;
+}
+
+#prev-month, #next-month {
+    visibility: visible;
+}
+
+.time-button {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.time-button.selected {
+    background-color: var(--highlighted-button-bg) !important;
+    border: 2px solid var(--highlighted-button-border) !important;
+    color: var(--highlighted-button-text) !important;
+}
+
+.time-button:hover:not([disabled]) {
+    background-color: #d0d0d0;
+}
+
+/* Styling for booked slots */
+.time-button.booked {
+    text-decoration: line-through;  /* Add strikethrough */
+    background-color: #f5f5f5;  /* A lighter background for booked slots */
+    color: #a0a0a0;  /* Gray out the text */
+    cursor: not-allowed;  /* Show not-allowed cursor */
+    border: 1px solid #ccc; /* Regular border */
+}
+
+#venue-details {
+    display: flex;
+}
+
+#venue-details > div {
+    flex: 1;
+    padding: 10px; /* Adjust as needed */
+}
+
+#venue-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px; /* Optional: to add rounded corners */
+}
+
+.book-button {
+    background-color: var(--highlighted-button-bg); /* Same background color */
+    border: 2px solid var(--highlighted-button-border); /* Same border style */
+    color: var(--highlighted-button-text) !important;
+    border-radius: 10px;
+    padding: 10px 20px; /* Same padding as inline style */
+    cursor: pointer; /* Pointer cursor */
+    width: 100%; /* Full width like in the inline style */
+    text-align: center; /* Center the text */
+    display: inline-block; /* Ensure proper button display */
+    font-weight: bold; /* Make the font bold */
+}
+
+.find-button {
+    background-color: var(--highlighted-button-bg);
+    border: 2px solid var(--highlighted-button-border);
+    color: var(--highlighted-button-text) !important;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+    box-sizing: border-box;
+    flex-shrink: 0; /* Prevent button from shrinking too much */
+}
+
+.booking-container {
+    border: 2px solid #ccc; /* Adjust the border color and thickness */
+    padding: 15px; /* Space inside the border */
+    border-radius: 8px; /* Optional: add rounded corners */
+    margin-top: 20px; /* Space above the container */
+    background-color: #f9f9f9; /* Optional: add a background color */
+    display: flex; /* Use flexbox for alignment */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center align children */
+    text-align: center; /* Center text inside */
+}
+
+#retrieve-booking {
+    width: 100%; /* Make the form full width */
+}
+
+.find-label {
+    width: auto; /* Remove fixed width for centering */
+    margin-bottom: 10px; /* Space between label and input */
+    font-weight: bold;
+}
+
+.find-input {
+    width: 50%; /* Set a specific width for the input */
+    margin-bottom: 10px; /* Space between input and buttons */
+    padding: 10px 15px !important;
+}
+
+.button-container {
+    display: flex; /* Use flexbox to arrange buttons in a row */
+    gap: 10px; /* Space between buttons */
+    justify-content: center; /* Center the buttons horizontally */
+    margin-top: 10px; /* Add some space above the button row */
+    margin-bottom: 20px; /* Add space below the buttons */
+}
