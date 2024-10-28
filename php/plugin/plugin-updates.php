@@ -21,9 +21,9 @@ function leanwi_check_for_plugin_updates($transient) {
         return $transient;
     }
 
-    // Check current version against the GitHub release version
-    $latest_version = $release->tag_name;
-    $plugin_file = plugin_basename(__FILE__);
+    // Get the main plugin file
+    $plugin_file = plugin_basename(dirname(__FILE__) . '/../leanwi-book-a-room.php'); // Correct path to main file
+    $latest_version = ltrim($release->tag_name, 'v'); // Remove 'v' if present in the GitHub tag
     $current_version = $transient->checked[$plugin_file];
 
     if (version_compare($current_version, $latest_version, '<')) {
