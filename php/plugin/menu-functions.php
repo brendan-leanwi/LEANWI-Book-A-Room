@@ -266,62 +266,72 @@ function leanwi_add_venue_page() {
 
     // Check if the form has been submitted
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Handle form submission to add new venue
-        $name = sanitize_text_field($_POST['name']);
-        $capacity = intval($_POST['capacity']);
-        $description = sanitize_textarea_field($_POST['description']);
-        $location = sanitize_text_field($_POST['location']);
-        $image_url = sanitize_text_field($_POST['image_url']);
-        $extra_text = sanitize_text_field($_POST['extra_text']);
-        $max_slots = intval($_POST['max_slots']);
-        $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
-        $email_text = sanitize_text_field($_POST['email_text']);
-        $page_url = sanitize_text_field($_POST['page_url']);
+        // Verify nonce before processing the form
+        if (isset($_POST['venue_nonce']) && wp_verify_nonce($_POST['venue_nonce'], 'add_venue_action')) {
+            // The nonce is valid; proceed with form processing.
+            $name = sanitize_text_field($_POST['name']);
+            $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
+            $description = sanitize_textarea_field($_POST['description']);
+            $location = sanitize_text_field($_POST['location']);
+            $image_url = esc_url($_POST['image_url']);
+            $extra_text = sanitize_text_field($_POST['extra_text']);
+            $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
+            $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
+            $email_text = sanitize_text_field($_POST['email_text']);
+            $page_url = esc_url($_POST['page_url']);
 
-        // Ensure the value has 2 decimal places
-        $slot_cost = number_format($slot_cost, 2, '.', '');
+            // Ensure the value has 2 decimal places
+            $slot_cost = number_format($slot_cost, 2, '.', '');
 
-        // Insert the new venue into the database
-        $wpdb->insert(
-            $venue_table,
-            array(
-                'name' => $name,
-                'capacity' => $capacity,
-                'description' => $description,
-                'location' => $location,
-                'image_url' => $image_url,
-                'extra_text' => $extra_text,
-                'max_slots' => $max_slots,
-                'slot_cost' => $slot_cost,
-                'email_text' => $email_text,
-                'page_url' => $page_url,
-            )
-        );
-
-        // Get the newly inserted venue_id
-        $venue_id = $wpdb->insert_id;
-
-        // Insert open and close hours for each day
-        foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
-            $open_hour = intval($_POST[$day . '_open_hour']);
-            $open_minute = intval($_POST[$day . '_open_minute']);
-            $close_hour = intval($_POST[$day . '_close_hour']);
-            $close_minute = intval($_POST[$day . '_close_minute']);
-
-            // Insert the hours into the database
-            $wpdb->insert(
-                $hours_table,
+            // Insert the new venue into the database
+            $inserted = $wpdb->insert(
+                $venue_table,
                 array(
-                    'venue_id' => $venue_id,
-                    'day_of_week' => ucfirst($day),
-                    'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
-                    'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                    'name' => $name,
+                    'capacity' => $capacity,
+                    'description' => $description,
+                    'location' => $location,
+                    'image_url' => $image_url,
+                    'extra_text' => $extra_text,
+                    'max_slots' => $max_slots,
+                    'slot_cost' => $slot_cost,
+                    'email_text' => $email_text,
+                    'page_url' => $page_url,
                 )
             );
-        }
 
-        echo '<div class="updated"><p>Venue added successfully.</p></div>';
-    }
+            if ($inserted) {
+                // Get the newly inserted venue_id
+                $venue_id = $wpdb->insert_id;
+
+                // Insert open and close hours for each day
+                foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
+                    $open_hour = intval($_POST[$day . '_open_hour']);
+                    $open_minute = intval($_POST[$day . '_open_minute']);
+                    $close_hour = intval($_POST[$day . '_close_hour']);
+                    $close_minute = intval($_POST[$day . '_close_minute']);
+
+                    // Insert the hours into the database
+                    $wpdb->insert(
+                        $hours_table,
+                        array(
+                            'venue_id' => $venue_id,
+                            'day_of_week' => ucfirst($day),
+                            'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
+                            'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                        )
+                    );
+                }
+
+                echo '<div class="updated"><p>Venue added successfully.</p></div>';
+            } else {
+                echo '<div class="error"><p>Error adding venue. Please try again.</p></div>';
+            }
+        } else {
+            // Nonce is invalid; handle the error accordingly.
+            wp_die('Nonce verification failed.');
+        }
+    }    
 
     // Initialize blank values for the form
     $venue = (object) [
@@ -362,11 +372,11 @@ function leanwi_add_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="description">Venue Summary</label></th>
-                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_textarea($venue->description); ?></textarea></td>
+                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_html($venue->description); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="extra_text">More Display Text</label></th>
-                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_textarea($venue->extra_text); ?></textarea></td>
+                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_html($venue->extra_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="location">Location</label></th>
@@ -391,7 +401,7 @@ function leanwi_add_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="email_text">Email Text</label></th>
-                    <td><textarea id="email_text" name="email_text" style="width: 90%;"><?php echo esc_textarea($venue->email_text); ?></textarea></td>
+                    <td><textarea id="email_text" name="email_text" style="width: 90%;"><?php echo esc_html($venue->email_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="page_url">Page URL</label></th>
@@ -440,7 +450,7 @@ function leanwi_add_venue_page() {
                     </tr>
                 <?php endforeach; ?>
             </table>
-
+            <?php wp_nonce_field('add_venue_action', 'venue_nonce'); ?>
             <p class="submit">
                 <input type="submit" class="button button-primary" value="Add Venue" />
             </p>
@@ -461,61 +471,71 @@ function leanwi_edit_venue_page() {
         $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id));
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Handle form submission to update venue details
-            $name = sanitize_text_field($_POST['name']);
-            $capacity = intval($_POST['capacity']);
-            $description = sanitize_textarea_field($_POST['description']);
-            $location = sanitize_text_field($_POST['location']);
-            $image_url = sanitize_text_field($_POST['image_url']);
-            $extra_text = sanitize_text_field($_POST['extra_text']);
-            $max_slots = intval($_POST['max_slots']);
-            $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
-            $email_text = sanitize_text_field($_POST['email_text']);
-            $historic = isset($_POST['historic']) ? 1 : 0; // Set to 1 if checked, otherwise 0
-            $page_url = sanitize_text_field($_POST['page_url']);
+            // Verify nonce before processing the form
+            if (isset($_POST['venue_nonce']) && wp_verify_nonce($_POST['venue_nonce'], 'update_venue_action')) {
+                // The nonce is valid; proceed with form processing.
+                $name = sanitize_text_field($_POST['name']);
+                $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
+                $description = sanitize_textarea_field($_POST['description']);
+                $location = sanitize_text_field($_POST['location']);
+                $image_url = esc_url($_POST['image_url']);
+                $extra_text = sanitize_text_field($_POST['extra_text']);
+                $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
+                $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
+                $email_text = sanitize_text_field($_POST['email_text']);
+                $historic = isset($_POST['historic']) ? 1 : 0; // Set to 1 if checked, otherwise 0
+                $page_url = esc_url($_POST['page_url']);
 
-            // Update the venue in the database
-            $wpdb->update(
-                $venue_table,
-                array(
-                    'name' => $name,
-                    'capacity' => $capacity,
-                    'description' => $description,
-                    'location' => $location,
-                    'image_url' => $image_url,
-                    'extra_text' => $extra_text,
-                    'max_slots' => $max_slots,
-                    'slot_cost' => $slot_cost,
-                    'email_text' => $email_text,
-                    'historic' => $historic,
-                    'page_url' => $page_url,
-                ),
-                array('venue_id' => $venue_id)
-            );
-
-            // Update the open and close hours
-            foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
-                $open_hour = intval($_POST[$day . '_open_hour']);
-                $open_minute = intval($_POST[$day . '_open_minute']);
-                $close_hour = intval($_POST[$day . '_close_hour']);
-                $close_minute = intval($_POST[$day . '_close_minute']);
-
-                // Update the hours in the database
-                $wpdb->update(
-                    $hours_table,
+                // Update the venue in the database
+                $updated = $wpdb->update(
+                    $venue_table,
                     array(
-                        'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
-                        'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                        'name' => $name,
+                        'capacity' => $capacity,
+                        'description' => $description,
+                        'location' => $location,
+                        'image_url' => $image_url,
+                        'extra_text' => $extra_text,
+                        'max_slots' => $max_slots,
+                        'slot_cost' => $slot_cost,
+                        'email_text' => $email_text,
+                        'historic' => $historic,
+                        'page_url' => $page_url,
                     ),
-                    array(
-                        'venue_id' => $venue_id,
-                        'day_of_week' => ucfirst($day)
-                    )
+                    array('venue_id' => $venue_id)
                 );
-            }
+                if($updated) {
+                    // Update the open and close hours
+                    foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
+                        $open_hour = intval($_POST[$day . '_open_hour']);
+                        $open_minute = intval($_POST[$day . '_open_minute']);
+                        $close_hour = intval($_POST[$day . '_close_hour']);
+                        $close_minute = intval($_POST[$day . '_close_minute']);
 
-            echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
-            $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id)); // Refresh venue details
+                        // Update the hours in the database
+                        $wpdb->update(
+                            $hours_table,
+                            array(
+                                'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
+                                'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                            ),
+                            array(
+                                'venue_id' => $venue_id,
+                                'day_of_week' => ucfirst($day)
+                            )
+                        );
+                    }  
+                } else {
+                    echo '<div class="error"><p>Error updating venue. Please try again.</p></div>';
+                }
+
+                echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
+                $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id)); // Refresh venue details
+            
+            } else {
+                // Nonce is invalid; handle the error accordingly.
+                wp_die('Nonce verification failed.');
+            }
         }
     }
 
@@ -557,11 +577,11 @@ function leanwi_edit_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="description">Venue Summary</label></th>
-                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_textarea((string)$venue->description); ?></textarea></td>
+                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_html((string)$venue->description); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="extra_text">More Display Text</label></th>
-                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_textarea((string)$venue->extra_text); ?></textarea></td>
+                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_html((string)$venue->extra_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="location">Location</label></th>
@@ -586,7 +606,7 @@ function leanwi_edit_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="email_text">Email Text</label></th>
-                    <td><textarea id="email_text" name="email_text" style="width: 90%;"><?php echo esc_textarea((string)$venue->email_text); ?></textarea></td>
+                    <td><textarea id="email_text" name="email_text" style="width: 90%;"><?php echo esc_html((string)$venue->email_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="page_url">Page URL</label></th>
@@ -643,7 +663,7 @@ function leanwi_edit_venue_page() {
                     </tr>
                 <?php endforeach; ?>
             </table>
-
+            <?php wp_nonce_field('update_venue_action', 'venue_nonce'); ?>
             <p class="submit">
                 <input type="submit" class="button button-primary" value="Update Venue" />
             </p>
@@ -661,15 +681,17 @@ function leanwi_categories_page() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'leanwi_booking_category';
 
-    // Handle delete action
-    if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['category_id'])) {
+    /****************************************************************************************************
+     * Functions are not currently used
+    // Handle delete action with nonce verification
+    if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['category_id']) && check_admin_referer('delete_category_action')) {
         $category_id = intval($_GET['category_id']);
         $wpdb->delete($table_name, ['category_id' => $category_id]);
         echo '<div class="updated"><p>Category deleted successfully.</p></div>';
     }
 
     // Handle category update
-    if (isset($_POST['update_category'])) {
+    if (isset($_POST['update_category']) && check_admin_referer('edit_category_action')) {
         $wpdb->update(
             $table_name,
             ['category_name' => sanitize_text_field($_POST['category_name']), 'historic' => isset($_POST['historic']) ? 1 : 0],
@@ -679,6 +701,7 @@ function leanwi_categories_page() {
         );
         echo '<div class="updated"><p>Category updated successfully.</p></div>';
     }
+    ************************************************************************************************************/
 
     // Display category list and edit form if needed
     if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['category_id'])) {
@@ -690,6 +713,7 @@ function leanwi_categories_page() {
             echo '<div class="wrap">';
             echo '<h1>Edit Category</h1>';
             echo '<form method="POST">';
+            wp_nonce_field('edit_category_action');
             echo '<input type="hidden" name="category_id" value="' . esc_attr($category->category_id) . '">';
             echo '<p>Category Name: <input type="text" name="category_name" value="' . esc_attr($category->category_name) . '"></p>';
             echo '<p>Historic: <input type="checkbox" name="historic" ' . checked(1, $category->historic, false) . '></p>';
@@ -702,8 +726,7 @@ function leanwi_categories_page() {
     // Display category list
     echo '<div class="wrap">';
     echo '<h1>Categories</h1>';
-
-    echo '<a href="' . admin_url('admin.php?page=leanwi-add-category') . '" class="button button-primary">Add Category</a>';
+    echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-add-category')) . '" class="button button-primary">Add Category</a>';
     echo '<p> </p>'; // Space below the button before the category table
 
     echo '<table class="wp-list-table widefat striped">';
@@ -729,9 +752,9 @@ function leanwi_categories_page() {
             echo '<td>' . esc_html($category['category_name']) . '</td>';
             echo '<td>' . ($category['historic'] ? 'Yes' : 'No') . '</td>';
             echo '<td>';
-            echo '<a href="' . admin_url('admin.php?page=leanwi-edit-category&category_id=' . esc_attr($category['category_id'])) . '" class="button">Edit</a> ';
-            // Uncomment if you want delete functionality
-            // echo '<a href="?page=leanwi-book-a-room-categories&action=delete&category_id=' . esc_attr($category['category_id']) . '" class="button button-danger" onclick="return confirm(\'Are you sure you want to delete this category?\');">Delete</a>';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-category&category_id=' . $category['category_id'])) . '" class="button">Edit</a> ';
+            // Uncomment to add delete functionality
+            //echo '<a href="' . esc_url(wp_nonce_url(admin_url('admin.php?page=leanwi-book-a-room-categories&action=delete&category_id=' . $category['category_id']), 'delete_category_action')) . '" class="button button-danger" onclick="return confirm(\'Are you sure you want to delete this category?\');">Delete</a>';
             echo '</td>';
             echo '</tr>';
         }
@@ -851,6 +874,9 @@ function leanwi_audiences_page() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'leanwi_booking_audience';
 
+    /**********************************************************************************************
+     *  These functions re nocrrently being used
+     **********************************************************************************************
     // Handle delete action
     if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['audience_id'])) {
         $audience_id = intval($_GET['audience_id']);
@@ -869,6 +895,7 @@ function leanwi_audiences_page() {
         );
         echo '<div class="updated"><p>Audience updated successfully.</p></div>';
     }
+    ************************************************************************************************/
 
     // Display audience list and edit form if needed
     if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['audience_id'])) {
@@ -919,7 +946,7 @@ function leanwi_audiences_page() {
             echo '<td>' . esc_html($audience['audience_name']) . '</td>';
             echo '<td>' . ($audience['historic'] ? 'Yes' : 'No') . '</td>';
             echo '<td>';
-            echo '<a href="' . admin_url('admin.php?page=leanwi-edit-audience&audience_id=' . esc_attr($audience['audience_id'])) . '" class="button">Edit</a> ';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-audience&audience_id=' . esc_attr($audience['audience_id']))) . '" class="button">Edit</a> ';
             // Uncomment if you want delete functionality
             // echo '<a href="?page=leanwi-book-a-room-audiences&action=delete&audience_id=' . esc_attr($audience['audience_id']) . '" class="button button-danger" onclick="return confirm(\'Are you sure you want to delete this audience?\');">Delete</a>';
             echo '</td>';
@@ -1038,6 +1065,17 @@ function leanwi_edit_audience_page() {
 
 // Function to display the reporting functionality
 function leanwi_reports_page() {
+    // Fetch venue data from the database
+    // Fetch venues
+    $venues_response = fetch_venues();
+    if (isset($venues_response['error'])) {
+        echo '<tr><td colspan="6">' . esc_html($venues_response['error']) . '</td></tr>';
+        return; // Exit early if there's an error
+    }
+
+    // Ensure venues is set and is an array
+    $venues = isset($venues_response['venues']) ? $venues_response['venues'] : [];
+
     ?>
     <div class="wrap">
         <h1>Reports</h1>
@@ -1053,6 +1091,17 @@ function leanwi_reports_page() {
                 </div>
             </div>
             <div class="form-row">
+                <div class="form-group">
+                <label for="venue_info">Select Venue:</label>
+                    <select id="venue_info" name="venue_info">
+                        <option value="">-- All Venues --</option>
+                        <?php foreach ($venues as $venue): ?>
+                            <option value="<?php echo esc_attr($venue['venue_id']) . '|' . esc_attr($venue['name']); ?>">
+                                <?php echo esc_html($venue['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="include_category">Include Category:</label>
                     <input type="checkbox" id="include_category" name="include_category" value="yes">
@@ -1088,6 +1137,11 @@ function leanwi_reports_page() {
         /* Adjust the checkbox label alignment */
         .form-group input[type="checkbox"] {
             margin-left: 5px; /* Space between checkbox and label */
+        }
+        /* Style the dropdown */
+        #venue_id {
+            padding: 5px; /* Padding inside the dropdown */
+            width: 150px; /* Set a fixed width for the dropdown */
         }
     </style>
     <?php

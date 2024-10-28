@@ -9,6 +9,7 @@
     background-color: var(--highlighted-button-bg) !important;
     border: 2px solid var(--highlighted-button-border) !important;
     color: var(--highlighted-button-text) !important;
+    cursor: pointer; /* Indicates the day is clickable */
 }
 
 #calendar {
@@ -16,6 +17,13 @@
     padding: 10px; /* Optional: add some padding */
     border-radius: 5px; /* Optional: add rounded corners */
 }
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
 .calendar-day {
     padding: 10px;
     border: 1px solid #ccc;
@@ -33,7 +41,8 @@
 .calendar-day.available {
     background-color: #fff;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    cursor: pointer; /* Indicates the day is clickable */
 }
 
 .calendar-day.available:hover {

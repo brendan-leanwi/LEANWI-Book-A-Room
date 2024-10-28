@@ -16,6 +16,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $include_category = isset($_POST['include_category']) ? 'yes' : 'no';
     $include_audience = isset($_POST['include_audience']) ? 'yes' : 'no';
 
+    // Split the venue_info to get venue_id and name
+    $venue_id = '';
+    $venue_name = '';
+    if (isset($_POST['venue_info']) && !empty($_POST['venue_info'])) {
+        $venue_info = sanitize_text_field($_POST['venue_info']);
+        list($venue_id, $venue_name) = explode('|', $venue_info);
+        $venue_id = intval($venue_id);
+    }
+
     // Ensure the start date is not after the end date
     if (strtotime($start_date) > strtotime($end_date)) {
         die('Start date cannot be after end date.');
@@ -38,7 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Generate a file name with a timestamp
-    $csv_filename = 'report_' . time() . '.csv';
+    if (!empty($venue_info)) {
+        $csv_filename = 'report_venue_' . $venue_id . '_' . time() . '.csv';
+    } else {
+        $csv_filename = 'report_' . time() . '.csv';
+    }
     $csv_file_path .= $csv_filename;
     $csv_file_url .= $csv_filename;
 
@@ -48,6 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($file === false) {
         die('Could not open the file for writing.');
     }
+
+    // Prepare the arguments for the query
+    $args = [$start_date, $end_date];
 
     // Add summary data regardless of category or audience
     $sql = "
@@ -61,14 +77,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         WHERE 
             DATE(bp.start_time) BETWEEN %s AND %s
     ";
+    if (!empty($venue_info)) {
+        $sql .= " AND bp.venue_id = %d";
+        $args[] = $venue_id;
+    }
     $results = $wpdb->get_results(
-        $wpdb->prepare($sql, $start_date, $end_date),
+        $wpdb->prepare($sql, ...$args),
         ARRAY_A
     );
 
     if (!empty($results)) {
         // Add heading for the summary section
         fputcsv($file, [' ']);
+        if (!empty($venue_info)) {
+            fputcsv($file, ["REPORT FOR VENUE: $venue_name"]);
+            fputcsv($file, [' ']);
+        }
+
         fputcsv($file, ['~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~']);
         fputcsv($file, ["Summary of all Data - $formatted_start_date To $formatted_end_date"]);
         
@@ -98,11 +123,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             WHERE 
                 DATE(bp.start_time) BETWEEN %s AND %s
             AND ba.audience_id > 1
-            GROUP BY 
-                ba.audience_name
         ";
+        if (!empty($venue_info)) {
+            $sql .= " AND bp.venue_id = %d";
+        }
+        $sql .= " GROUP BY ba.audience_name";
+
         $results = $wpdb->get_results(
-            $wpdb->prepare($sql, $start_date, $end_date),
+            $wpdb->prepare($sql, ...$args),
             ARRAY_A
         );
 
@@ -139,11 +167,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             WHERE 
                 DATE(bp.start_time) BETWEEN %s AND %s
             AND bc.category_id > 1
-            GROUP BY 
-                bc.category_name
         ";
+        if (!empty($venue_info)) {
+            $sql .= " AND bp.venue_id = %d";
+        }
+        $sql .= " GROUP BY bc.category_name";
         $results = $wpdb->get_results(
-            $wpdb->prepare($sql, $start_date, $end_date),
+            $wpdb->prepare($sql, ...$args),
             ARRAY_A
         );
 

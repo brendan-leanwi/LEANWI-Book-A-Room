@@ -4,7 +4,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 
 global $wpdb;
 
-// Get venue_id from the query string
+// Get venue_id from the query string and sanitize it
 if (!isset($_GET['venue_id']) || empty($_GET['venue_id'])) {
     // Return error response
     header('Content-Type: application/json');
@@ -15,17 +15,16 @@ if (!isset($_GET['venue_id']) || empty($_GET['venue_id'])) {
     exit; // Stop further script execution
 }
 
-// Sanitize and convert venue_id to integer
+// Sanitize and validate venue_id and date
 $venue_id = intval($_GET['venue_id']);
-$selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d'); // Default to today if not provided
+$selected_date = isset($_GET['date']) ? sanitize_text_field($_GET['date']) : date('Y-m-d'); // Default to today if not provided
 
-// Validate venue_id (optional but recommended)
 if ($venue_id <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $selected_date)) {
     echo json_encode([]);
     exit;
 }
 
-// Check for unique_id
+// Sanitize unique_id if present
 $unique_id = isset($_GET['unique_id']) ? sanitize_text_field($_GET['unique_id']) : null;
 
 // Define table names with prefix
@@ -55,8 +54,8 @@ $bookings = $wpdb->get_results(
 // Calculate all slot times with booking status
 $slots_with_booking_status = [];
 if ($hours) {
-    $start_time = new DateTime($selected_date . $hours->open_time);
-    $end_time = new DateTime($selected_date . $hours->close_time);
+    $start_time = new DateTime($selected_date . ' ' . $hours->open_time);
+    $end_time = new DateTime($selected_date . ' ' . $hours->close_time);
     
     // Get the minutes interval from settings
     $minutes_interval = get_option('leanwi_minutes_interval', 30); // Default to 30 if not set
@@ -92,8 +91,8 @@ if ($hours) {
 
         // Add the slot with its booking status
         $slots_with_booking_status[] = [
-            'start' => $start_time->format('H:i'),
-            'end' => $slot_end_time->format('H:i'),
+            'start' => esc_html($start_time->format('H:i')),
+            'end' => esc_html($slot_end_time->format('H:i')),
             'booked' => $is_booked,
             'is_booked_for_unique_id' => $is_booked_for_unique_id
         ];

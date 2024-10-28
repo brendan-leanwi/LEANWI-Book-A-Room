@@ -43,6 +43,9 @@ function display_staff_venue_details($atts) {
                 <p><h2>Already know your Booking ID?</h2></p>
                 <p> </p>
                 <form id="retrieve-booking" method="POST">
+                    <!-- Set up nonce verification for the fetch and delete actions -->
+                    <?php wp_nonce_field('delete_booking_action', 'delete_booking_nonce'); ?>
+
                     <label for="unique_id" class="find-label">Booking ID:</label>
                     <input type="text" id="unique_id" name="unique_id" class="find-input" required>
                     

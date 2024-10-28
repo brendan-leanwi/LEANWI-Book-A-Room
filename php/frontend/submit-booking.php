@@ -4,16 +4,25 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 
 global $wpdb; // Access the global $wpdb object
 
+$success = true;
+$errorMessage = '';
+
+// verify the nonce before processing the rest of the form data
+if (!isset($_POST['submit_booking_nonce']) || !wp_verify_nonce($_POST['submit_booking_nonce'], 'submit_booking_action')) {
+    $success = false;
+    $errorMessage = 'Nonce verification failed.';
+}
+
 // Sanitize incoming POST data
 $day = sanitize_text_field($_POST['day']);
 $name = sanitize_text_field($_POST['name']);
 $email = sanitize_email($_POST['email']);
 $phone = sanitize_text_field($_POST['phone']);
-$participants = intval($_POST['participants']);
+$participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
 $notes = sanitize_textarea_field($_POST['notes']);
-$category = intval($_POST['category']);
-$audience = intval($_POST['audience']);
-$venue_id = intval($_POST['venue_id']);
+$category = isset($_POST['category']) ? intval($_POST['category']) : 0;
+$audience = isset($_POST['audience']) ? intval($_POST['audience']) : 0;
+$venue_id = isset($_POST['venue_id']) ? intval($_POST['venue_id']) : 0;
 
 // Get the start and end time directly from the POST data
 $start_time = sanitize_text_field($_POST['start_time']); // Passed from the form
@@ -25,7 +34,8 @@ if (!$current_time || !strtotime($current_time) || !$end_time || !strtotime($end
     $errorMessage = 'Invalid time format for all or either start, end and current times.';
 }
 
-$minutes_interval = isset($_POST['minutes_interval']) ? sanitize_text_field($_POST['minutes_interval']) : 30;
+$minutes_interval = isset($_POST['minutes_interval']) && is_numeric($_POST['minutes_interval']) ? intval($_POST['minutes_interval']) : 30;
+
 
 // Create a DateTime object for the end time and add the minutes_interval
 $endDateTime = new DateTime($end_time);
@@ -36,21 +46,24 @@ $admin_email_address = isset($_POST['admin_email_address']) ? sanitize_email($_P
 $send_admin_email = isset($_POST['send_admin_email']) ? sanitize_text_field($_POST['send_admin_email']) : 'no';
 $email_text = isset($_POST['email_text']) ? sanitize_text_field($_POST['email_text']) : '';
 $total_cost = isset($_POST['total_cost']) && !empty($_POST['total_cost']) ? floatval(number_format((float) sanitize_text_field($_POST['total_cost']), 2, '.', '')) : 0.00;
-$page_url = isset($_POST['page_url']) ? sanitize_text_field($_POST['page_url']) : '';
+$page_url = isset($_POST['page_url']) ? esc_url($_POST['page_url']) : '';
 $venue_name = sanitize_text_field($_POST['venue_name']);
 $unique_id = isset($_POST['unique_id']) ? sanitize_text_field($_POST['unique_id']) : '';
 
-$success = true;
-$errorMessage = '';
 $bookingAlreadyExisted = false;
 
 $currentDateTime = new DateTime($current_time); // Create a DateTime object for the current time
 $startDateTime = new DateTime($start_time); // Create a DateTime object for the start time
 
+if (empty($name) || empty($email) || empty($start_time) || empty($end_time)) {
+    $success = false;
+    $errorMessage = 'Name, email, start time, and end time are required.';
+}
+
 // Check if the start time is in the past
 if ($startDateTime < $currentDateTime) {
     $success = false;
-    $errorMessage = 'The selected start time is in the past. Please choose a future time for the booking.';
+    $errorMessage = 'The selected start time is in the past. You will need to add a booking with a start time in the future.';
 }
 
 if ($success) {
@@ -100,44 +113,49 @@ if ($success) {
 
     if ($insert_result === false) {
         $success = false;
-        $errorMessage = 'Failed to book time slot: ' . $time;
+        $errorMessage = 'Failed to make booking:  DB Error: ' . $wpdb->last_error;
     }
 }
 
 // Send email if booking is successful
+if ($success && !is_email($email)) {
+    $success = false;
+    $errorMessage = 'Invalid email address. Failed to send confirmation email to user.';
+}
+
 if ($success) {
     // Ensure the page URL ends without a trailing '/' before appending the query string
     $page_url = rtrim($page_url, '/'); // Remove the trailing '/' if it exists
 
     // Email details
-    $to = 'btuckey@leanwi.org';// For testing purposes just use my email $email; // Send the email to the user's email address
+    $to = sanitize_email('btuckey@leanwi.org'); // For testing purposes, replace later with sanitize_email($email)
     $subject = 'Your Booking Confirmation';
     if ($bookingAlreadyExisted) {
         $subject = 'Your Booking has been updated';
     }
-    $message = "<p>Hi <strong>$name</strong>,</p>";
+    $message = "<p>Hi <strong>" . esc_html($name) . "</strong>,</p>";
     if ($bookingAlreadyExisted) {
-        $message .= "<p>Here are the most recent details for your updated booking. Your booking ID is: <strong>$unique_id</strong>.</p>";
+        $message .= "<p>Here are the most recent details for your updated booking. Your booking ID is: <strong>" . esc_html($unique_id) . "</strong>.</p>";
     }
     else{
-        $message .= "<p>Thank you for your booking. Your booking ID is: <strong>$unique_id</strong>.</p>";
+        $message .= "<p>Thank you for your booking. Your booking ID is: <strong>" . esc_html($unique_id) . "</strong>.</p>";
     }
     $message .= "<p>You can use this ID to find and modify your booking by going to this page: " .
-           "<a href='" . $page_url . "?booking_id=" . $unique_id . "'>" . $page_url . "?booking_id=" . $unique_id . "</a> " .
+           "<a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "</a> " .
            "and entering the above ID.</p>";
 
     // Conditionally display $email_text if it has content
     if (!empty($email_text)) {
-        $message .= "<p>$email_text</p>";
+        $message .= "<p>" . esc_html($email_text) . "</p>";
     }
 
     $message .= "<p><strong>Here are the details of your booking:</strong></p>" .
-            "<p><strong>Venue:</strong> $venue_name<br>" .
+            "<p><strong>Venue:</strong>" . esc_html($venue_name) . "<br>" .
             "<strong>Date:</strong> " . date('F j, Y', strtotime($start_time)) . "<br>" .
             "<strong>Start Time:</strong> " . date('g:i A', strtotime($start_time)) . "<br>" .
             "<strong>End Time:</strong> " . date('g:i A', strtotime($adjusted_end_time)) . "<br>" .
             "<strong>Number of Participants:</strong> $participants<br>" .
-            "<strong>Booking Notes:</strong> " . (!empty($notes) ? $notes : 'None') . "</p>";
+            "<strong>Booking Notes:</strong> " . (!empty($notes) ? esc_html($notes) : 'None') . "</p>";
 
     // Conditionally display total cost if greater than 0.00
     if ($total_cost > 0.00) {
@@ -160,6 +178,11 @@ if ($success) {
     }
     else {
         if ($send_admin_email === 'yes' && !empty($admin_email_address)){
+            if (!is_email($admin_email_address)) {
+                $success = false;
+                $errorMessage = 'Invalid admin email address. Failed to send confirmation email to administrator.';
+            }
+            
             $to = $admin_email_address;
             $subject = 'A booking has been made!';
             if ($bookingAlreadyExisted) {
@@ -178,7 +201,7 @@ if ($success) {
 header('Content-Type: application/json');
 $response = [
     'success' => $success,
-    'message' => $success ? 'Booking successful!' : $errorMessage
+    'message' => $success ? 'Booking successful!' : esc_html($errorMessage)
 ];
 
 echo json_encode($response);

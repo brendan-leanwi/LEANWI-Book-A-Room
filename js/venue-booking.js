@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
     const venueId = document.getElementById('venue_id').value;
-    console.log('Venue Id:', venueId); // Add this to see the response
 
     // Get the user-defined colors from bookingSettings
     const highlightedButtonBgColor = bookingSettings.highlightedButtonBgColor || '#ffe0b3';
@@ -29,27 +28,41 @@ document.addEventListener("DOMContentLoaded", function () {
     let maxMonths = bookingSettings.maxMonths || 1; // Use the localized data
     let currentDetailsDate = new Date();
 
+    document.body.style.cursor = 'wait'; // Set cursor before fetch starts
     fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-venue-details.php?venue_id=${venueId}`)
-        .then(response => response.json())
-        .then(venue => {
-            console.log('Venue details:',venue); // Add this to see the response
-            document.getElementById('venue-name').textContent = venue.name;
-            document.getElementById('venue-capacity').textContent = venue.capacity;
-            document.getElementById('venue-description').textContent = venue.description;
-            document.getElementById('venue-location').textContent = venue.location;
-            document.getElementById('venue-image').src = venue.image_url;
-            document.getElementById('venue-extra-text').textContent = venue.extra_text;
-            document.getElementById('venue-email-text').value = venue.email_text;
-            document.getElementById('venue-max-slots').value = venue.max_slots;
-            document.getElementById('venue-slot-cost').textContent = venue.slot_cost; // Update the displayed cost
-
-            updateCalendar(venueId);
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
         })
-        .catch(error => console.error('Error fetching venue details:', error));
+        .then(venue => {
+            document.getElementById('venue-name').textContent = escapeHtml(venue.name);
+            document.getElementById('venue-capacity').textContent = escapeHtml(venue.capacity);
+            document.getElementById('venue-description').textContent = escapeHtml(venue.description);
+            document.getElementById('venue-location').textContent = escapeHtml(venue.location);
+            document.getElementById('venue-image').src = venue.image_url;
+            document.getElementById('venue-extra-text').textContent = escapeHtml(venue.extra_text);
+            document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
+            document.getElementById('venue-max-slots').value = venue.max_slots;
+            document.getElementById('venue-slot-cost').textContent = escapeHtml(venue.slot_cost); // Update the displayed cost
+
+           updateCalendar(venueId);
+        })
+        .catch(error => console.error('Error fetching venue details:', error))
+        .finally(() => {
+            document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+        });
 
     //Fetch categories and audiences
+    document.body.style.cursor = 'wait'; // Set cursor before fetch starts
     fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories-audiences.php')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             // Populate Category dropdown
             const categorySelect = document.getElementById('category');
@@ -69,15 +82,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 audienceSelect.appendChild(option);
             });
         })
-        .catch(error => console.error('Error fetching categories and audiences:', error));
+        .catch(error => console.error('Error fetching categories and audiences:', error))
+        .finally(() => {
+            document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+        });
 
-    
+        let selectedDayElement = null; // Store the selected day element for later
         function updateCalendar(venueId, callback, bookingData = null) {
-            let selectedDayElement = null; // Store the selected day element for later
-
+            document.body.style.cursor = 'wait';
             // Fetch the available days for the venue
-            fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-days.php?venue_id=${venueId}`)
-                .then(response => response.json())
+            fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-days.php?venue_id=${encodeURIComponent(venueId)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(availableDays => {
                     const calendar = document.getElementById('calendar');
                     const currentMonthDisplay = document.getElementById('current-month');
@@ -96,26 +116,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const firstDay = new Date(year, month, 1);
                     const lastDay = new Date(year, month + 1, 0);
         
-                    // Create a grid for the calendar (7 columns for 7 days of the week)
-                    const calendarGrid = document.createElement('div');
-                    calendarGrid.style.display = 'grid';
-                    calendarGrid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-                    calendarGrid.style.gap = '10px';
-        
-                    // Add weekday headers (Sunday to Saturday)
-                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                    dayNames.forEach(dayName => {
-                        const dayHeader = document.createElement('div');
-                        dayHeader.textContent = dayName;
-                        dayHeader.style.fontWeight = 'bold';
-                        calendarGrid.appendChild(dayHeader);
-                    });
-        
-                    // Add empty cells for days before the first day of the month
-                    for (let i = 0; i < firstDay.getDay(); i++) {
-                        const emptyCell = document.createElement('div');
-                        calendarGrid.appendChild(emptyCell);
-                    }
+                    // Create the calendar grid
+                    const calendarGrid = createCalendarGrid();
+                    addWeekdayHeaders(calendarGrid);
+                    addEmptyStartCells(calendarGrid, firstDay);
         
                     // Loop through all the days of the current month
                     for (let day = 1; day <= lastDay.getDate(); day++) {
@@ -163,8 +167,9 @@ document.addEventListener("DOMContentLoaded", function () {
                                     .then(availableTimes => {
                                         // Directly call showContactForm with the available times
                                         if (availableTimes.length > 0) {
-                                            console.log('Date Before call: ', dateFormatted);
+                                            document.body.style.cursor = 'wait';
                                             showContactForm(availableTimes, dateFormatted);
+                                            document.body.style.cursor = 'default';
                                         } else {
                                             alert('No available times for this date.');
                                         }
@@ -180,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         // Append day element to the calendar grid
                         calendarGrid.appendChild(dayElement);
                     }
-
+        
                     // Append the calendar grid to the main calendar div
                     calendar.appendChild(calendarGrid);
         
@@ -188,11 +193,81 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (callback) {
                         callback();
                     }
-
+        
                     // Update the visibility of the navigation arrows
                     updateNavigationButtons();
                 })
-                .catch(error => console.error('Error fetching available days:', error));
+                .catch(error => console.error('Error fetching available days:', error))
+                .finally(() => {
+                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                });
+        }            
+        
+        function createCalendarGrid() {
+            const grid = document.createElement('div');
+            grid.classList.add('calendar-grid'); // Apply the CSS class
+            return grid;
+        }        
+        
+        function addWeekdayHeaders(calendarGrid) {
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            dayNames.forEach(dayName => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = dayName;
+                dayHeader.classList.add('day-header'); // Use CSS class for styling
+                calendarGrid.appendChild(dayHeader);
+            });
+        }
+        
+        function addEmptyStartCells(calendarGrid, firstDay) {
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+        }
+        
+        function createDayElement(day, dayData, currentDate, today, dateFormatted) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = day;
+        
+            const isToday = currentDate.toISOString().split('T')[0] === today.toISOString().split('T')[0];
+            const isAvailable = dayData && dayData.open_time !== '00:00:00' && dayData.close_time !== '00:00:00';
+        
+            if (isAvailable) {
+                dayElement.classList.add('available');
+                dayElement.addEventListener('click', () => handleDayClick(dayElement, venueId, dateFormatted));
+            } else {
+                dayElement.classList.add('unavailable');
+            }
+        
+            return dayElement;
+        }
+        
+        function handleDayClick(dayElement, venueId, dateFormatted) {
+            if (selectedDayElement) selectedDayElement.classList.remove('highlighted');
+            dayElement.classList.add('highlighted');
+            selectedDayElement = dayElement;
+        
+            document.body.style.cursor = 'wait';
+            dayElement.style.cursor = 'wait';
+        
+            fetchDayBookings(venueId, dateFormatted)
+                .then(bookings => {
+                    document.body.style.cursor = 'default';
+                    dayElement.style.cursor = 'pointer';
+        
+                    if (bookings.success && bookings.data.length > 0) {
+                        showDayBookings(bookings.data, dateFormatted);
+                    } else {
+                        alert(bookings.error);
+                    }
+                })
+                .catch(error => {
+                    document.body.style.cursor = 'default';
+                    dayElement.style.cursor = 'pointer';
+                    console.error('Error fetching bookings:', error);
+                    alert('An error occurred while fetching bookings. Please try again.');
+                });
         }
         
         // Handle navigation buttons
@@ -200,7 +275,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const today = new Date();
             if (currentMonth > today) {  // Won't go to any month prior to today
                 currentMonth.setMonth(currentMonth.getMonth() - 1); // Go to the previous month
-                updateCalendar(venueId); // Refresh the calendar with the new month
+                
+                updateCalendar(venueId);
             }
         });
         
@@ -222,7 +298,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Only allow navigation if within the maxMonths limit
             if (currentMonth < maxMonthLimit) {
                 currentMonth.setMonth(currentMonth.getMonth() + 1); // Go to the next month
-                updateCalendar(venueId); // Refresh the calendar with the new month
+                updateCalendar(venueId);
             }
         });
         
@@ -251,165 +327,124 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         
-        // Initialize the calendar on page load
-        document.body.style.cursor = 'wait';
-        updateCalendar(venueId);        
-        document.body.style.cursor = 'default';
+        updateCalendar(venueId);
         
         function fetchAvailableTimes(venueId, date, uniqueId = null) {
-            const url = `/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-times.php?venue_id=${venueId}&date=${date}`;
             currentDetailsDate = date;
 
-            // Append unique_id if it exists
-            const finalUrl = uniqueId ? `${url}&unique_id=${encodeURIComponent(uniqueId)}` : url;
+            const params = new URLSearchParams({ venue_id: venueId, date: date });
+            if (uniqueId) params.append('unique_id', uniqueId);
+            const finalUrl = `/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-times.php?${params}`;
             console.log("Final URL: ", finalUrl);
 
+            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
             return fetch(finalUrl)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .catch(error => {
                     console.error('Error fetching available times:', error);
                     return []; // Return an empty array on error
+                })
+                .finally(() => {
+                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
                 });
         }
         
-        let contactFormContainer; // Declare this in a broader scope
+        let contactFormContainer;
+
         function showContactForm(availableTimes, day, showingExistingRecord = false) {
             contactFormContainer = document.querySelector('#contact-form-container');
             const timeSelectDiv = document.querySelector('#time-select');
             const dayInput = document.querySelector('#day');
             const availableTimesHeading = document.getElementById('available-times-heading');
-            const totalCostDisplay = document.getElementById('total-cost'); // Add reference to total cost display
+            const totalCostDisplay = document.getElementById('total-cost');
             const slotCost = parseFloat(document.getElementById('venue-slot-cost').textContent);
-        
+            
             if (!contactFormContainer || !timeSelectDiv || !dayInput || !totalCostDisplay || isNaN(slotCost)) {
                 console.error('One or more elements were not found in the DOM or slot cost is invalid.');
                 return;
             }
 
-            // Clear previous options
-            timeSelectDiv.innerHTML = '';
-        
-            // Split the 'YYYY-MM-DD' string and create a date in the local time zone
-            const [year, month, date] = day.split('-');
-            const selectedDate = new Date(year, month - 1, date); // Month is 0-indexed in JavaScript
-            
-            const formattedDate = selectedDate.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
+            timeSelectDiv.innerHTML = ''; // Clear previous options
+            const formattedDate = new Date(day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             availableTimesHeading.textContent = `Available Times for ${formattedDate}`;
 
-            // Array to store selected times for updating the dataset
-            let selectedTimes = [];
-        
-            // Populate with buttons for available times
+            // Populate time buttons
             availableTimes.forEach((time, index) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'time-button';
-                button.textContent = time.start;  // Display start time
-                
-                // Check if the time slot is booked
+                button.textContent = time.start;
+
                 if (time.booked && !time.is_booked_for_unique_id) {
-                    button.disabled = true;  // Disable the button
-                    button.classList.add('booked');  // Add a class for styling booked times
+                    button.disabled = true;
+                    button.classList.add('booked');
                 }
 
-                // Automatically select booked times for the unique_id if showingExistingRecord is true
                 if (showingExistingRecord && time.is_booked_for_unique_id) {
                     button.classList.add('selected');
-                    selectedTimes.push(time.start);  // Add to selected times array
                 }
 
-
-                // Add functionality to handle time selection for available (non-booked) times
-                if (!time.booked || time.is_booked_for_unique_id) {
-                    button.addEventListener('click', () => {
-                        const selectedTimes = Array.from(timeSelectDiv.querySelectorAll('.selected')).map(btn => btn.textContent);
-                        const currentSelectionIndex = getTimeIndex(button.textContent, availableTimes);
-
-                        // Check if the clicked time is already selected
-                        if (button.classList.contains('selected')) {
-                            // Deselect the clicked time and all times after it
-                            const buttons = Array.from(timeSelectDiv.querySelectorAll('button'));
-
-                            // Loop through all buttons starting from the clicked time to the end
-                            for (let i = currentSelectionIndex; i < buttons.length; i++) {
-                                buttons[i].classList.remove('selected');
-                            }
-
-                        } else {
-                            // If the time is not selected, proceed with the normal selection logic
-
-                            if (selectedTimes.length > 0) {
-                                const lastSelectedTime = selectedTimes[selectedTimes.length - 1];
-                                const lastSelectedIndex = getTimeIndex(lastSelectedTime, availableTimes);
-
-                                // Check if the selected time is continuous
-                                const isAdjacent = Math.abs(currentSelectionIndex - lastSelectedIndex) === 1;
-
-                                if (!isAdjacent) {
-                                    // Check for intermediate booked slots
-                                    const minIndex = Math.min(currentSelectionIndex, lastSelectedIndex);
-                                    const maxIndex = Math.max(currentSelectionIndex, lastSelectedIndex);
-
-                                    let canSelect = true;
-                                    for (let i = minIndex + 1; i < maxIndex; i++) {
-                                        if (availableTimes[i].booked) {
-                                            canSelect = false;
-                                            break;
-                                        }
-                                    }
-
-                                    if (canSelect) {
-                                        // Automatically select all intermediate slots
-                                        for (let i = minIndex; i <= maxIndex; i++) {
-                                            const intermediateButton = timeSelectDiv.querySelectorAll('button')[i];
-                                            intermediateButton.classList.add('selected');
-                                        }
-                                    } else {
-                                        alert('A booking must use continuous times without a booked slot in between.');
-                                        return;
-                                    }
-                                } else {
-                                    // Toggle the clicked button's selection state
-                                    button.classList.add('selected');
-                                }
-                            } else {
-                                // If no times are selected, just select this one
-                                button.classList.add('selected');
-                            }
-                        }
-
-                        // Update selected times in the container's data attribute
-                        const newSelectedTimes = Array.from(timeSelectDiv.querySelectorAll('.selected')).map(btn => btn.textContent);
-                        contactFormContainer.dataset.selectedTimes = newSelectedTimes.join(',');
-
-                        // Calculate the total cost
-                        const selectedCount = newSelectedTimes.length; // Get the number of selected times
-                        const totalCost = (selectedCount * slotCost).toFixed(2); // Calculate total cost
-                        totalCostDisplay.textContent = totalCost; // Update the total cost display
-                        
-                    });
-                }
-                
+                button.addEventListener('click', () => handleTimeSelection(button, index));
                 timeSelectDiv.appendChild(button);
             });
-        
+
             dayInput.value = day;
             
-            //If we're displaying an existing record we need to show the total cost before we leave
-            if(showingExistingRecord){
-                // Calculate the total cost
-                const selectedTimes = Array.from(timeSelectDiv.querySelectorAll('.selected')).map(btn => btn.textContent);
-                contactFormContainer.dataset.selectedTimes = selectedTimes.join(',');
-                const selectedCount = selectedTimes.length; // Get the number of selected times
-                const totalCost = (selectedCount * slotCost).toFixed(2); // Calculate total cost
-                totalCostDisplay.textContent = totalCost; // Update the total cost display
+            if (showingExistingRecord) {
+                updateTotalCost();
             }
-            // Show the contact form
+
             contactFormContainer.style.display = 'block';
+
+            function handleTimeSelection(button, index) {
+                const isSelected = button.classList.contains('selected');
+
+                if (isSelected) {
+                    deselectFollowingButtons(index);
+                } else {
+                    const selectedButtons = Array.from(timeSelectDiv.querySelectorAll('.selected'));
+                    const lastSelectedIndex = selectedButtons.length ? getTimeIndex(selectedButtons[selectedButtons.length - 1].textContent, availableTimes) : -1;
+
+                    if (lastSelectedIndex >= 0 && !isContinuousSelection(index, lastSelectedIndex) && !hasIntermediateBookedSlots(Math.min(index, lastSelectedIndex), Math.max(index, lastSelectedIndex))) {
+                        alert('A booking must use continuous times without a booked or empty slot in between.');
+                        return;
+                    }
+
+                    button.classList.add('selected');
+                }
+
+                updateTotalCost();
+            }
+
+            function deselectFollowingButtons(index) {
+                const buttons = Array.from(timeSelectDiv.querySelectorAll('button'));
+                for (let i = index; i < buttons.length; i++) {
+                    buttons[i].classList.remove('selected');
+                }
+            }
+
+            function updateTotalCost() {
+                const selectedTimes = Array.from(timeSelectDiv.querySelectorAll('.selected')).map(btn => btn.textContent);
+                totalCostDisplay.textContent = (selectedTimes.length * slotCost).toFixed(2);
+                contactFormContainer.dataset.selectedTimes = selectedTimes.join(',');
+            }
+
+            function isContinuousSelection(currentIndex, lastIndex) {
+                return Math.abs(currentIndex - lastIndex) === 1;
+            }
+            
+            function hasIntermediateBookedSlots(start, end) {
+                for (let i = start + 1; i < end; i++) {
+                    if (availableTimes[i].booked) return true;
+                }
+                return false;
+            }
+            
         }
 
         // Function to get time index based on the button's time (start time)
@@ -419,166 +454,180 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.querySelector('#booking-form').addEventListener('submit', function (event) {
             event.preventDefault();
-            let formData = new FormData(this);
         
-            // Add the venue_id from hidden div
+            const formData = new FormData(this);
+            const contactFormContainer = document.getElementById('contact-form-container');
+            const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
+            
+            // Add the nonce
+            formData.append('submit_booking_nonce', document.querySelector('#submit_booking_nonce').value);
+
+            // Append required data to formData
             formData.append('venue_id', document.getElementById('venue_id').value);
             formData.append('email_text', document.getElementById('venue-email-text').value);
-            formData.append('total_cost', document.getElementById('total-cost').textContent); 
+            formData.append('total_cost', document.getElementById('total-cost').textContent);
             formData.append('venue_name', document.getElementById('venue-name').textContent);
-
-            if(existingRecord){
-                formData.append('unique_id', document.getElementById('unique_id').value);
-                console.log('unique_id passed: ', document.getElementById('unique_id').value);
-            }
-
-            // Add the current page URL to formData
             formData.append('page_url', window.location.href);
-
-            // Handle multiple selected times from the data attribute
-            const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
         
+            if (existingRecord) {
+                const uniqueId = document.getElementById('unique_id').value;
+                formData.append('unique_id', uniqueId);
+                console.log('Unique ID:', uniqueId);
+            }
+        
+            // Ensure at least one time slot is selected
             if (selectedTimes.length === 0) {
                 alert('Please select at least one time slot.');
                 return;
             }
         
-            var maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
-            // Check if selected times exceed the maximum booking slots
+            // Check against maximum allowed booking slots
+            const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
             if (selectedTimes.length > maxSlots) {
-                alert(`We only allow you to book ${maxSlots} timeslots in one booking.`);
+                alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
                 return;
             }
-
+        
+            // Format and append start and end times
             const currentDateFormatted = returnCurrentDate();
+            const startTime = `${currentDetailsDate} ${selectedTimes[0]}:00`;
+            const endTime = `${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}:00`;
+            formData.append('start_time', startTime);
+            formData.append('end_time', endTime);
             formData.append('current_time', currentDateFormatted);
-
-            // Get the start time and end time from the selected times
-            const startTime = selectedTimes[0];
-            const endTime = selectedTimes[selectedTimes.length - 1];
-
-            // Construct 'YYYY-MM-DD HH:MM:SS' format by appending ':00'
-            const formattedStartTime = `${currentDetailsDate} ${startTime}:00`;
-            const formattedEndTime = `${currentDetailsDate} ${endTime}:00`;
-
-            // Append the start time and end time to formData
-            formData.append('start_time', formattedStartTime);
-            formData.append('end_time', formattedEndTime);
-            console.log('start_time:', formattedStartTime, 'end_time:', formattedEndTime, 'current_time:',currentDateFormatted)
-            
-            // Append plugin settings to formData
+        
+            // Add plugin settings
             formData.append('minutes_interval', bookingSettings.minutesInterval);
             formData.append('admin_email_address', bookingSettings.adminEmailAddress);
             formData.append('send_admin_email', bookingSettings.sendAdminEmail);
-            
+        
+            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
             fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.text())  // Changed to .text() for debugging
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network error: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                console.log('Response Data:', data);  // Log the raw response for inspection
-                try {
-                    const jsonData = JSON.parse(data);  // Try to parse the JSON if possible
-                    if (jsonData.success) {
-                        alert(jsonData.message);
-                        document.querySelector('#contact-form-container').style.display = 'none';
-                    } else {
-                        alert('Error: ' + jsonData.message);
-                    }
-                } catch (e) {
-                    console.error('Error parsing JSON:', e);
-                    console.error('Raw response:', data);
+                if (data.success) {
+                    alert(data.message);
+                    contactFormContainer.style.display = 'none';
+                } else {
+                    console.error('Submit Error:', data.message);
+                    alert(data.message);
                 }
             })
-            .catch(error => console.error('Error submitting booking:', error));
-        });
+            .catch(error => {
+                console.error('Error submitting booking:', error.message);
+                alert('An error occurred while submitting your booking: ' + error.message);
+            })
+            .finally(() => {
+                document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+            });
+        });        
         
         /*****************************************************************************************
          * FUNCTIONALITY FOR DISPLAYING AN EXISTING BOOKING
          *****************************************************************************************/
         let existingRecord = false;
-        document.querySelector('#retrieve-booking').addEventListener('submit', function (event) {
+        const retrieveBookingForm = document.querySelector('#retrieve-booking');
+        const findButton = retrieveBookingForm.querySelector('.find-button[type="submit"]');
+
+        retrieveBookingForm.addEventListener('submit', function (event) {
             event.preventDefault();
-            //Get the unique_id from the input and pass it to the fetch-booking file
-            let formData = new FormData(this);
             existingRecord = true;
-            
-            // Add the venue_id from hidden div
+            contactFormContainer = document.getElementById('contact-form-container');
+
+            // Prepare form data
+            const formData = new FormData(this);
             formData.append('venue_id', document.getElementById('venue_id').value);
+            // Add the nonce
+            formData.append('fetch_booking_nonce', document.querySelector('#fetch_booking_nonce').value);
 
-            console.log('unique_id: ', formData.get('unique_id'), ' venue_id: ', formData.get('venue_id'))
-            
-            // Show "wait" cursor
-            document.body.style.cursor = 'wait';  // Change cursor to wait
-            // Disable the submit button to prevent multiple clicks
-            const submitButton = document.querySelector('.find-button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.style.cursor = 'wait';
-
+            // Change cursor and disable submit button to prevent multiple clicks
+            document.body.style.cursor = 'wait';
+            findButton.disabled = true;
+            findButton.style.cursor = 'wait';
             fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/fetch-booking.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                console.log('Fetch booking Response Data:', data);  // Log the raw response for inspection
-
-                // Show "default" cursor
-                document.body.style.cursor = 'default'; 
-                submitButton.disabled = false;
-                submitButton.style.cursor = 'default';
-
                 if (data.success) {
                     const booking = data.data[0]; // Assuming single booking for now
 
-                    const startDate = new Date(booking.start_time); 
-                    const dateFormatted = formatDate_YYYY_MM_DD(startDate);
-                    console.log('Formatted date:', dateFormatted);
-
-                    document.body.style.cursor = 'wait';
-                    // Call the function with the venueId, date, and uniqueId
-                    fetchAvailableTimes(booking.venue_id , dateFormatted, booking.unique_id)
-                    .then(availableTimes => {
-                        // Handle the available times as needed
-                        console.log('Available times:', availableTimes);
-                        // Directly call showContactForm with the available times
-                        if (availableTimes.length > 0) {
-                            showContactForm(availableTimes, dateFormatted, existingRecord);
-                        } else {
-                            alert('No available times for this date.');
-                        }
-                    });
-                    document.body.style.cursor = 'default';
-
-                    // Populate form fields with the booking data
-                    document.getElementById('name').value = booking.name;
-                    document.getElementById('email').value = booking.email;
-                    document.getElementById('phone').value = booking.phone;
-                    document.getElementById('participants').value = booking.number_of_participants;
-                    document.getElementById('notes').value = booking.booking_notes;
-                    document.getElementById('category').value = booking.category_id;
-                    document.getElementById('audience').value = booking.audience_id;
-
-                    // Show the booking form
-                    document.getElementById('contact-form-container').style.display = 'block';
-
-                    // Highlight the day in the calendar based on the start_time
-                    highlightSelectedDay(booking.start_time);
-
+                    // Populate form fields and display booking information
+                    populateBookingFormFields(booking);
+                    
+                    // Fetch available times and show the contact form if times are available
+                    handleAvailableTimes(booking);
                 } else {
-                    alert(data.error);
+                    alert(data.error || 'Booking retrieval unsuccessful.');
                 }
             })
             .catch(error => {
-                // Show "default" cursor
-                document.body.style.cursor = 'default';
-                submitButton.disabled = false;
-                submitButton.style.cursor = 'default';
                 console.error('Error fetching booking:', error);
-                alert('An error occurred fetching the booking. Please try again.');
+                alert('An error occurred while fetching the booking. Please try again.');
+            })
+            .finally(() => {
+                document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                findButton.disabled = false;
+                findButton.style.cursor = 'default';
             });
         });
+
+        // Helper functions
+        function populateBookingFormFields(booking) {
+            // Populate form fields with booking data
+            document.getElementById('name').value = booking.name;
+            document.getElementById('email').value = booking.email;
+            document.getElementById('phone').value = booking.phone;
+            document.getElementById('participants').value = booking.number_of_participants;
+            document.getElementById('notes').value = booking.booking_notes;
+            document.getElementById('category').value = booking.category_id;
+            document.getElementById('audience').value = booking.audience_id;
+
+            // Display the booking form container
+            contactFormContainer.style.display = 'block';
+
+            // Highlight selected day on the calendar
+            highlightSelectedDay(booking.start_time);
+        }
+
+        function handleAvailableTimes(booking) {
+            const dateFormatted = formatDate_YYYY_MM_DD(new Date(booking.start_time));
+            
+            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+            // Fetch available times and call showContactForm if there are times available
+            fetchAvailableTimes(booking.venue_id, dateFormatted, booking.unique_id)
+                .then(availableTimes => {
+                    if (availableTimes.length > 0) {
+                        document.body.style.cursor = 'wait';
+                        showContactForm(availableTimes, dateFormatted, existingRecord);
+                        document.body.style.cursor = 'default';
+                    } else {
+                        alert('No available times for this date.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching available times:', error);
+                    alert('An error occurred while fetching available times.');
+                })
+                .finally(() => {
+                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                });
+        }
+
 
         function highlightSelectedDay(startTime) {
             const bookingDate = new Date(startTime);
@@ -594,12 +643,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Navigate to the booking month
                 currentMonth.setFullYear(bookingYear);
                 currentMonth.setMonth(bookingMonth);
-                updateCalendar(venueId); // Refresh the calendar with the new month
-        
-                // Update the calendar and highlight after it's rendered
+
                 updateCalendar(venueId, () => {
-                    highlightDayInCalendar(bookingDay); // Highlight the correct day
-                });
+                    highlightDayInCalendar(bookingDay); // Highlight the correct day AFTER the calendar month has been loaded
+                }); 
             }
         }
         
@@ -618,6 +665,12 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
    
+        function escapeHtml(html) {
+            const text = document.createElement("textarea");
+            text.textContent = html;
+            return text.innerHTML;
+        }
+        
         // Function to format date as 'YYYY-MM-DD'
         function formatDate_YYYY_MM_DD(date) {
             const year = date.getFullYear();
@@ -640,22 +693,20 @@ document.addEventListener("DOMContentLoaded", function () {
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
 
-        // Handle the Delete Booking button click
-        document.querySelector('#delete-booking').addEventListener('click', function () {
-            const uniqueId = document.getElementById('unique_id').value;
-            // Add admin email data from settings
-            const adminEmailAddress = bookingSettings.adminEmailAddress;
-            const sendAdminEmail = bookingSettings.sendAdminEmail;
+        const deleteBookingButton = document.querySelector('#delete-booking');
+        const uniqueIdInput = document.getElementById('unique_id');
 
-            console.log('uniqueId: ',uniqueId);
+        deleteBookingButton.addEventListener('click', handleDeleteBooking);
+
+        function handleDeleteBooking() {
+            const uniqueId = uniqueIdInput.value;
+            const { adminEmailAddress, sendAdminEmail } = bookingSettings;
+            contactFormContainer = document.getElementById('contact-form-container');
+            const deleteNonce = document.querySelector('#delete_booking_nonce').value; // Retrieve delete nonce
+
             if (confirm(`Are you sure you want to delete the booking with ID: ${uniqueId}?`)) {
-                // Show "wait" cursor
-                document.body.style.cursor = 'wait';  // Change cursor to wait
-                // Disable the submit button to prevent multiple clicks
-                const submitButton = document.querySelector('.find-button[type="button"]');
-                submitButton.disabled = true;
-                submitButton.style.cursor = 'wait';
-
+                // Update cursor and button state to "wait"
+                setLoadingState(true);
                 // Make a fetch call to delete the booking
                 fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/delete-booking.php`, {
                     method: 'POST',
@@ -665,37 +716,47 @@ document.addEventListener("DOMContentLoaded", function () {
                     body: JSON.stringify({ 
                         unique_id: uniqueId, 
                         admin_email_address: adminEmailAddress,
-                        send_admin_email: sendAdminEmail
+                        send_admin_email: sendAdminEmail,
+                        delete_booking_nonce: deleteNonce // Include the nonce
                     }),
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    // Show "default" cursor
-                    document.body.style.cursor = 'default';
-                    submitButton.disabled = false;
-                    submitButton.style.cursor = 'default';
-
                     if (data.success) {
                         alert('Booking deleted successfully.');
-                        // Clear the input field or redirect the user
-                        document.getElementById('unique_id').value = '';
-                        // Don't show the contact form
-                        contactFormContainer.style.display = 'none';
-                        document.getElementById('total-cost').textContent = '0.00';
-
+                        resetBookingForm();
                     } else {
                         alert('Failed to delete booking: ' + data.message);
                     }
                 })
                 .catch(error => {
-                    // Show "default" cursor
-                    document.body.style.cursor = 'default';
-                    submitButton.disabled = false;
-                    submitButton.style.cursor = 'default';
                     console.error('Error deleting booking:', error);
                     alert('An error occurred while deleting the booking. Please try again.');
+                })
+                .finally(() => {
+                    setLoadingState(false);
                 });
             }
-        });
+        }
+
+        // Helper function to set the loading state
+        function setLoadingState(isLoading) {
+            document.body.style.cursor = isLoading ? 'wait' : 'default';
+            deleteBookingButton.disabled = isLoading;
+            deleteBookingButton.style.cursor = isLoading ? 'wait' : 'default';
+        }
+
+        // Helper function to reset the booking form after deletion
+        function resetBookingForm() {
+            uniqueIdInput.value = '';
+            contactFormContainer.style.display = 'none';
+            document.getElementById('total-cost').textContent = '0.00';
+        }
+
 
 });

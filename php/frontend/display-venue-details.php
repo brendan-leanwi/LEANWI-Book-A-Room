@@ -42,6 +42,10 @@ function display_venue_details($atts) {
                 <p><h2 id="previous_booking_h2">Looking for a previously placed booking?</h2></p>
                 <p> </p>
                 <form id="retrieve-booking" method="POST">
+                    <!-- Set up nonce verification for the fetch and delete actions -->
+                    <?php wp_nonce_field('fetch_booking_action', 'fetch_booking_nonce'); ?>
+                    <?php wp_nonce_field('delete_booking_action', 'delete_booking_nonce'); ?>
+
                     <label for="unique_id" class="find-label">Booking ID:</label>
                     <input type="text" id="unique_id" name="unique_id" class="find-input" required>
                     
@@ -70,6 +74,7 @@ function display_venue_details($atts) {
     
     <div id="contact-form-container" style="display: none;">
         <form id="booking-form" method="POST" style="max-width: 600px; margin: 0 auto;">
+            <?php wp_nonce_field('submit_booking_action', 'submit_booking_nonce'); ?>
             <p><br></p>
             <p>
             <h2 id="available-times-heading"></h2>

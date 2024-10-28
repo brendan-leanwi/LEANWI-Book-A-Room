@@ -13,10 +13,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return urlParams.get(param);
     }
 
-    // Get booking_id from the URL and set it in the unique_id input field if it exists
+    // Get booking_id from the URL and validate it
     const bookingId = getQueryParam('booking_id');
-    if (bookingId) {
+    if (bookingId && /^[a-zA-Z0-9]{7}$/.test(bookingId)) {  // Check for 7 alphanumeric characters
         document.getElementById('unique_id').value = bookingId;
+    } else if (bookingId) {
+        console.warn("Invalid booking ID format: must be exactly 7 alphanumeric characters.");
     }
 
     // Update the CSS variables in the :root selector
@@ -32,15 +34,15 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(venue => {
             console.log('Venue details:',venue); // Add this to see the response
-            document.getElementById('venue-name').textContent = venue.name;
-            document.getElementById('venue-capacity').textContent = venue.capacity;
-            document.getElementById('venue-description').textContent = venue.description;
-            document.getElementById('venue-location').textContent = venue.location;
-            document.getElementById('venue-image').src = venue.image_url;
-            document.getElementById('venue-extra-text').textContent = venue.extra_text;
-            document.getElementById('venue-email-text').value = venue.email_text;
+            document.getElementById('venue-name').textContent = escapeHtml(venue.name);
+            document.getElementById('venue-capacity').textContent = escapeHtml(venue.capacity);
+            document.getElementById('venue-description').textContent = escapeHtml(venue.description);
+            document.getElementById('venue-location').textContent = escapeHtml(venue.location);
+            document.getElementById('venue-image').src = venue.image_url; // Ensure image URL is safe
+            document.getElementById('venue-extra-text').textContent = escapeHtml(venue.extra_text);
+            document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
             document.getElementById('venue-max-slots').value = venue.max_slots;
-            document.getElementById('venue-slot-cost').textContent = venue.slot_cost; // Update the displayed cost
+            document.getElementById('venue-slot-cost').textContent = escapeHtml(venue.slot_cost);
             document.getElementById('venue-page-url').value = venue.page_url;
 
             // Initialize the calendar on page load
@@ -50,136 +52,113 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(error => console.error('Error fetching venue details:', error));
     
+        let selectedDayElement = null;
         function updateCalendar(venueId, callback) {
-            let selectedDayElement = null; // Store the selected day element for later
-
-            // Fetch the available days for the venue
-            fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-days.php?venue_id=${venueId}`)
+        
+            // Fetch available days for the venue
+            fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-days.php?venue_id=${encodeURIComponent(venueId)}`)
                 .then(response => response.json())
                 .then(availableDays => {
                     const calendar = document.getElementById('calendar');
                     const currentMonthDisplay = document.getElementById('current-month');
-                    const today = new Date(); // Get today's date
-        
-                    // Clear existing content
-                    calendar.innerHTML = '';
-        
-                    // Get the year and month we're currently viewing
+                    const today = new Date();
+                    
+                    calendar.innerHTML = ''; // Clear previous content
                     const year = currentMonth.getFullYear();
                     const month = currentMonth.getMonth();
-                    const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                    currentMonthDisplay.textContent = monthName;
+                    currentMonthDisplay.textContent = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         
-                    // First and last days of the current month
                     const firstDay = new Date(year, month, 1);
                     const lastDay = new Date(year, month + 1, 0);
         
-                    // Create a grid for the calendar (7 columns for 7 days of the week)
-                    const calendarGrid = document.createElement('div');
-                    calendarGrid.style.display = 'grid';
-                    calendarGrid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-                    calendarGrid.style.gap = '10px';
-        
-                    // Add weekday headers (Sunday to Saturday)
-                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                    dayNames.forEach(dayName => {
-                        const dayHeader = document.createElement('div');
-                        dayHeader.textContent = dayName;
-                        dayHeader.style.fontWeight = 'bold';
-                        calendarGrid.appendChild(dayHeader);
-                    });
-        
-                    // Add empty cells for days before the first day of the month
-                    for (let i = 0; i < firstDay.getDay(); i++) {
-                        const emptyCell = document.createElement('div');
-                        calendarGrid.appendChild(emptyCell);
-                    }
-        
-                    // Loop through all the days of the current month
-                    for (let day = 1; day <= lastDay.getDate(); day++) {
-                        const currentDate = new Date(year, month, day);
-                        currentDate.setHours(0, 0, 0, 0); // Set time to midnight to avoid timezone issues
-
-                        const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-                        const dateFormatted = currentDate.toLocaleDateString('en-CA'); // Returns 'YYYY-MM-DD' format in local time
-
-                        // Reset both `currentDate` and `today` to midnight for date-only comparison
-                        const currentDateMidnight = new Date(currentDate.setHours(0, 0, 0, 0));
-                        const todayMidnight = new Date(today.setHours(0, 0, 0, 0));
-
-                        // Create day element
-                        const dayElement = document.createElement('div');
-                        dayElement.className = 'calendar-day';
-                        dayElement.textContent = day;
-                        dayElement.style.padding = '10px';
-                        dayElement.style.border = '1px solid #ccc';
-                        dayElement.style.textAlign = 'center';
-
-                        // Find the corresponding available day data by matching the day name
-                        const dayData = availableDays.find(day => day.day_of_week === dayName);
-
-                        if (dayData && dayData.open_time !== '00:00:00' && dayData.close_time !== '00:00:00') {
-                            // Available day: make it clickable
-                            dayElement.style.cursor = 'pointer';
-                            dayElement.style.backgroundColor = '#fff';
-                            dayElement.classList.add('available');
-
-                            dayElement.addEventListener('click', function () {
-                                if (selectedDayElement) {
-                                    selectedDayElement.classList.remove('highlighted'); // Remove highlight from previous selection
-                                }
-                                dayElement.classList.add('highlighted'); // Highlight the clicked day
-                                selectedDayElement = dayElement; // Store the selected day
-
-                                // Show "wait" cursor
-                                document.body.style.cursor = 'wait';  // Change cursor to wait
-                                dayElement.style.cursor = 'wait';
-
-                                fetchDayBookings(venueId, dateFormatted)
-                                    .then(bookings => {
-                                        // Revert cursor back to default
-                                        document.body.style.cursor = 'default';
-                                        dayElement.style.cursor = 'pointer';
-
-                                        // Directly call showContactForm with the available times
-                                        if (bookings.success && bookings.data.length > 0) {
-                                            showDayBookings(bookings.data, dateFormatted);
-                                        } else {
-                                            alert(bookings.error);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        // Ensure cursor reverts even in case of an error
-                                        document.body.style.cursor = 'default';
-                                        dayElement.style.cursor = 'pointer';
-                                        console.error('Error fetching bookings: ', error);
-                                        alert('An error occurred while fetching bookings. Please try again.');
-                                    });
-                            });
-                        } else {
-                            // Non-available day: grey it out
-                            dayElement.style.backgroundColor = '#f0f0f0';
-                            dayElement.style.color = '#ccc';
-                            dayElement.classList.add('unavailable');
-                        }
-
-                        // Append day element to the calendar grid
-                        calendarGrid.appendChild(dayElement);
-                    }
-
-                    // Append the calendar grid to the main calendar div
+                    const calendarGrid = createCalendarGrid();
                     calendar.appendChild(calendarGrid);
         
-                    // Call the callback if provided
-                    if (callback) {
-                        callback();
+                    addWeekdayHeaders(calendarGrid);
+                    addEmptyStartCells(calendarGrid, firstDay);
+        
+                    for (let day = 1; day <= lastDay.getDate(); day++) {
+                        const currentDate = new Date(year, month, day);
+                        const dateFormatted = currentDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+                        const dayData = availableDays.find(d => d.day_of_week === currentDate.toLocaleDateString('en-US', { weekday: 'long' }));
+        
+                        const dayElement = createDayElement(day, dayData, currentDate, today, dateFormatted);
+                        if (dayElement) calendarGrid.appendChild(dayElement);
                     }
-
-                    // Update the visibility of the navigation arrows
+        
+                    if (callback) callback();
                     updateNavigationButtons();
                 })
                 .catch(error => console.error('Error fetching available days:', error));
         }
+        
+        function createCalendarGrid() {
+            const grid = document.createElement('div');
+            grid.classList.add('calendar-grid'); // Apply the CSS class
+            return grid;
+        }        
+        
+        function addWeekdayHeaders(calendarGrid) {
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            dayNames.forEach(dayName => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = dayName;
+                dayHeader.classList.add('day-header'); // Use CSS class for styling
+                calendarGrid.appendChild(dayHeader);
+            });
+        }
+        
+        function addEmptyStartCells(calendarGrid, firstDay) {
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+        }
+        
+        function createDayElement(day, dayData, currentDate, today, dateFormatted) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = day;
+        
+            const isToday = currentDate.toISOString().split('T')[0] === today.toISOString().split('T')[0];
+            const isAvailable = dayData && dayData.open_time !== '00:00:00' && dayData.close_time !== '00:00:00';
+        
+            if (isAvailable) {
+                dayElement.classList.add('available');
+                dayElement.addEventListener('click', () => handleDayClick(dayElement, venueId, dateFormatted));
+            } else {
+                dayElement.classList.add('unavailable');
+            }
+        
+            return dayElement;
+        }
+        
+        function handleDayClick(dayElement, venueId, dateFormatted) {
+            if (selectedDayElement) selectedDayElement.classList.remove('highlighted');
+            dayElement.classList.add('highlighted');
+            selectedDayElement = dayElement;
+        
+            document.body.style.cursor = 'wait';
+            dayElement.style.cursor = 'wait';
+        
+            fetchDayBookings(venueId, dateFormatted)
+                .then(bookings => {
+                    document.body.style.cursor = 'default';
+                    dayElement.style.cursor = 'pointer';
+        
+                    if (bookings.success && bookings.data.length > 0) {
+                        showDayBookings(bookings.data, dateFormatted);
+                    } else {
+                        alert(bookings.error);
+                    }
+                })
+                .catch(error => {
+                    document.body.style.cursor = 'default';
+                    dayElement.style.cursor = 'pointer';
+                    console.error('Error fetching bookings:', error);
+                    alert('An error occurred while fetching bookings. Please try again.');
+                });
+        }
+        
         
         // Handle navigation buttons
         document.getElementById('prev-month').addEventListener('click', function () {
@@ -244,7 +223,12 @@ document.addEventListener("DOMContentLoaded", function () {
             currentDetailsDate = date;
             console.log('venueId: ', venueId, 'date: ', date);
             return fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/get-day-bookings.php?venue_id=${venueId}&date=${date}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .catch(error => {
                     console.error('Error fetching bookings:', error);
                     return []; // Return an empty array on error
@@ -255,71 +239,35 @@ document.addEventListener("DOMContentLoaded", function () {
             const dayBookingsContainer = document.querySelector('#day-bookings-container');
             const dayBookingsHeading = document.getElementById('day-bookings-heading');
             const bookingsTableBody = document.querySelector('#bookings-table tbody');
-
-            let page_url = document.getElementById('venue-page-url').value;
-            // Ensure page_url does not have a trailing slash
+        
+            // Ensure the page_url does not have a trailing slash
+            let page_url = document.getElementById('venue-page-url').value.trim();
             if (page_url.endsWith('/')) {
                 page_url = page_url.slice(0, -1); // Remove the trailing slash
             }
-
-            // Split the 'YYYY-MM-DD' string and create a date in the local time zone
-            const [year, month, date] = day.split('-');
-            const selectedDate = new Date(year, month - 1, date); // Month is 0-indexed in JavaScript
         
-            // Format the date
-            const formattedDate = selectedDate.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
+            // Create a local date object from the provided day
+            const [year, month, date] = day.split('-').map(Number);
+            const selectedDate = new Date(year, month - 1, date);
+            const formattedDate = formatDate(selectedDate);
+        
+            // Update the heading
             dayBookingsHeading.textContent = `Bookings for ${formattedDate}`;
         
-            // Clear any existing rows
+            // Clear existing rows
             bookingsTableBody.innerHTML = '';
         
             // Loop through each booking and add it to the table
             bookings.forEach(booking => {
                 const row = document.createElement('tr');
+                const { name, email, phone, start_time, end_time, unique_id } = booking;
         
-                const nameCell = document.createElement('td');
-                nameCell.textContent = booking.name;
-        
-                const emailCell = document.createElement('td');
-                emailCell.textContent = booking.email;
-        
-                const phoneCell = document.createElement('td');
-                phoneCell.textContent = booking.phone;
-        
-                const startTimeCell = document.createElement('td');
-                const startTime = new Date(booking.start_time);
-                startTimeCell.textContent = startTime.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-        
-                const endTimeCell = document.createElement('td');
-                const endTime = new Date(booking.end_time);
-                endTimeCell.textContent = endTime.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-        
-                const actionCell = document.createElement('td');
-                const viewLink = document.createElement('a');
-
-                // Use the page_url from the hidden input and append the booking unique_id
-                viewLink.href = `${page_url}?booking_id=${booking.unique_id}`;
-                viewLink.textContent = 'View';
-                viewLink.classList.add('button'); // Add WordPress button styling if needed
-                actionCell.appendChild(viewLink);
-        
-                // Append all cells to the row
-                row.appendChild(nameCell);
-                row.appendChild(emailCell);
-                row.appendChild(phoneCell);
-                row.appendChild(startTimeCell);
-                row.appendChild(endTimeCell);
-                row.appendChild(actionCell);
+                row.appendChild(createTableCell(name));
+                row.appendChild(createTableCell(email));
+                row.appendChild(createTableCell(phone));
+                row.appendChild(createTableCell(formatTime(start_time)));
+                row.appendChild(createTableCell(formatTime(end_time)));
+                row.appendChild(createActionCell(page_url, unique_id));
         
                 // Add the row to the table
                 bookingsTableBody.appendChild(row);
@@ -329,26 +277,78 @@ document.addEventListener("DOMContentLoaded", function () {
             dayBookingsContainer.style.display = 'block';
         }
         
+        // Helper function to create a table cell
+        function createTableCell(content) {
+            const cell = document.createElement('td');
+            cell.textContent = content || ''; // Default to empty string if content is missing
+            return cell;
+        }
+        
+        // Helper function to create the action cell with a view link
+        function createActionCell(page_url, unique_id) {
+            const actionCell = document.createElement('td');
+            const viewLink = document.createElement('a');
+            viewLink.href = `${page_url}?booking_id=${unique_id}`;
+            viewLink.textContent = 'View';
+            viewLink.classList.add('button'); // Add WordPress button styling if needed
+            actionCell.appendChild(viewLink);
+            return actionCell;
+        }
+        
+        // Helper function to format time
+        function formatTime(time) {
+            const date = new Date(time);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Helper function to format date
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+        
+
+        function escapeHtml(html) {
+            const text = document.createElement("textarea");
+            text.textContent = html;
+            return text.innerHTML;
+        }
+        
+        
         /*****************************************************************************************
          * FUNCTIONALITY FOR DEALING WITH A BOOKING BY ITS UNIQUE ID
          * ****************************************************************************************/
         document.querySelector('#retrieve-booking').addEventListener('submit', function (event) {
             event.preventDefault();
             // Get the unique_id from the input
-            const uniqueId = document.getElementById('unique_id').value;
-            let page_url = document.getElementById('venue-page-url').value;
+            const uniqueId = document.getElementById('unique_id').value.trim();
+            const page_url = document.getElementById('venue-page-url').value.trim();
 
-            // Ensure page_url does not have a trailing slash
-            if (page_url.endsWith('/')) {
-                page_url = page_url.slice(0, -1); // Remove the trailing slash
+            // Validate the uniqueId
+            if (!uniqueId) {
+                alert('Please enter a valid booking ID.');
+                return;
             }
 
             // Construct the URL with the booking ID
-            const redirectUrl = `${page_url}?booking_id=${uniqueId}`;
+            const redirectUrl = constructRedirectUrl(page_url, uniqueId);
 
             // Redirect the user to the constructed URL
             window.location.href = redirectUrl;
         });
+
+        // Helper function to construct the redirect URL
+        function constructRedirectUrl(pageUrl, bookingId) {
+            // Ensure pageUrl does not have a trailing slash
+            const trimmedUrl = pageUrl.endsWith('/') ? pageUrl.slice(0, -1) : pageUrl;
+            return `${trimmedUrl}?booking_id=${bookingId}`;
+        }
 
         // Handle the Delete Booking button click
         document.querySelector('#delete-booking').addEventListener('click', function () {
@@ -356,17 +356,21 @@ document.addEventListener("DOMContentLoaded", function () {
             // Add admin email data from settings
             const adminEmailAddress = bookingSettings.adminEmailAddress;
             const sendAdminEmail = bookingSettings.sendAdminEmail;
+            const deleteNonce = document.querySelector('#delete_booking_nonce').value; // Retrieve delete nonce
+
+            if (!uniqueId) {
+                alert('Please enter a valid booking ID.');
+                return;
+            }
 
             console.log('uniqueId: ',uniqueId);
-            if (confirm(`Are you sure you want to delete the booking with ID: ${uniqueId}?`)) {
-                
-                // Show "wait" cursor
-                document.body.style.cursor = 'wait';  // Change cursor to wait
+            if (confirm(`Are you sure you want to delete the booking with ID: ${sanitizeInput(uniqueId)}?`)) {
+                toggleCursorState(true);
+        
                 // Disable the submit button to prevent multiple clicks
                 const submitButton = document.querySelector('.find-button[type="button"]');
                 submitButton.disabled = true;
-                submitButton.style.cursor = 'wait';
-
+        
                 // Make a fetch call to delete the booking
                 fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/staff-delete-booking.php`, {
                     method: 'POST',
@@ -376,32 +380,41 @@ document.addEventListener("DOMContentLoaded", function () {
                     body: JSON.stringify({ 
                         unique_id: uniqueId, 
                         admin_email_address: adminEmailAddress,
-                        send_admin_email: sendAdminEmail
+                        send_admin_email: sendAdminEmail,
+                        delete_booking_nonce: deleteNonce // Include the nonce
                     }),
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Show "default" cursor
-                    document.body.style.cursor = 'default';
+                    toggleCursorState(false);
                     submitButton.disabled = false;
-                    submitButton.style.cursor = 'default';
-
+        
                     if (data.success) {
                         alert('Booking deleted successfully.');
-                        // Optionally, clear the input field or redirect the user
-                        document.getElementById('unique_id').value = '';
+                        document.getElementById('unique_id').value = ''; // Clear the input field
                     } else {
-                        alert('Failed to delete booking: ' + data.message);
+                        alert(`Failed to delete booking: ${sanitizeInput(data.message)}`);
                     }
                 })
                 .catch(error => {
-                    document.body.style.cursor = 'default';
+                    toggleCursorState(false);
                     submitButton.disabled = false;
-                    submitButton.style.cursor = 'default';
                     console.error('Error deleting booking:', error);
                     alert('An error occurred while deleting the booking. Please try again.');
                 });
             }
         });
+
+        // Function to toggle the cursor state
+        function toggleCursorState(isWaiting) {
+            document.body.style.cursor = isWaiting ? 'wait' : 'default';
+        }
+
+        // Function to sanitize user input
+        function sanitizeInput(input) {
+            const tempElement = document.createElement('div');
+            tempElement.textContent = input; // Use textContent to escape HTML
+            return tempElement.innerHTML;
+        }
 
 });
