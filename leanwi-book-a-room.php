@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name:  LEANWI Book A Room
-Plugin URI:   https://base1.librarieswin.org
+GitHub URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Description:  Room Booking functionality compatible with LEANWI Divi WordPress websites
-Version:      1.0
+Version:      1.1
 Author:       Brendan Tuckey
 Author URI:   https://leanwi.org
 License:      GPL2
@@ -17,7 +17,7 @@ require_once plugin_dir_path(__FILE__) . 'php/plugin/menu-functions.php';  // Me
 require_once plugin_dir_path(__FILE__) . 'php/plugin/schema.php'; //File containing table create and drop statements
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-details.php'; // Contains the page and shortcode for the venue_details shortcode
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue-details.php'; // Contains the page and shortcode for the staff_venue_details shortcode
-//require_once plugin_dir_path(__FILE__) . 'php/plugin/generate-report.php';
+require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updates.php';
 
 // Hook to run when the plugin is activated
 register_activation_hook(__FILE__, 'leanwi_create_tables');
