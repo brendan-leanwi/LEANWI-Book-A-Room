@@ -20,6 +20,8 @@ function display_venue_details($atts) {
     $show_categories = get_option('leanwi_show_categories', 'no'); // Default to 'no' if option not set
     $show_audiences = get_option('leanwi_show_audiences', 'no'); // Default to 'no' if option not set
     $minutes_interval = intval(get_option('leanwi_minutes_interval', 30));
+    $use_recaptcha = get_option('leanwi_enable_recaptcha', 'no'); // Check if reCAPTCHA is enabled
+    $recaptcha_site_key = get_option('leanwi_recaptcha_site_key', ''); // Retrieve the reCAPTCHA site key
 
     // Output the HTML and add the venue ID as a hidden field
     ob_start();
@@ -72,6 +74,14 @@ function display_venue_details($atts) {
     </div>
     <div id="calendar"></div>
     
+    <?php
+    // Only include reCAPTCHA script if enabled
+    if ('yes' === $use_recaptcha && !empty($recaptcha_site_key)) {
+        ?>
+        <script src="https://www.google.com/recaptcha/api.js?render=<?php echo esc_js($recaptcha_site_key); ?>"></script>
+        <?php
+    }
+    ?>
     <div id="contact-form-container" style="display: none;">
         <form id="booking-form" method="POST" style="max-width: 600px; margin: 0 auto;">
             <?php wp_nonce_field('submit_booking_action', 'submit_booking_nonce'); ?>
@@ -116,7 +126,6 @@ function display_venue_details($atts) {
             <?php endif; ?>
 
             <p id="total-cost-text"><strong>Total Cost:</strong> $<span id="total-cost">0.00</span></p>
-
             <button type="submit" class="book-button">Save Booking</button>
         </form>
 

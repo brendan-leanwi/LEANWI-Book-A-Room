@@ -44,7 +44,11 @@ function leanwi_enqueue_scripts() {
             'adminEmailAddress' => get_option('leanwi_admin_email_address', ''), // Default to empty string if not set
             'highlightedButtonBgColor' => get_option('leanwi_highlighted_button_bg_color', '#ffe0b3'), // Highlighted button Background color
             'highlightedButtonBorderColor' => get_option('leanwi_highlighted_button_border_color', '#ff9800'), // Highlighted button Border color
-            'highlightedButtonTextColor' => get_option('leanwi_highlighted_button_text_color', '#000000') // Highlighted button Text color
+            'highlightedButtonTextColor' => get_option('leanwi_highlighted_button_text_color', '#000000'), // Highlighted button Text color
+            'showCategories' => get_option('leanwi_show_categories', 'no'),
+            'showAudiences' => get_option('leanwi_show_audiences', 'no'),
+            'enableRecaptcha' => get_option('leanwi_enable_recaptcha', 'no'),
+            'recaptchaSiteKey' => get_option('leanwi_recaptcha_site_key', '')
         ));
 
         wp_enqueue_script('venue-booking-js');

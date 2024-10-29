@@ -54,38 +54,59 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.style.cursor = 'default'; // Reset cursor after fetch completes
         });
 
-    //Fetch categories and audiences
-    document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-    fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories-audiences.php')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Populate Category dropdown
-            const categorySelect = document.getElementById('category');
-            data.categories.forEach(category => {
-                let option = document.createElement('option');
-                option.value = category.category_id;
-                option.textContent = category.category_name;
-                categorySelect.appendChild(option);
-            });
+        //Fetch categories if we're showing them to users
+        if(bookingSettings.showCategories === 'yes')
+        {
+            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+            fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Populate Category dropdown
+                    const categorySelect = document.getElementById('category');
+                    data.forEach(category => {
+                        let option = document.createElement('option');
+                        option.value = category.category_id;
+                        option.textContent = category.category_name;
+                        categorySelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching categories:', error))
+                .finally(() => {
+                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                });
+        }
 
-            // Populate Audience dropdown
-            const audienceSelect = document.getElementById('audience');
-            data.audiences.forEach(audience => {
-                let option = document.createElement('option');
-                option.value = audience.audience_id;
-                option.textContent = audience.audience_name;
-                audienceSelect.appendChild(option);
-            });
-        })
-        .catch(error => console.error('Error fetching categories and audiences:', error))
-        .finally(() => {
-            document.body.style.cursor = 'default'; // Reset cursor after fetch completes
-        });
+        //Fetch audiences if we're showing them to users
+        if(bookingSettings.showAudiences === 'yes')
+            {
+                document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+                fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-audiences.php')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Populate Audience dropdown
+                        const audienceSelect = document.getElementById('audience');
+                        data.forEach(audience => {
+                            let option = document.createElement('option');
+                            option.value = audience.audience_id;
+                            option.textContent = audience.audience_name;
+                            audienceSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching audiences:', error))
+                    .finally(() => {
+                        document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                    });
+            }
 
         let selectedDayElement = null; // Store the selected day element for later
         function updateCalendar(venueId, callback, bookingData = null) {
@@ -454,80 +475,97 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.querySelector('#booking-form').addEventListener('submit', function (event) {
             event.preventDefault();
-        
             const formData = new FormData(this);
-            const contactFormContainer = document.getElementById('contact-form-container');
-            const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
+        
+            // Execute reCAPTCHA if enabled
+            if (bookingSettings.enableRecaptcha) {
+                grecaptcha.execute(bookingSettings.recaptchaSiteKey, { action: 'submit' })
+                .then(function(token) {
+                    // Append the reCAPTCHA token to the form
+                    formData.append('g-recaptcha-response', token);
+                    // Call the fetch function after appending the token
+                    submitForm(formData);
+                });
+            } else {
+                // If reCAPTCHA is not enabled, submit the form directly
+                submitForm(formData);
+            }
+        
+            // This code is moved into the function call
+            function submitForm(formData) {
+                const contactFormContainer = document.getElementById('contact-form-container');
+                const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
+                
+                // Add the nonce
+                formData.append('submit_booking_nonce', document.querySelector('#submit_booking_nonce').value);
+        
+                // Append required data to formData
+                formData.append('venue_id', document.getElementById('venue_id').value);
+                formData.append('email_text', document.getElementById('venue-email-text').value);
+                formData.append('total_cost', document.getElementById('total-cost').textContent);
+                formData.append('venue_name', document.getElementById('venue-name').textContent);
+                formData.append('page_url', window.location.href);
             
-            // Add the nonce
-            formData.append('submit_booking_nonce', document.querySelector('#submit_booking_nonce').value);
-
-            // Append required data to formData
-            formData.append('venue_id', document.getElementById('venue_id').value);
-            formData.append('email_text', document.getElementById('venue-email-text').value);
-            formData.append('total_cost', document.getElementById('total-cost').textContent);
-            formData.append('venue_name', document.getElementById('venue-name').textContent);
-            formData.append('page_url', window.location.href);
-        
-            if (existingRecord) {
-                const uniqueId = document.getElementById('unique_id').value;
-                formData.append('unique_id', uniqueId);
-                console.log('Unique ID:', uniqueId);
-            }
-        
-            // Ensure at least one time slot is selected
-            if (selectedTimes.length === 0) {
-                alert('Please select at least one time slot.');
-                return;
-            }
-        
-            // Check against maximum allowed booking slots
-            const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
-            if (selectedTimes.length > maxSlots) {
-                alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
-                return;
-            }
-        
-            // Format and append start and end times
-            const currentDateFormatted = returnCurrentDate();
-            const startTime = `${currentDetailsDate} ${selectedTimes[0]}:00`;
-            const endTime = `${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}:00`;
-            formData.append('start_time', startTime);
-            formData.append('end_time', endTime);
-            formData.append('current_time', currentDateFormatted);
-        
-            // Add plugin settings
-            formData.append('minutes_interval', bookingSettings.minutesInterval);
-            formData.append('admin_email_address', bookingSettings.adminEmailAddress);
-            formData.append('send_admin_email', bookingSettings.sendAdminEmail);
-        
-            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-            fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Network error: ${response.status}`);
+                if (existingRecord) {
+                    const uniqueId = document.getElementById('unique_id').value;
+                    formData.append('unique_id', uniqueId);
+                    console.log('Unique ID:', uniqueId);
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    contactFormContainer.style.display = 'none';
-                } else {
-                    console.error('Submit Error:', data.message);
-                    alert(data.message);
+            
+                // Ensure at least one time slot is selected
+                if (selectedTimes.length === 0) {
+                    alert('Please select at least one time slot.');
+                    return;
                 }
-            })
-            .catch(error => {
-                console.error('Error submitting booking:', error.message);
-                alert('An error occurred while submitting your booking: ' + error.message);
-            })
-            .finally(() => {
-                document.body.style.cursor = 'default'; // Reset cursor after fetch completes
-            });
+            
+                // Check against maximum allowed booking slots
+                const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
+                if (selectedTimes.length > maxSlots) {
+                    alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
+                    return;
+                }
+            
+                // Format and append start and end times
+                const currentDateFormatted = returnCurrentDate();
+                const startTime = `${currentDetailsDate} ${selectedTimes[0]}:00`;
+                const endTime = `${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}:00`;
+                formData.append('start_time', startTime);
+                formData.append('end_time', endTime);
+                formData.append('current_time', currentDateFormatted);
+            
+                // Add plugin settings
+                formData.append('minutes_interval', bookingSettings.minutesInterval);
+                formData.append('admin_email_address', bookingSettings.adminEmailAddress);
+                formData.append('send_admin_email', bookingSettings.sendAdminEmail);
+            
+                document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+                fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        contactFormContainer.style.display = 'none';
+                    } else {
+                        console.error('Submit Error:', data.message);
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting booking:', error.message);
+                    alert('An error occurred while submitting your booking: ' + error.message);
+                })
+                .finally(() => {
+                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                });
+            }
         });        
         
         /*****************************************************************************************
@@ -594,8 +632,12 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('phone').value = booking.phone;
             document.getElementById('participants').value = booking.number_of_participants;
             document.getElementById('notes').value = booking.booking_notes;
-            document.getElementById('category').value = booking.category_id;
-            document.getElementById('audience').value = booking.audience_id;
+            if (bookingSettings.showCategories === 'yes') {
+                document.getElementById('category').value = booking.category_id;
+            }
+            if (bookingSettings.showAudiences === 'yes') {
+                document.getElementById('audience').value = booking.audience_id;
+            }
 
             // Display the booking form container
             contactFormContainer.style.display = 'block';

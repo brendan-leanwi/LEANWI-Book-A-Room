@@ -13,6 +13,28 @@ if (!isset($_POST['submit_booking_nonce']) || !wp_verify_nonce($_POST['submit_bo
     $errorMessage = 'Nonce verification failed.';
 }
 
+if(get_option('leanwi_enable_recaptcha') === 'yes')
+{
+    if (isset($_POST['g-recaptcha-response'])) {
+        $recaptchaSecret = get_option('leanwi_recaptcha_secret_key', '');
+        $response = $_POST['g-recaptcha-response'];
+        
+        // Make a request to the Google reCAPTCHA API to verify the token
+        $remoteIp = $_SERVER['REMOTE_ADDR'];
+        $recaptchaResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=$recaptchaSecret&response=$response&remoteip=$remoteIp");
+        $recaptchaData = json_decode($recaptchaResponse);
+
+        // Check if the reCAPTCHA is valid
+        if (!$recaptchaData->success || $recaptchaData->score < 0.5) { // reCaptcha score
+            $success = false;
+            $errorMessage = 'reCAPTCHA verification unsuccessful. Please try again.';
+        }
+    } else {
+        $success = false;
+        $errorMessage = 'reCAPTCHA response is missing.';
+    }
+}
+
 // Sanitize incoming POST data
 $day = sanitize_text_field($_POST['day']);
 $name = sanitize_text_field($_POST['name']);
@@ -141,7 +163,7 @@ if ($success) {
         $message .= "<p>Thank you for your booking. Your booking ID is: <strong>" . esc_html($unique_id) . "</strong>.</p>";
     }
     $message .= "<p>You can use this ID to find and modify your booking by going to this page: " .
-           "<a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "</a> " .
+           "<a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "</a> " .
            "and entering the above ID.</p>";
 
     // Conditionally display $email_text if it has content

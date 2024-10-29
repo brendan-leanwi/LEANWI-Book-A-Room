@@ -1305,6 +1305,11 @@ function leanwi_register_settings() {
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_bg_color');
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_text_color');
 
+    // Register settings for reCAPTCHA enable, site key, and secret key
+    register_setting('leanwi_plugin_settings_group', 'leanwi_enable_recaptcha');
+    register_setting('leanwi_plugin_settings_group', 'leanwi_recaptcha_site_key');
+    register_setting('leanwi_plugin_settings_group', 'leanwi_recaptcha_secret_key');
+
     // Add a section to the settings page
     add_settings_section(
         'leanwi_main_section',          // Section ID
@@ -1393,7 +1398,37 @@ function leanwi_register_settings() {
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
+
+    // Add field to enable/disable reCAPTCHA
+    add_settings_field(
+        'leanwi_enable_recaptcha',
+        'Enable reCAPTCHA',
+        'leanwi_enable_recaptcha_field',
+        'leanwi-book-a-room-settings',
+        'leanwi_main_section'
+    );
+
+    // Add field for reCAPTCHA site key
+    add_settings_field(
+        'leanwi_recaptcha_site_key',
+        'reCAPTCHA Site Key',
+        'leanwi_recaptcha_site_key_field',
+        'leanwi-book-a-room-settings',
+        'leanwi_main_section'
+    );
+
+    // Add field for reCAPTCHA secret key
+    add_settings_field(
+        'leanwi_recaptcha_secret_key',
+        'reCAPTCHA Secret Key',
+        'leanwi_recaptcha_secret_key_field',
+        'leanwi-book-a-room-settings',
+        'leanwi_main_section'
+    );
 }
+
+// Hook the settings registration function
+add_action('admin_init', 'leanwi_register_settings');
 
 // Function to display the Minutes Interval dropdown
 function leanwi_minutes_interval_field() {
@@ -1449,7 +1484,7 @@ function leanwi_send_admin_booking_email_field() {
 // Function to display the admin email address input
 function leanwi_admin_email_address_field() {
     $value = get_option('leanwi_admin_email_address', ''); // Get saved value or default to an empty string
-    echo '<input type="email" id="leanwi_admin_email_address" name="leanwi_admin_email_address" value="' . esc_attr($value) . '" />';
+    echo '<input type="email" id="leanwi_admin_email_address" name="leanwi_admin_email_address" value="' . esc_attr($value) . '"  style="width: 75%;"/>';
 }
 
 // Function to display the highlighted border color input
@@ -1468,7 +1503,30 @@ function leanwi_highlighted_button_bg_color_field() {
 function leanwi_highlighted_button_text_color_field() {
     $value = get_option('leanwi_highlighted_button_text_color', '#000000'); // Get saved value or default to this hex vaue
     echo '<input type="color" id="leanwi_highlighted_button_text_color" name="leanwi_highlighted_button_text_color" value="' . esc_attr($value) . '" />';
+    echo '<hr style="margin-top: 40px; border: 1px solid #ccc;">'; // Adds a horizontal line before the reCAPTCHA fields
 }
 
-// Hook the settings registration function
-add_action('admin_init', 'leanwi_register_settings');
+// Function to display 'Enable reCAPTCHA' dropdown
+function leanwi_enable_recaptcha_field() {
+    $value = get_option('leanwi_enable_recaptcha', 'no'); // Default to 'no' if not set
+    ?>
+    <select id="leanwi_enable_recaptcha" name="leanwi_enable_recaptcha">
+        <option value="yes" <?php selected($value, 'yes'); ?>>Yes</option>
+        <option value="no" <?php selected($value, 'no'); ?>>No</option>
+    </select>
+    <?php
+}
+
+// Function to display the reCAPTCHA site key input
+function leanwi_recaptcha_site_key_field() {
+    $value = get_option('leanwi_recaptcha_site_key', ''); // Get saved value or default to an empty string
+    echo '<input type="password" id="leanwi_recaptcha_site_key" name="leanwi_recaptcha_site_key" value="' . esc_attr($value) . '" style="width: 75%;" />';
+}
+
+// Function to display the reCAPTCHA secret key input
+function leanwi_recaptcha_secret_key_field() {
+    $value = get_option('leanwi_recaptcha_secret_key', ''); // Get saved value or default to an empty string
+    echo '<input type="password" id="leanwi_recaptcha_secret_key" name="leanwi_recaptcha_secret_key" value="' . esc_attr($value) . '" style="width: 75%;" />';
+    echo '<hr style="margin-top: 40px; margin-bottom: 20px; border: 1px solid #ccc;">'; // Adds a horizontal line before the reCAPTCHA fields
+}
+
