@@ -123,7 +123,7 @@ function leanwi_add_admin_menu() {
         'Reporting',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-reports',// Menu slug
-        'leanwi_reports_page'        // Callback function to display settings
+        'leanwi_reports_page'        // Callback function to display the reports page
     );
 
     // Sub-menu: "Settings"
@@ -1076,10 +1076,19 @@ function leanwi_reports_page() {
     // Ensure venues is set and is an array
     $venues = isset($venues_response['venues']) ? $venues_response['venues'] : [];
 
+    // Define the directory path for reports
+    $upload_dir = wp_upload_dir();
+    $reports_dir = $upload_dir['basedir'] . '/leanwi_reports/';
+    
+    // Get report files
+    $report_files = glob($reports_dir . '*.csv');
+    $report_count = count($report_files);
+
     ?>
     <div class="wrap">
         <h1>Reports</h1>
         <form id="leanwi-report-form" method="post" action="<?php echo plugins_url('LEANWI-Book-A-Room/php/plugin/generate-report.php'); ?>">
+            <?php wp_nonce_field('leanwi_generate_report', 'leanwi_generate_report_nonce'); ?>
             <div class="form-row">
                 <div class="form-group">
                     <label for="start_date">Start Date:</label>
@@ -1115,6 +1124,65 @@ function leanwi_reports_page() {
                 <input type="submit" value="Generate Report" class="button button-primary">
             </div>
         </form>
+
+        <!-- Handle form submission so we can update the number of reports we have on the server after the report has been created -->
+        <script type="text/javascript">
+            document.getElementById("leanwi-report-form").onsubmit = function(event) {
+                const form = this;
+                const originalAction = form.action; // Save the original action
+                
+                // Prevent the default form submission
+                event.preventDefault(); 
+                
+                // Create a FormData object from the form
+                const formData = new FormData(form);
+                formData.append('_ajax_nonce', '<?php echo wp_create_nonce('leanwi_generate_report_nonce'); ?>');
+
+                // Perform AJAX request to generate the report
+                fetch(originalAction, {
+                    method: "POST",
+                    body: formData,
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to generate report.");
+                    return response.text(); // Process as plain text to handle redirection
+                })
+                .then(data => {
+                    // Now update the report count via AJAX
+                    return fetch("<?php echo admin_url('admin-ajax.php'); ?>?action=leanwi_get_report_count", {
+                        method: "GET",
+                        credentials: "same-origin",
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.querySelector(".purge-reports-section p").innerText = 
+                            `You currently have ${data.data.report_count} reports sitting on the server.`;
+                    }
+                })
+                .catch(error => alert(error.message));
+                
+                // Submit the form to trigger the download
+                form.submit();
+            };
+        </script>
+
+        <hr>
+        <div class="purge-reports-section">
+            <p>You currently have <?php echo esc_html($report_count); ?> reports sitting on the server.</p>
+            <form method="post" action="" onsubmit="return confirmPurge();">
+                <?php wp_nonce_field('leanwi_purge_reports', 'leanwi_purge_reports_nonce'); ?>
+                <input type="hidden" name="purge_reports" value="1">
+                <input type="submit" value="Purge Old Reports" class="button button-secondary">
+            </form>
+        </div>
+
+        <script type="text/javascript">
+            function confirmPurge() {
+                return confirm("Are you sure you want to purge all old reports? This action cannot be undone.");
+            }
+        </script>
     </div>
 
     <style>
@@ -1143,9 +1211,61 @@ function leanwi_reports_page() {
             padding: 5px; /* Padding inside the dropdown */
             width: 150px; /* Set a fixed width for the dropdown */
         }
+        .purge-reports-section {
+            margin-top: 20px;
+        }
     </style>
     <?php
 }
+
+// Handle report purge action
+function leanwi_purge_reports() {
+    if (isset($_POST['purge_reports']) && $_POST['purge_reports'] == '1') {
+        // Verify the nonce
+        if (!isset($_POST['leanwi_purge_reports_nonce']) || !wp_verify_nonce($_POST['leanwi_purge_reports_nonce'], 'leanwi_purge_reports')) {
+            wp_die('Nonce verification failed. Please reload the page and try again.');
+        }
+        // Define the directory path for reports
+        $upload_dir = wp_upload_dir();
+        $reports_dir = $upload_dir['basedir'] . '/leanwi_reports/';
+        
+        // Get all report files in the directory
+        $report_files = glob($reports_dir . '*.csv');
+        
+        // Delete each file
+        foreach ($report_files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+        
+        // Redirect back to the reports page to refresh the count
+        wp_redirect(admin_url('admin.php?page=leanwi-book-a-room-reports'));
+        exit;
+    }   
+}
+add_action('admin_init', 'leanwi_purge_reports');
+
+// AJAX handler for fetching updated report count
+function leanwi_get_report_count() {
+    // Check if the user has the required permissions
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized', 403);
+    }
+
+    // Get the directory path for reports
+    $upload_dir = wp_upload_dir();
+    $reports_dir = $upload_dir['basedir'] . '/leanwi_reports/';
+    
+    // Count the reports
+    $report_files = glob($reports_dir . '*.csv');
+    $report_count = count($report_files);
+
+    // Return the count
+    wp_send_json_success(['report_count' => $report_count]);
+}
+add_action('wp_ajax_leanwi_get_report_count', 'leanwi_get_report_count');
+
 
 /**************************************************************************************************
  * Settings

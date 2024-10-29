@@ -2,6 +2,11 @@
 // Include WordPress functions
 require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php');
 
+// Verify the nonce before processing the form
+if (!isset($_POST['leanwi_generate_report_nonce']) || !wp_verify_nonce($_POST['leanwi_generate_report_nonce'], 'leanwi_generate_report')) {
+    wp_die('Nonce verification failed. Please reload the page and try again.');
+}
+
 // Check if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get the start and end dates from the form
@@ -44,6 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Ensure the reports folder exists
     if (!file_exists($csv_file_path)) {
         wp_mkdir_p($csv_file_path);
+    }
+
+    // Check the number of existing reports
+    $report_files = glob($csv_file_path . '*.csv');
+    if (count($report_files) > 100) {
+        wp_die('You have reached the maximum number of saved reports (100). You will need to delete old reports before creating any new ones.');
     }
 
     // Generate a file name with a timestamp
