@@ -13,46 +13,48 @@ function leanwi_check_for_plugin_updates($transient) {
     // Get release information from GitHub
     $response = wp_remote_get($api_url);
     if (is_wp_error($response)) {
-        error_log("GitHub API error: " . $response->get_error_message());
+        //error_log("GitHub API error: " . $response->get_error_message());
         return $transient;
     }
 
     $release = json_decode(wp_remote_retrieve_body($response));
     if (!isset($release->tag_name)) {
-        error_log("GitHub tag_name is not set.");
+        //error_log("GitHub tag_name is not set.");
         return $transient;
     }
 
     // Get the main plugin file
-    $plugin_file = plugin_basename(dirname(__FILE__) . '/../leanwi-book-a-room.php');
-    error_log("Plugin file: " . $plugin_file);
-    error_log("Checked plugins: " . print_r($transient->checked, true));
+    $plugin_file = 'LEANWI-Book-A-Room/leanwi-book-a-room.php';//plugin_basename(dirname(__FILE__) . '/../leanwi-book-a-room.php');
+    //error_log("Plugin file: " . $plugin_file);
+    //error_log("Checked plugins: " . print_r($transient->checked, true));
 
     if (!isset($transient->checked[$plugin_file])) {
-        error_log("Plugin not found in the checked plugins list.");
+        //error_log("Plugin not found in the checked plugins list.");
         return $transient; // Ensure the plugin is in the checked list
     }
 
     $latest_version = ltrim($release->tag_name, 'v'); // Remove 'v' if present in the GitHub tag
     $current_version = $transient->checked[$plugin_file] ?? '';
 
-    error_log("Current version: " . $current_version);
-    error_log("Latest version from GitHub: " . $latest_version);
+    //error_log("Current version: " . $current_version);
+    //error_log("Latest version from GitHub: " . $latest_version);
 
     if (version_compare((string)$current_version, (string)$latest_version, '<')) {
         // Define the update data
-        error_log("Update available: Current version is older than the latest version.");
+        //error_log("Update available: Current version is older than the latest version.");
         $transient->response[$plugin_file] = (object) array(
             'slug'        => basename(__DIR__),
             'new_version' => $latest_version,
             'package'     => $release->zipball_url, // GitHub zip URL for the release
             'url'         => "https://github.com/{$repo}",
         );
-    } else {
+    }
+    /*
+    else {
         error_log("No update needed: Current version is up-to-date.");
     }
-    
-    error_log("Transient response after check: " . print_r($transient, true));
+    */
+    //error_log("Transient response after check: " . print_r($transient, true));
     return $transient;
 }
 add_filter('site_transient_update_plugins', 'leanwi_check_for_plugin_updates');
@@ -81,4 +83,20 @@ function leanwi_plugin_update_info($false, $action, $response) {
     return $response;
 }
 add_filter('plugins_api', 'leanwi_plugin_update_info', 20, 3);
+
+function leanwi_override_update_directory($source, $remote_source, $upgrader) {
+    global $wp_filesystem;
+
+    // Check if this is the right plugin by verifying its GitHub repo name
+    if (isset($upgrader->skin->plugin) && $upgrader->skin->plugin == 'LEANWI-Book-A-Room/leanwi-book-a-room.php') {
+        $corrected_path = trailingslashit($remote_source) . 'LEANWI-Book-A-Room';
+
+        // Rename the folder to the expected plugin folder name
+        $wp_filesystem->move($source, $corrected_path);
+        return $corrected_path;
+    }
+
+    return $source;
+}
+add_filter('upgrader_source_selection', 'leanwi_override_update_directory', 10, 3);
 
