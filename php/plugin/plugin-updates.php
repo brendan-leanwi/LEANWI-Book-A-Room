@@ -87,8 +87,10 @@ add_filter('plugins_api', 'leanwi_plugin_update_info', 20, 3);
 function leanwi_override_update_directory($source, $remote_source, $upgrader) {
     global $wp_filesystem;
 
-    // Check if this is the right plugin by verifying its GitHub repo name
-    if (isset($upgrader->skin->plugin) && $upgrader->skin->plugin == 'LEANWI-Book-A-Room/leanwi-book-a-room.php') {
+    error_log("leanwi_override_update_directory source: " . $source . " remote_source: " . $remote_source);
+
+    // Check if this is the right plugin by verifying a part of its expected path
+    if (isset($upgrader->skin->plugin) && strpos($upgrader->skin->plugin, 'leanwi-book-a-room.php') !== false) {
         $corrected_path = trailingslashit($remote_source) . 'LEANWI-Book-A-Room';
 
         // Rename the folder to the expected plugin folder name
@@ -99,4 +101,3 @@ function leanwi_override_update_directory($source, $remote_source, $upgrader) {
     return $source;
 }
 add_filter('upgrader_source_selection', 'leanwi_override_update_directory', 10, 3);
-
