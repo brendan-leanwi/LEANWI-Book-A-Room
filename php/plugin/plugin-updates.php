@@ -84,27 +84,20 @@ function leanwi_plugin_update_info($false, $action, $response) {
 }
 add_filter('plugins_api', 'leanwi_plugin_update_info', 20, 3);
 
-function leanwi_override_update_directory($source, $remote_source, $upgrader) {
+function leanwi_override_post_install($true, $hook_extra, $result) {
     global $wp_filesystem;
 
-    error_log("leanwi_override_update_directory source: " . $source . " remote_source: " . $remote_source);
+    // Verify it's our plugin by checking the main plugin file
+    if (isset($hook_extra['plugin']) && strpos($hook_extra['plugin'], 'leanwi-book-a-room.php') !== false) {
+        $source = $result['destination'];
+        $corrected_path = trailingslashit(WP_PLUGIN_DIR) . 'LEANWI-Book-A-Room';
 
-    // Check if this is the right plugin by verifying a part of its expected path
-    if (isset($upgrader->skin->plugin) && strpos($upgrader->skin->plugin, 'leanwi-book-a-room.php') !== false) {
-        $corrected_path = trailingslashit($remote_source) . 'LEANWI-Book-A-Room';
-
-        // Copy files to the correct path
-        if (!$wp_filesystem->is_dir($corrected_path)) {
-            $wp_filesystem->mkdir($corrected_path);
+        // Rename the plugin directory to the expected folder name
+        if ($wp_filesystem->move($source, $corrected_path, true)) {
+            $result['destination'] = $corrected_path; // Update the result with the new path
         }
-        $wp_filesystem->copy_dir($source, $corrected_path);
-
-        // Delete the original directory
-        $wp_filesystem->delete($source, true);
-
-        return $corrected_path;
     }
 
-    return $source;
+    return $result;
 }
-add_filter('upgrader_source_selection', 'leanwi_override_update_directory', 10, 3);
+add_filter('upgrader_post_install', 'leanwi_override_post_install', 10, 3);

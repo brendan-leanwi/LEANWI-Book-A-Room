@@ -3,7 +3,7 @@
 Plugin Name:  LEANWI Book A Room
 GitHub URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Description:  Room Booking functionality compatible with LEANWI Divi WordPress websites
-Version:      1.2.6
+Version:      1.2.7
 Author:       Brendan Tuckey
 Author URI:   https://leanwi.org
 License:      GPL2
