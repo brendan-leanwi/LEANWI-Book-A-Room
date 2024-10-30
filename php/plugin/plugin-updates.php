@@ -93,8 +93,15 @@ function leanwi_override_update_directory($source, $remote_source, $upgrader) {
     if (isset($upgrader->skin->plugin) && strpos($upgrader->skin->plugin, 'leanwi-book-a-room.php') !== false) {
         $corrected_path = trailingslashit($remote_source) . 'LEANWI-Book-A-Room';
 
-        // Rename the folder to the expected plugin folder name
-        $wp_filesystem->move($source, $corrected_path);
+        // Copy files to the correct path
+        if (!$wp_filesystem->is_dir($corrected_path)) {
+            $wp_filesystem->mkdir($corrected_path);
+        }
+        $wp_filesystem->copy_dir($source, $corrected_path);
+
+        // Delete the original directory
+        $wp_filesystem->delete($source, true);
+
         return $corrected_path;
     }
 
