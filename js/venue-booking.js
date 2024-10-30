@@ -184,6 +184,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                 dayElement.classList.add('highlighted'); // Highlight the clicked day
                                 selectedDayElement = dayElement; // Store the selected day
 
+                                console.log('dateFormatted',dateFormatted);
+
                                 fetchAvailableTimes(venueId, dateFormatted)
                                     .then(availableTimes => {
                                         // Directly call showContactForm with the available times
@@ -391,7 +393,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             timeSelectDiv.innerHTML = ''; // Clear previous options
-            const formattedDate = new Date(day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            // Assuming 'day' is in 'YYYY-MM-DD' format
+            const [year, month, date] = day.split('-').map(Number);
+            const localDate = new Date(year, month - 1, date); // month is 0-indexed
+            const formattedDate = localDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+            console.log('day', day, 'formattedDate', formattedDate);
             availableTimesHeading.textContent = `Available Times for ${formattedDate}`;
 
             // Populate time buttons
@@ -399,7 +406,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'time-button';
-                button.textContent = time.start;
+                
+                // Set the button text to the formatted 12-hour time
+                button.textContent = formatTimeTo12Hour(time.start);
+                
+                // Set the original time value as a data attribute
+                button.dataset.timeValue = time.start; // Use the raw time value directly
 
                 if (time.booked && !time.is_booked_for_unique_id) {
                     button.disabled = true;
@@ -409,6 +421,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (showingExistingRecord && time.is_booked_for_unique_id) {
                     button.classList.add('selected');
                 }
+
+                // Hover event to display time range
+                button.addEventListener('mouseenter', () => {
+                    const endTime = calculateEndTime(time.start, bookingSettings.minutesInterval);
+                    button.title = `${formatTimeTo12Hour(time.start)} - ${formatTimeTo12Hour(endTime)}`;
+                });
 
                 button.addEventListener('click', () => handleTimeSelection(button, index));
                 timeSelectDiv.appendChild(button);
@@ -429,7 +447,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     deselectFollowingButtons(index);
                 } else {
                     const selectedButtons = Array.from(timeSelectDiv.querySelectorAll('.selected'));
-                    const lastSelectedIndex = selectedButtons.length ? getTimeIndex(selectedButtons[selectedButtons.length - 1].textContent, availableTimes) : -1;
+                    const lastSelectedIndex = selectedButtons.length 
+                            ? getTimeIndex(selectedButtons[selectedButtons.length - 1], availableTimes)
+                            : -1;
 
                     if (lastSelectedIndex >= 0 && !isContinuousSelection(index, lastSelectedIndex) && !hasIntermediateBookedSlots(Math.min(index, lastSelectedIndex), Math.max(index, lastSelectedIndex))) {
                         alert('A booking must use continuous times without a booked or empty slot in between.');
@@ -468,10 +488,47 @@ document.addEventListener("DOMContentLoaded", function () {
             
         }
 
+        //Function to display start and end time on cursor hover
+        function calculateEndTime(startTime, interval) {
+            // Split start time into hours and minutes
+            const intervalMinutes = Number(interval);
+            const [hour, minute] = startTime.split(':').map(Number);
+
+            // Calculate total minutes from the start time and add the interval
+            let totalMinutes = (hour * 60) + minute + intervalMinutes;
+        
+            // Calculate end hour and end minute by converting total minutes back
+            const endHour = Math.floor(totalMinutes / 60) % 24; // Wrap hours to 24-hour format
+            const endMinute = totalMinutes % 60;
+        
+            // Ensure hours and minutes are formatted with leading zeros
+            const formattedEndHour = String(endHour).padStart(2, '0');
+            const formattedEndMinute = String(endMinute).padStart(2, '0');
+
+            return `${formattedEndHour}:${formattedEndMinute}`;
+        }
+        
+        // Function to format time to 12-hour format
+        function formatTimeTo12Hour(time) {
+            const [hour, minute] = time.split(':').map(Number);
+            const period = hour >= 12 ? 'pm' : 'am';
+            const formattedHour = hour % 12 || 12; // Convert to 12-hour format; use 12 for midnight and noon
+            const formattedMinute = String(minute).padStart(2, '0'); // Optional: format minute with leading zero
+
+            return `${formattedHour}:${formattedMinute} ${period}`;
+        }
+        
         // Function to get time index based on the button's time (start time)
-        function getTimeIndex(timeString, availableTimes) {
-            return availableTimes.findIndex(time => time.start === timeString);
-        }        
+        function getTimeIndex(button, availableTimes) {
+            const timeValue = button.dataset.timeValue; // Get the time from the button's data attribute
+            return availableTimes.findIndex(time => time.start === timeValue);
+        }
+
+        function formatTo24Hour(dateString) {
+            // Append a timezone (e.g., "Z" for UTC or "+00:00") to avoid invalid time value error
+            const date = new Date(`${dateString} UTC`); // Create a date object using a fixed date with UTC time zone
+            return date.toISOString().slice(0, 19).replace('T', ' '); // Format as 'YYYY-MM-DD HH:MM:SS'
+        }
 
         document.querySelector('#booking-form').addEventListener('submit', function (event) {
             event.preventDefault();
@@ -525,10 +582,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
             
-                // Format and append start and end times
+                // Assuming selectedTimes contains time strings in 'h:mm a' format (e.g., '9:00 am')
                 const currentDateFormatted = returnCurrentDate();
-                const startTime = `${currentDetailsDate} ${selectedTimes[0]}:00`;
-                const endTime = `${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}:00`;
+                console.log('selectedTimes[0]', selectedTimes[0], 'selectedTimes[selectedTimes.length - 1]', selectedTimes[selectedTimes.length - 1]);
+                const startTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[0]}`); // Convert start time
+                const endTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}`); // Convert end time
+
                 formData.append('start_time', startTime);
                 formData.append('end_time', endTime);
                 formData.append('current_time', currentDateFormatted);
@@ -566,7 +625,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.body.style.cursor = 'default'; // Reset cursor after fetch completes
                 });
             }
-        });        
+        });   
         
         /*****************************************************************************************
          * FUNCTIONALITY FOR DISPLAYING AN EXISTING BOOKING

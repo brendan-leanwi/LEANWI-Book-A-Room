@@ -4,7 +4,6 @@
     --highlighted-button-text: #000000; /* Default border color */
 }
 
-/* Add this to your main CSS file */
 .calendar-day.highlighted {
     background-color: var(--highlighted-button-bg) !important;
     border: 2px solid var(--highlighted-button-border) !important;
@@ -13,9 +12,11 @@
 }
 
 #calendar {
-    border: 2px solid #ccc; /* Adjust the border color and width as needed */
-    padding: 10px; /* Optional: add some padding */
-    border-radius: 5px; /* Optional: add rounded corners */
+    border: 2px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 100%; /* Ensure calendar fits within screen width */
+    box-sizing: border-box; /* Include padding and border in element’s total width */
 }
 
 .calendar-grid {
@@ -55,13 +56,6 @@
     text-align: center;
 }
 
-.available-time {
-    padding: 5px;
-    margin: 2px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-}
-
 #calendar-navigation {
     display: flex; /* Use flexbox for layout */
     justify-content: center; /* Center horizontally */
@@ -70,8 +64,54 @@
     gap: 30px;
 }
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    /* For tablets */
+    .day-header { 
+        display: none; /* Don't bother displaying the days of the week */
+    }
+    .calendar-grid {
+        grid-template-columns: repeat(4, 1fr); /* 4 columns on tablets */
+        gap: 5px;
+    }
+
+    .calendar-day {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    #calendar-navigation {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* For mobile phones */
+    .calendar-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+        gap: 5px;
+    }
+
+    .calendar-day {
+        padding: 6px;
+        font-size: 10px;
+    }
+
+    #calendar-navigation {
+        flex-direction: column; /* Stack navigation vertically */
+        gap: 10px;
+    }
+}
+
 #prev-month, #next-month {
     visibility: visible;
+}
+
+.available-time {
+    padding: 5px;
+    margin: 2px;
+    border: 1px solid #ccc;
+    cursor: pointer;
 }
 
 .time-button {
@@ -143,16 +183,17 @@
     flex-shrink: 0; /* Prevent button from shrinking too much */
 }
 
-.booking-container {
-    border: 2px solid #ccc; /* Adjust the border color and thickness */
-    padding: 15px; /* Space inside the border */
-    border-radius: 8px; /* Optional: add rounded corners */
-    margin-top: 20px; /* Space above the container */
-    background-color: #f9f9f9; /* Optional: add a background color */
-    display: flex; /* Use flexbox for alignment */
-    flex-direction: column; /* Stack items vertically */
-    align-items: center; /* Center align children */
-    text-align: center; /* Center text inside */
+/* Adjust padding on smaller screens */
+@media (max-width: 480px) {
+    .find-button {
+        padding: 10px 10px; /* Smaller left and right padding */
+    }
+}
+
+.find-input {
+    width: 50%; 
+    margin-bottom: 10px; /* Space between input and buttons */
+    padding: 10px 15px !important;
 }
 
 #retrieve-booking {
@@ -165,12 +206,6 @@
     font-weight: bold;
 }
 
-.find-input {
-    width: 50%; /* Set a specific width for the input */
-    margin-bottom: 10px; /* Space between input and buttons */
-    padding: 10px 15px !important;
-}
-
 .button-container {
     display: flex; /* Use flexbox to arrange buttons in a row */
     gap: 10px; /* Space between buttons */
@@ -178,3 +213,53 @@
     margin-top: 10px; /* Add some space above the button row */
     margin-bottom: 20px; /* Add space below the buttons */
 }
+
+.booking-container {
+    border: 2px solid #ccc; /* Adjust the border color and thickness */
+    padding: 15px; /* Space inside the border */
+    border-radius: 8px; /* Rounded corners */
+    margin-top: 20px; /* Space above the container */
+    background-color: #f9f9f9; /* Background color */
+    display: flex; /* Flex layout for vertical alignment */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center align children */
+    text-align: center; /* Center text inside */
+    width: 100%; /* Full width */
+    max-width: 600px; /* Limit max width on larger screens */
+    margin-left: auto; /* Center container horizontally */
+    margin-right: auto;
+}
+
+/* Default flex layout for larger screens */
+#venue-details {
+    display: flex;
+}
+
+/* Adjust flex layout on smaller screens */
+@media (max-width: 768px) {
+    /* Stack #venue-details content vertically */
+    #venue-details {
+        display: flex;
+        flex-direction: column; /* Stack children in a column */
+    }
+
+    /* Make .booking-container take up 90% of viewport width */
+    .booking-container {
+        width: 100%;
+        max-width: 100%; /* Ensure it doesn’t exceed available width */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Full width for input on mobile */
+    .find-input {
+        width: 100% !important;
+    }
+
+    /* Center the image and adjust width on smaller screens */
+    #venue-image {
+        width: 100%; /* Make image full width on mobile */
+        margin-top: 20px; /* Add space between content and image */
+    }
+}
+
