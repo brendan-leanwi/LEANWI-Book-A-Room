@@ -46,67 +46,63 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
             document.getElementById('venue-max-slots').value = venue.max_slots;
             document.getElementById('venue-slot-cost').textContent = escapeHtml(venue.slot_cost); // Update the displayed cost
+            document.getElementById('display-affirmations').value = venue.display_affirmations;
+            document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
 
-           updateCalendar(venueId);
+            updateCalendar(venueId);
         })
         .catch(error => console.error('Error fetching venue details:', error))
         .finally(() => {
             document.body.style.cursor = 'default'; // Reset cursor after fetch completes
         });
 
-        //Fetch categories if we're showing them to users
-        if(bookingSettings.showCategories === 'yes')
-        {
-            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-            fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories.php')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Populate Category dropdown
-                    const categorySelect = document.getElementById('category');
-                    data.forEach(category => {
-                        let option = document.createElement('option');
-                        option.value = category.category_id;
-                        option.textContent = category.category_name;
-                        categorySelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error fetching categories:', error))
-                .finally(() => {
-                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+        //Fetch categories even if we're not showing them to users as we might need to save their current value
+        document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+        fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories.php')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Populate Category dropdown
+                const categorySelect = document.getElementById('category');
+                data.forEach(category => {
+                    let option = document.createElement('option');
+                    option.value = category.category_id;
+                    option.textContent = category.category_name;
+                    categorySelect.appendChild(option);
                 });
-        }
+            })
+            .catch(error => console.error('Error fetching categories:', error))
+            .finally(() => {
+                document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+            });
 
-        //Fetch audiences if we're showing them to users
-        if(bookingSettings.showAudiences === 'yes')
-            {
-                document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-                fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-audiences.php')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Populate Audience dropdown
-                        const audienceSelect = document.getElementById('audience');
-                        data.forEach(audience => {
-                            let option = document.createElement('option');
-                            option.value = audience.audience_id;
-                            option.textContent = audience.audience_name;
-                            audienceSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Error fetching audiences:', error))
-                    .finally(() => {
-                        document.body.style.cursor = 'default'; // Reset cursor after fetch completes
-                    });
-            }
+        //Fetch audiences even if we're not showing them to users as we might need to save their current value
+        document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+        fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-audiences.php')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Populate Audience dropdown
+                const audienceSelect = document.getElementById('audience');
+                data.forEach(audience => {
+                    let option = document.createElement('option');
+                    option.value = audience.audience_id;
+                    option.textContent = audience.audience_name;
+                    audienceSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching audiences:', error))
+            .finally(() => {
+                document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+            });
 
         let selectedDayElement = null; // Store the selected day element for later
         function updateCalendar(venueId, callback, bookingData = null) {
@@ -358,7 +354,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const params = new URLSearchParams({ venue_id: venueId, date: date });
             if (uniqueId) params.append('unique_id', uniqueId);
             const finalUrl = `/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-times.php?${params}`;
-            console.log("Final URL: ", finalUrl);
 
             document.body.style.cursor = 'wait'; // Set cursor before fetch starts
             return fetch(finalUrl)
@@ -398,7 +393,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const localDate = new Date(year, month - 1, date); // month is 0-indexed
             const formattedDate = localDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-            console.log('day', day, 'formattedDate', formattedDate);
             availableTimesHeading.textContent = `Available Times for ${formattedDate}`;
 
             // Populate time buttons
@@ -437,6 +431,153 @@ document.addEventListener("DOMContentLoaded", function () {
             if (showingExistingRecord) {
                 updateTotalCost();
             }
+
+            //Show affirmations if is selected to do so for this venue
+            const showAffirmations = parseInt(document.getElementById('display-affirmations').value, 10);
+
+            if(showAffirmations === 1) {
+                document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+                fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-affirmations.php')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Reference to the affirmations div
+                        const affirmationsDiv = document.getElementById('affirmations');
+            
+                        if (data.length > 0) {
+                            // Clear previous content
+                            affirmationsDiv.innerHTML = '';
+
+                            // Create and add the heading
+                            const heading = document.createElement('label');
+                            heading.innerHTML = "<strong>Please affirm the following statements before completing your booking *<strong>";
+                            heading.style.display = 'block';
+                            heading.style.marginBottom = '10px'; // Optional: add spacing below the heading
+                            affirmationsDiv.appendChild(heading);
+
+                            // Create the table element
+                            const table = document.createElement('table');
+                            table.classList.add('affirmations-table');
+                        
+                            data.forEach(affirmation => {
+                                // Create a new row
+                                const row = document.createElement('tr');
+                        
+                                // Create the checkbox cell
+                                const checkboxCell = document.createElement('td');
+                                checkboxCell.style.width = '5%';
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.id = `affirmation-${affirmation.id}`;
+                                checkbox.name = `affirmation-${affirmation.id}`;
+                                checkbox.required = true; // Set as required                               
+                                checkbox.checked = existingRecord;
+                                checkboxCell.appendChild(checkbox);
+                        
+                                // Create the text cell
+                                const textCell = document.createElement('td');
+                                textCell.textContent = affirmation.affirmation;
+                                textCell.style.paddingLeft = '10px'; // Add padding for spacing
+                        
+                                // Append cells to the row
+                                row.appendChild(checkboxCell);
+                                row.appendChild(textCell);
+                        
+                                // Append the row to the table
+                                table.appendChild(row);
+                            });
+                        
+                            // Clear previous content and add the table to the div
+                            affirmationsDiv.appendChild(table);
+                            affirmationsDiv.style.display = 'block';
+                        }
+                                                        
+                        
+                    })
+                    .catch(error => console.error('Error fetching affirmations:', error))
+                    .finally(() => {
+                        document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                    });
+            }
+
+            //Show conditions of use text and link if there is one assigned for this venue
+            const conditionsOfUseUrl = document.getElementById('conditions-of-use-url').value;
+
+            if (conditionsOfUseUrl) {
+                // Reference to the conditions of use div
+                const conditionsDiv = document.getElementById('conditions-of-use');
+
+                // Clear previous content
+                conditionsDiv.innerHTML = '';
+
+                // Create a container for styling
+                const container = document.createElement('div');
+                container.style.border = '1px solid #ccc'; // Add a border
+                container.style.padding = '15px'; // Add padding
+                container.style.marginBottom = '15px'; // Margin below the container
+
+                // Create the text paragraph
+                const textParagraph = document.createElement('p');
+                textParagraph.textContent = "In order to reserve a room, we require that you review and agree to the Meeting Room Conditions of Use, which can be viewed ";
+
+                // Create the link to the PDF (make "here" the hyperlink)
+                const link = document.createElement('a');
+                link.href = conditionsOfUseUrl;
+                link.textContent = "here"; // Only "here" as the hyperlink
+                link.target = "_blank"; // Opens the link in a new tab
+                link.style.fontWeight = 'bold'; // Optional: make the link bold
+                textParagraph.appendChild(link); // Append the link to the paragraph
+
+                // Create the table for checkbox and label
+                const table = document.createElement('table');
+                table.style.width = '100%'; // Make the table full width
+                table.style.marginTop = '10px'; // Space above the table
+                table.style.border = '0px'
+
+                // Create a new row for the checkbox
+                const row = document.createElement('tr');
+
+                // Create the checkbox cell
+                const checkboxCell = document.createElement('td');
+                checkboxCell.style.width = '5%'; // Width for the checkbox
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'conditions-accepted';
+                checkbox.name = 'conditions-accepted';
+                checkbox.checked = existingRecord;
+                checkbox.required = true; // Set as required
+                checkboxCell.appendChild(checkbox);
+
+                // Create the text cell for the label
+                const textCell = document.createElement('td');
+                const checkboxLabel = document.createElement('label');
+                checkboxLabel.htmlFor = checkbox.id;
+                checkboxLabel.innerHTML = "<strong>* I have read and will follow the Meeting Room Conditions of Use.</strong>";
+                textCell.appendChild(checkboxLabel);
+                textCell.style.paddingLeft = '10px'; // Add padding for spacing
+
+                // Append cells to the row
+                row.appendChild(checkboxCell);
+                row.appendChild(textCell);
+
+                // Append the row to the table
+                table.appendChild(row);
+
+                // Append the text paragraph and the table to the container
+                container.appendChild(textParagraph);
+                container.appendChild(table);
+
+                // Append the container to the conditions div
+                conditionsDiv.appendChild(container);
+
+                // Make the div visible
+                conditionsDiv.style.display = 'block';
+            }
+
 
             contactFormContainer.style.display = 'block';
 
@@ -548,10 +689,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 submitForm(formData);
             }
         
-            // This code is moved into the function call
             function submitForm(formData) {
                 const contactFormContainer = document.getElementById('contact-form-container');
                 const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
+                
+                console.log("document.getElementById('category').value", document.getElementById('category').value);
+                console.log("document.getElementById('audience').value", document.getElementById('audience').value);
                 
                 // Add the nonce
                 formData.append('submit_booking_nonce', document.querySelector('#submit_booking_nonce').value);
@@ -687,17 +830,14 @@ document.addEventListener("DOMContentLoaded", function () {
         function populateBookingFormFields(booking) {
             // Populate form fields with booking data
             document.getElementById('name').value = booking.name;
+            document.getElementById('organization').value = booking.organization;
             document.getElementById('email').value = booking.email;
             document.getElementById('phone').value = booking.phone;
             document.getElementById('participants').value = booking.number_of_participants;
             document.getElementById('notes').value = booking.booking_notes;
-            if (bookingSettings.showCategories === 'yes') {
-                document.getElementById('category').value = booking.category_id;
-            }
-            if (bookingSettings.showAudiences === 'yes') {
-                document.getElementById('audience').value = booking.audience_id;
-            }
-
+            document.getElementById('category').value = booking.category_id;
+            document.getElementById('audience').value = booking.audience_id;
+            
             // Display the booking form container
             contactFormContainer.style.display = 'block';
 

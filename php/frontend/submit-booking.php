@@ -38,6 +38,7 @@ if(get_option('leanwi_enable_recaptcha') === 'yes')
 // Sanitize incoming POST data
 $day = sanitize_text_field($_POST['day']);
 $name = sanitize_text_field($_POST['name']);
+$organization = sanitize_text_field($_POST['organization']);
 $email = sanitize_email($_POST['email']);
 $phone = sanitize_text_field($_POST['phone']);
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
@@ -120,6 +121,7 @@ if ($success) {
             'unique_id'            => $unique_id,
             'venue_id'             => $venue_id,
             'name'                 => $name,
+            'organization'         => $organization,
             'email'                => $email,
             'phone'                => $phone,
             'start_time'           => $start_time,
@@ -130,7 +132,7 @@ if ($success) {
             'audience_id'          => $audience,
             'total_cost'            => $total_cost
         ],
-        ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%f']
+        ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%f']
     );
 
     if ($insert_result === false) {

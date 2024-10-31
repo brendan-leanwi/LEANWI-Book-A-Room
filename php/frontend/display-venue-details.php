@@ -15,7 +15,11 @@ function display_venue_details($atts) {
         ),
         $atts
     );
-    
+
+    // Get the passer query parameter
+    $staffLooking = isset($_GET['passer']) && sanitize_text_field($_GET['passer']) === 'staff'; // Default to false if not set
+
+
     // Get the settings for categories and audiences
     $show_categories = get_option('leanwi_show_categories', 'no'); // Default to 'no' if option not set
     $show_audiences = get_option('leanwi_show_audiences', 'no'); // Default to 'no' if option not set
@@ -39,6 +43,8 @@ function display_venue_details($atts) {
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
             <input type="hidden" id="venue-max-slots" value="100">
             <input type="hidden" id="venue-email-text" value="">
+            <input type="hidden" id="display-affirmations" value="1">
+            <input type="hidden" id="conditions-of-use-url" value="">
 
             <div class="booking-container">
                 <p><h2 id="previous_booking_h2">Looking for a previously placed booking?</h2></p>
@@ -98,6 +104,9 @@ function display_venue_details($atts) {
 
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            
+            <label for="name">Organization:</label>
+            <input type="text" id="organization" name="organization" style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
@@ -110,22 +119,27 @@ function display_venue_details($atts) {
 
             <label for="notes">Booking Notes:</label>
             <textarea id="notes" name="notes" style="width: 100%; height: 100px; padding: 8px; margin-bottom: 10px;"></textarea>
-            
-            <?php if ($show_categories === 'yes'): ?>
-                <label for="category">Category:</label>
-                <select id="category" name="category" required style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
-            <?php else: ?>
-                <input type="hidden" name="category" value="1"> <!-- Default value for category -->
-            <?php endif; ?>
 
-            <?php if ($show_audiences === 'yes'): ?>
-                <label for="audience">Audience:</label>
-                <select id="audience" name="audience" required style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
-            <?php else: ?>
-                <input type="hidden" name="audience" value="1"> <!-- Default value for audience -->
-            <?php endif; ?>
+            <!-- Category Section -->
+            <label for="category" style="display: <?php echo ($show_categories === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;">Category:</label>
+            <select id="category" name="category" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_categories === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;"></select>
+            <!--<input type="hidden" name="category" value="1"> Default value for category -->
 
+            <!-- Audience Section -->
+            <label for="audience" style="display: <?php echo ($show_audiences === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;">Audience:</label>
+            <select id="audience" name="audience" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_audiences === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;"></select>
+            <!--<input type="hidden" name="audience" value="1"> Default value for audience -->
+
+            <p><br></p>
+            <div id="affirmations" style="display: none;">
+            </div>
+
+            <div id="conditions-of-use" style="display: none;">
+            </div>
+
+            <p><br></p>
             <p id="total-cost-text"><strong>Total Cost:</strong> $<span id="total-cost">0.00</span></p>
+            <p><br></p>
             <button type="submit" class="book-button">Save Booking</button>
         </form>
 

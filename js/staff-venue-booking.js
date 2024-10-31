@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function createActionCell(page_url, unique_id) {
             const actionCell = document.createElement('td');
             const viewLink = document.createElement('a');
-            viewLink.href = `${page_url}?booking_id=${unique_id}`;
+            viewLink.href = `${page_url}?booking_id=${unique_id}&passer=staff`;
             viewLink.textContent = 'View';
             viewLink.classList.add('button'); // Add WordPress button styling if needed
             actionCell.appendChild(viewLink);
@@ -347,7 +347,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function constructRedirectUrl(pageUrl, bookingId) {
             // Ensure pageUrl does not have a trailing slash
             const trimmedUrl = pageUrl.endsWith('/') ? pageUrl.slice(0, -1) : pageUrl;
-            return `${trimmedUrl}?booking_id=${bookingId}`;
+            return `${trimmedUrl}?booking_id=${bookingId}&passer=staff`;
         }
 
         // Handle the Delete Booking button click

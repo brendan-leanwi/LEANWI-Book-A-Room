@@ -46,6 +46,16 @@ function leanwi_add_admin_menu() {
         'leanwi_add_venue_page'
     );
 
+    // Sub-menu: "Delete Venue"
+    add_submenu_page(
+        'leanwi-book-a-room-main',
+        'Delete Venue',
+        'Delete Venue',
+        'manage_options',
+        'leanwi-delete-venue',
+        'leanwi_delete_venue_page'
+    );
+
     // Sub-menu: "Edit Venue"
     add_submenu_page(
         'leanwi-book-a-room-main', // Parent slug (linked to Venues submenu)
@@ -116,6 +126,46 @@ function leanwi_add_admin_menu() {
         'leanwi_edit_audience_page'      // Callback function to display the edit venue form
     );
 
+    // Sub-menu: "Affirmations"
+    add_submenu_page(
+        'leanwi-book-a-room-main',    // Parent slug
+        'Affirmations',                   // Page title
+        'Affirmations',                   // Menu title
+        'manage_options',             // Capability
+        'leanwi-book-a-room-affirmations',// Menu slug
+        'leanwi_affirmations_page'        // Callback function to display settings
+    );
+
+    // Sub-menu: "Add Affirmation"
+    add_submenu_page(
+        'leanwi-book-a-room-main',
+        'Add Affirmation',
+        'Add Affirmation',
+        'manage_options',
+        'leanwi-add-affirmation',
+        'leanwi_add_affirmation_page'
+    );
+
+    // Sub-menu: "Delete Affirmation"
+    add_submenu_page(
+        'leanwi-book-a-room-main',
+        'Delete Affirmation',
+        'Delete Affirmation',
+        'manage_options',
+        'leanwi-delete-affirmation',
+        'leanwi_delete_affirmation_page'
+    );
+
+    // Sub-menu: "Edit Affirmation"
+    add_submenu_page(
+        'leanwi-book-a-room-main', // Parent slug (linked to Audiences submenu)
+        'Edit Affirmation',                 // Page title
+        'Edit Affirmation',                 // Menu title
+        'manage_options',             // Capability
+        'leanwi-edit-affirmation',          // Menu slug
+        'leanwi_edit_affirmation_page'      // Callback function to display the edit venue form
+    );
+
     // Sub-menu: "Reports"
     add_submenu_page(
         'leanwi-book-a-room-main',    // Parent slug
@@ -146,6 +196,9 @@ function leanwi_hide_add_edit_submenus_css() {
         #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-venue"] {
             display: none !important;
         }
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-venue"] {
+            display: none !important;
+        }
         #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-venue"] {
             display: none !important;
         }
@@ -159,6 +212,15 @@ function leanwi_hide_add_edit_submenus_css() {
             display: none !important;
         }
         #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-audience"] {
+            display: none !important;
+        }
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-affirmation"] {
+            display: none !important;
+        }
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-affirmation"] {
+            display: none !important;
+        }
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-affirmation"] {
             display: none !important;
         }
     </style>';
@@ -218,7 +280,8 @@ function leanwi_venues_page() {
             echo '<td>' . esc_html($venue['description']) . '</td>';
             echo '<td>' . ($venue['historic'] == 0 ? 'False' : 'True') . '</td>';
             echo '<td>';
-            echo '<a href="' . admin_url('admin.php?page=leanwi-edit-venue&venue_id=' . esc_attr($venue['venue_id'])) . '" class="button">Edit</a> ';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-venue&venue_id=' . esc_attr($venue['venue_id']))) . '" class="button">Edit</a> ';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-delete-venue&venue_id=' . esc_attr($venue['venue_id']))) . '" class="button" onclick="return confirm(\'Are you sure you want to delete this venue?\');">Delete</a>';
             echo '</td>';
             echo '</tr>';
         }
@@ -259,6 +322,38 @@ function fetch_venues() {
     return $venues; // Return the venues array
 }
 
+// Function to handle deletion
+function leanwi_delete_venue_page() {
+    global $wpdb;
+    $venue_table = $wpdb->prefix . 'leanwi_booking_venue';
+    $hours_table = $wpdb->prefix . 'leanwi_booking_venue_hours';
+    $participant_table =  $wpdb->prefix . 'leanwi_booking_participant';
+
+    if (isset($_GET['venue_id'])) {
+        $venue_id = intval($_GET['venue_id']);
+        $participant = $wpdb->get_row($wpdb->prepare("SELECT 1 FROM $participant_table WHERE venue_id = %d", $venue_id));
+
+        if($participant){
+            echo '<div class="error"><p>Venue could not be deleted as there are meetings associated with the venue.</p></div>';
+        } else {
+            $wpdb->delete(
+                $venue_table,
+                ['venue_id' => $venue_id],
+                ['%d']
+            );
+            $wpdb->delete(
+                $hours_table,
+                ['venue_id' => $venue_id],
+                ['%d']
+            );
+            echo '<div class="deleted"><p>Venue deleted successfully.</p></div>';
+        }
+    } else {
+        // Handle the case where no ID is provided
+        echo '<div class="error"><p>No Venue ID provided for deletion.</p></div>';
+    }
+}
+
 function leanwi_add_venue_page() {
     global $wpdb;
     $venue_table = $wpdb->prefix . 'leanwi_booking_venue';
@@ -279,6 +374,8 @@ function leanwi_add_venue_page() {
             $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
             $email_text = sanitize_text_field($_POST['email_text']);
             $page_url = esc_url($_POST['page_url']);
+            $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
+            $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
 
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
@@ -297,6 +394,8 @@ function leanwi_add_venue_page() {
                     'slot_cost' => $slot_cost,
                     'email_text' => $email_text,
                     'page_url' => $page_url,
+                    'conditions_of_use_url' => $conditions_of_use_url,
+                    'display_affirmations' => $display_affirmations,
                 )
             );
 
@@ -345,7 +444,9 @@ function leanwi_add_venue_page() {
         'page_url' => '',
         'extra_text' => '',
         'slot_cost' => '0.00',
-        'email_text' => 'Thank you for your booking. Please consider this as confirmation of your booking unless we get in touch with you further.'
+        'email_text' => 'Thank you for your booking. Please consider this as confirmation of your booking unless we get in touch with you further.',
+        'conditions_of_use_url' => '',
+        'display_affirmations' => 1
     ];
 
     // Initialize hours to default values
@@ -389,6 +490,14 @@ function leanwi_add_venue_page() {
                 <tr>
                     <th><label for="image_url">Image URL</label></th>
                     <td><input type="text" id="image_url" name="image_url" style="width: 90%;" value="<?php echo esc_attr($venue->image_url); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><label for="conditions_of_use_url">Conditions of Use URL</label></th>
+                    <td><input type="text" id="conditions_of_use_url" name="conditions_of_use_url" style="width: 90%;" value="<?php echo esc_attr($venue->conditions_of_use_url); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><label for="display_affirmations">Display affirmations for this venue?</label></th>
+                    <td><input type="checkbox" id="display_affirmations" name="display_affirmations" <?php echo ($venue->display_affirmations == 1) ? 'checked' : ''; ?>/></td>
                 </tr>
                 <tr>
                     <th><label for="slot_cost">Cost per slot</label></th>
@@ -485,6 +594,8 @@ function leanwi_edit_venue_page() {
                 $email_text = sanitize_text_field($_POST['email_text']);
                 $historic = isset($_POST['historic']) ? 1 : 0; // Set to 1 if checked, otherwise 0
                 $page_url = esc_url($_POST['page_url']);
+                $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
+                $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
 
                 // Update the venue in the database
                 $updated = $wpdb->update(
@@ -501,6 +612,8 @@ function leanwi_edit_venue_page() {
                         'email_text' => $email_text,
                         'historic' => $historic,
                         'page_url' => $page_url,
+                        'conditions_of_use_url' => $conditions_of_use_url,
+                        'display_affirmations' => $display_affirmations,
                     ),
                     array('venue_id' => $venue_id)
                 );
@@ -594,6 +707,14 @@ function leanwi_edit_venue_page() {
                 <tr>
                     <th><label for="image_url">Image URL</label></th>
                     <td><input type="text" id="image_url" name="image_url" style="width: 90%;" value="<?php echo esc_attr((string)$venue->image_url); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><label for="conditions_of_use_url">Conditions of Use URL</label></th>
+                    <td><input type="text" id="conditions_of_use_url" name="conditions_of_use_url" style="width: 90%;" value="<?php echo esc_attr($venue->conditions_of_use_url); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><label for="display_affirmations">Display affirmations for this venue?</label></th>
+                    <td><input type="checkbox" id="display_affirmations" name="display_affirmations" <?php echo ($venue->display_affirmations == 1) ? 'checked' : ''; ?>/></td>
                 </tr>
                 <tr>
                     <th><label for="slot_cost">Cost per slot</label></th>
@@ -1058,6 +1179,164 @@ function leanwi_edit_audience_page() {
         echo '<div class="error"><p>No audience ID provided.</p></div>';
     }
 }
+
+/**************************************************************************************************
+ * Affirmations
+ **************************************************************************************************/
+
+// Function to display the list of affirmations
+function leanwi_affirmations_page() {
+    global $wpdb;
+
+    // Display affirmations list
+    echo '<div class="wrap">';
+    echo '<h1>Affirmations</h1>';
+
+    echo '<a href="' . admin_url('admin.php?page=leanwi-add-affirmation') . '" class="button button-primary">Add Affirmation</a>';
+    echo '<p> </p>'; // Space below the button before the affirmation table
+
+    echo '<table class="wp-list-table widefat striped">';
+    echo '<thead>';
+    echo '<tr>';
+    echo '<th scope="col">ID</th>';
+    echo '<th scope="col" width="75%">Affirmation</th>';
+    echo '<th scope="col" style="text-align: right; padding-right: 40px;">Actions</th>';
+    echo '</tr>';
+    echo '</thead>';
+    echo '<tbody>';
+
+    // Fetch affirmations
+    $affirmations = fetch_affirmations();
+    if (empty($affirmations)) {
+        echo '<tr><td colspan="3">No affirmations found.</td></tr>';
+    } else {
+        // Display each affirmation in a row
+        foreach ($affirmations as $affirmation) {
+            echo '<tr>';
+            echo '<td>' . esc_html($affirmation['id']) . '</td>';
+            echo '<td>' . esc_html($affirmation['affirmation']) . '</td>';
+            echo '<td style="text-align: right;">';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-affirmation&id=' . esc_attr($affirmation['id']))) . '" class="button">Edit</a> ';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-delete-affirmation&id=' . esc_attr($affirmation['id']))) . '" class="button" onclick="return confirm(\'Are you sure you want to delete this affirmation?\');">Delete</a>';
+            echo '</td>';
+            echo '</tr>';
+        }
+    }
+
+    echo '</tbody>';
+    echo '</table>';
+    echo '</div>';
+}
+
+// Function to get affirmations
+function fetch_affirmations() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_affirmation';
+
+    // Fetch affirmations and check for database errors
+    $affirmations = $wpdb->get_results("SELECT id, affirmation FROM $table_name", ARRAY_A);
+    if ($wpdb->last_error) {
+        return ['error' => $wpdb->last_error];
+    }
+
+    return $affirmations ?: []; // Return an empty array if no results are found
+}
+
+// Function to handle deletion
+function leanwi_delete_affirmation_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_affirmation';
+
+    // Check if an ID is provided for deleting
+    if (isset($_GET['id'])) {
+        $id = intval($_GET['id']);
+        $wpdb->delete(
+            $table_name,
+            ['id' => $id],
+            ['%d']
+        );
+        echo '<div class="deleted"><p>Affirmation deleted successfully.</p></div>';
+    } else {
+        // Handle the case where no ID is provided
+        echo '<div class="error"><p>No affirmation ID provided for deletion.</p></div>';
+    }
+}
+
+function leanwi_add_affirmation_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_affirmation';
+
+    // Handle form submission
+    if (isset($_POST['add_affirmation'])) {
+        $wpdb->insert(
+            $table_name,
+            ['affirmation' => sanitize_text_field($_POST['affirmation'])],
+            ['%s']
+        );
+        echo '<div class="updated"><p>Affirmation added successfully.</p></div>';
+    }
+
+    // Display the add affirmation form
+    echo '<div class="wrap">';
+    echo '<h1>Add Affirmation</h1>';
+    echo '<form method="POST">';
+    echo '<p>Affirmation:<br><textarea name="affirmation" rows="5" cols="50" required></textarea></p>';
+    echo '<p><input type="submit" name="add_affirmation" value="Add Affirmation" class="button button-primary"></p>';
+    echo '</form>';
+    echo '</div>';
+}
+
+// Function to handle editing of an affirmation
+function leanwi_edit_affirmation_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_affirmation';
+
+    // Handle the form submission to update the affirmation
+    if (isset($_POST['update_affirmation'])) {
+        $id = intval($_POST['id']);
+        $affirmation = sanitize_text_field($_POST['affirmation']);
+
+        // Update the affirmation in the database
+        $wpdb->update(
+            $table_name,
+            ['affirmation' => $affirmation],
+            ['id' => $id],
+            ['%s'],
+            ['%d']
+        );
+
+        echo '<div class="notice notice-success"><p>Affirmation updated successfully.</p></div>';
+    }
+
+    // Check if an ID is provided for editing
+    if (isset($_GET['id'])) {
+        $id = intval($_GET['id']);
+        $affirmation = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id));
+
+        if ($affirmation) {
+            // Display form to edit the affirmation
+            echo '<div class="wrap">';
+            echo '<h1>Edit Affirmation</h1>';
+            echo '<form method="POST">';
+            echo '<input type="hidden" name="id" value="' . esc_attr($affirmation->id) . '">';
+
+            // Display the Affirmation input
+            echo '<p>Affirmation:<br><textarea name="affirmation" rows="5" cols="50" required>' . esc_textarea($affirmation->affirmation) . '</textarea></p>';
+            
+            // Submit button to update the affirmation
+            echo '<p><input type="submit" name="update_affirmation" value="Save Changes" class="button button-primary"></p>';
+            echo '</form>';
+            echo '</div>';
+        } else {
+            // Display a message if the affirmation is not found
+            echo '<div class="notice notice-error"><p>Affirmation not found.</p></div>';
+        }
+    } else {
+        // Display a message if no ID is provided
+        echo '<div class="notice notice-error"><p>No ID provided.</p></div>';
+    }
+}
+
 
 /**************************************************************************************************
  * Reporting

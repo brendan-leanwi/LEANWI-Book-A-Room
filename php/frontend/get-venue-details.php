@@ -28,6 +28,8 @@ if (isset($_GET['venue_id'])) {
             'slot_cost' => floatval($venue['slot_cost']),
             'image_url' => esc_url($venue['image_url']),
             'page_url' => esc_url($venue['page_url']),
+            'conditions_of_use_url' => esc_url($venue['conditions_of_use_url']),
+            'display_affirmations' => intval($venue['display_affirmations']),
             'extra_text' => wp_kses_post($venue['extra_text']),
             'email_text' => wp_kses_post($venue['email_text']),
             'historic' => intval($venue['historic'])

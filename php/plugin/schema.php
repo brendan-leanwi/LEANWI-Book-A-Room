@@ -20,6 +20,8 @@ function leanwi_create_tables() {
         slot_cost DECIMAL(10,2) DEFAULT 0.00,
         image_url VARCHAR(255),
         page_url VARCHAR(255),
+        conditions_of_use_url VARCHAR(255),
+        display_affirmations TINYINT(1) DEFAULT 1,
         extra_text TEXT,
         email_text TEXT,
         historic TINYINT(1) DEFAULT 0
@@ -54,6 +56,7 @@ function leanwi_create_tables() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         unique_id CHAR(7) NOT NULL,
         venue_id INT NOT NULL,
+        organization VARCHAR(255),
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL,
         phone VARCHAR(20),
@@ -65,6 +68,12 @@ function leanwi_create_tables() {
         audience_id INT,
         total_cost DECIMAL(10,2) DEFAULT 0.00,
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
+    ) $engine $charset_collate;";
+
+    // SQL for creating leanwi_booking_category table
+    $sql6 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_affirmation (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        affirmation TEXT NOT NULL
     ) $engine $charset_collate;";
 
     // Execute the SQL queries
@@ -100,6 +109,11 @@ function leanwi_create_tables() {
     if ($wpdb->last_error) {
         error_log('DB Error5: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
     }
+    dbDelta($sql6);
+    // Debug logging to track SQL execution
+    if ($wpdb->last_error) {
+        error_log('DB Error6: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+    }
 
     // Insert default category
     $wpdb->insert(
@@ -134,6 +148,7 @@ function leanwi_drop_tables() {
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_venue_hours");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_category");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_audience");
+    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_affirmation");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_user");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_venue");
 }

@@ -263,3 +263,23 @@
     }
 }
 
+/*************************************************************************************/
+/* AFFIRMATIONS STYLING */
+/*************************************************************************************/
+
+/* Style for the table */
+.affirmations-table {
+    width: 100%; /* Full width */
+    border-collapse: collapse; /* Remove spacing between cells */
+    margin-top: 10px;
+}
+
+.affirmations-table td {
+    padding: 12px 5px;
+    vertical-align: middle; /* Align checkbox vertically center with text */
+}
+
+.affirmations-table td:first-child {
+    text-align: center; /* Center-align checkbox */
+    width: 5%;
+}

@@ -44,6 +44,7 @@ if (!empty($unique_id)) {
                     'unique_id' => esc_html($result['unique_id']),
                     'venue_id' => intval($result['venue_id']),
                     'name' => esc_html($result['name']),
+                    'organization' => esc_html($result['organization']),
                     'email' => sanitize_email($result['email']),
                     'phone' => esc_html($result['phone']),
                     'start_time' => esc_html($result['start_time']), 
