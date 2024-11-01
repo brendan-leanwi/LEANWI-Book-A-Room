@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
 
             // Check if cost should be hidden
-            if (parseInt(bookingSettings.showZeroCost) === 0 && parseFloat(venue.slot_cost) === 0) {
+            if (bookingSettings.showZeroCost === 'no' && parseFloat(venue.slot_cost) === 0) {
                 document.getElementById('cost-info').style.display = 'none'; // Hide the Cost line
             }
 
@@ -590,7 +590,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Check if cost should be hidden
-            if (parseInt(bookingSettings.showZeroCost) === 0 && parseFloat(document.getElementById('venue-slot-cost').textContent) === 0) {
+            if (bookingSettings.showZeroCost === 'no' && parseFloat(document.getElementById('venue-slot-cost').textContent) === 0) {
                 document.getElementById('cost-container').style.display = 'none'; // Hide the entire cost container
             }
 
