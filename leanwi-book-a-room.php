@@ -3,7 +3,7 @@
 Plugin Name:  LEANWI Book A Room
 GitHub URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Description:  Room Booking functionality compatible with LEANWI Divi WordPress websites
-Version:      1.2.8
+Version:      1.2.7
 Author:       Brendan Tuckey
 Author URI:   https://leanwi.org
 License:      GPL2
@@ -40,6 +40,7 @@ function leanwi_enqueue_scripts() {
         wp_localize_script('venue-booking-js', 'bookingSettings', array(
             'maxMonths' => intval(get_option('leanwi_booking_months', 2)), // Default to 2 months if not set
             'minutesInterval' => intval(get_option('leanwi_minutes_interval', 30)), // Default to 30 minutes if not set
+            'showZeroCost' => intval(get_option('leanwi_show_zero_cost', 'no')), // Default to No
             'sendAdminEmail' => get_option('leanwi_send_admin_booking_email', 'no'), // Default to No to not send an email if not set
             'adminEmailAddress' => get_option('leanwi_admin_email_address', ''), // Default to empty string if not set
             'highlightedButtonBgColor' => get_option('leanwi_highlighted_button_bg_color', '#ffe0b3'), // Highlighted button Background color

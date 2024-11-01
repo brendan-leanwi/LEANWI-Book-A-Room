@@ -42,7 +42,7 @@ if (!empty($unique_id)) {
 
             $wpdb->query('COMMIT');
 
-            $to = sanitize_email('btuckey@leanwi.org'); // For testing purposes, replace later with sanitize_email($email)
+            $to = sanitize_email($email);
             $subject = 'Your Booking Cancellation';
             $message = "<p>Hi <strong>" . esc_html($name) . "</strong>,</p>" .
                 "<p>Your booking for booking ID <strong>" . esc_html($unique_id) . "</strong> scheduled to start on " . 

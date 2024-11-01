@@ -45,9 +45,14 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('venue-extra-text').textContent = escapeHtml(venue.extra_text);
             document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
             document.getElementById('venue-max-slots').value = venue.max_slots;
-            document.getElementById('venue-slot-cost').textContent = escapeHtml(venue.slot_cost); // Update the displayed cost
+            document.getElementById('venue-slot-cost').textContent = parseFloat(venue.slot_cost).toFixed(2);
             document.getElementById('display-affirmations').value = venue.display_affirmations;
             document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
+
+            // Check if cost should be hidden
+            if (parseInt(bookingSettings.showZeroCost) === 0 && parseFloat(venue.slot_cost) === 0) {
+                document.getElementById('cost-info').style.display = 'none'; // Hide the Cost line
+            }
 
             updateCalendar(venueId);
         })
@@ -584,6 +589,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 conditionsDiv.style.display = 'block';
             }
 
+            // Check if cost should be hidden
+            if (parseInt(bookingSettings.showZeroCost) === 0 && parseFloat(document.getElementById('venue-slot-cost').textContent) === 0) {
+                document.getElementById('cost-container').style.display = 'none'; // Hide the entire cost container
+            }
 
             contactFormContainer.style.display = 'block';
 
