@@ -37,7 +37,7 @@ function display_venue_details($atts) {
             <p><strong>Capacity:</strong> <span id="venue-capacity"></span></p>
             <p><strong>Description:</strong> <span id="venue-description"></span></p>
             <p><strong>Location:</strong> <span id="venue-location"></span></p>
-            <p><strong>Cost:</strong> $<span id="venue-slot-cost">0.00</span> per <?php echo esc_html($minutes_interval); ?> minute time slot</p>
+            <p id="cost-info"><strong>Cost:</strong> $<span id="venue-slot-cost">0.00</span> per <?php echo esc_html($minutes_interval); ?> minute time slot</p>
             <p></p>
             <p><span id="venue-extra-text"></span></p>
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
@@ -137,9 +137,12 @@ function display_venue_details($atts) {
             <div id="conditions-of-use" style="display: none;">
             </div>
 
-            <p><br></p>
-            <p id="total-cost-text"><strong>Total Cost:</strong> $<span id="total-cost">0.00</span></p>
-            <p><br></p>
+            <div id="cost-container">
+                <p><br></p>
+                <p id="total-cost-text"><strong>Total Cost:</strong> $<span id="total-cost">0.00</span></p>
+                <p><br></p>
+            </div>
+
             <button type="submit" class="book-button">Save Booking</button>
         </form>
 

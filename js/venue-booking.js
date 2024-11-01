@@ -45,9 +45,14 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('venue-extra-text').textContent = escapeHtml(venue.extra_text);
             document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
             document.getElementById('venue-max-slots').value = venue.max_slots;
-            document.getElementById('venue-slot-cost').textContent = escapeHtml(venue.slot_cost); // Update the displayed cost
+            document.getElementById('venue-slot-cost').textContent = parseFloat(venue.slot_cost).toFixed(2);
             document.getElementById('display-affirmations').value = venue.display_affirmations;
             document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
+
+            // Check if cost should be hidden
+            if (bookingSettings.showZeroCost === 'no' && parseFloat(venue.slot_cost) === 0) {
+                document.getElementById('cost-info').style.display = 'none'; // Hide the Cost line
+            }
 
             updateCalendar(venueId);
         })
@@ -293,33 +298,39 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('prev-month').addEventListener('click', function () {
             const today = new Date();
             if (currentMonth > today) {  // Won't go to any month prior to today
-                currentMonth.setMonth(currentMonth.getMonth() - 1); // Go to the previous month
-                
+                currentMonth.setMonth(currentMonth.getMonth() - 1); 
+                currentMonth.setDate(1); // Reset to the first day of the month
                 updateCalendar(venueId);
             }
         });
         
+        // Ensure currentMonth always starts on the first day of the month to prevent day-based shifts
+        currentMonth.setDate(1);
+
+        // Handle the next month click event
         document.getElementById('next-month').addEventListener('click', function () {
             const today = new Date();
             const currentYear = today.getFullYear();
             const currentMonthNumber = today.getMonth(); // October = 9
-        
+
             // Calculate the future month and handle overflow correctly
             let futureMonthNumber = currentMonthNumber + parseInt(maxMonths); // Add maxMonths
             let futureYear = currentYear;
-        
+
             if (futureMonthNumber > 11) {
                 futureYear += Math.floor(futureMonthNumber / 12); // Adjust the year if overflow occurs
                 futureMonthNumber = futureMonthNumber % 12; // Adjust the month number to stay within 0-11 range
             }
-            const maxMonthLimit = new Date(futureYear, futureMonthNumber, 1); // Correctly create the future date
-        
+            const maxMonthLimit = new Date(futureYear, futureMonthNumber, 1); // Ensure future month starts on the 1st
+
             // Only allow navigation if within the maxMonths limit
             if (currentMonth < maxMonthLimit) {
-                currentMonth.setMonth(currentMonth.getMonth() + 1); // Go to the next month
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+                currentMonth.setDate(1); // Reset to the first day to avoid jump issues
                 updateCalendar(venueId);
             }
         });
+        
         
         // Function to update the visibility of navigation buttons
         function updateNavigationButtons() {
@@ -578,6 +589,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 conditionsDiv.style.display = 'block';
             }
 
+            // Check if cost should be hidden
+            if (bookingSettings.showZeroCost === 'no' && parseFloat(document.getElementById('venue-slot-cost').textContent) === 0) {
+                document.getElementById('cost-container').style.display = 'none'; // Hide the entire cost container
+            }
 
             contactFormContainer.style.display = 'block';
 

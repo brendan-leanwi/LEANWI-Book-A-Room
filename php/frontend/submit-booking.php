@@ -152,7 +152,7 @@ if ($success) {
     $page_url = rtrim($page_url, '/'); // Remove the trailing '/' if it exists
 
     // Email details
-    $to = sanitize_email('btuckey@leanwi.org'); // For testing purposes, replace later with sanitize_email($email)
+    $to = sanitize_email($email);
     $subject = 'Your Booking Confirmation';
     if ($bookingAlreadyExisted) {
         $subject = 'Your Booking has been updated';
