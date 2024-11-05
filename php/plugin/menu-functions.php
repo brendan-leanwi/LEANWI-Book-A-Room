@@ -366,10 +366,10 @@ function leanwi_add_venue_page() {
             // The nonce is valid; proceed with form processing.
             $name = sanitize_text_field($_POST['name']);
             $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
-            $description = sanitize_textarea_field($_POST['description']);
+            $description = wp_kses_post($_POST['description']);
             $location = sanitize_text_field($_POST['location']);
             $image_url = esc_url($_POST['image_url']);
-            $extra_text = sanitize_text_field($_POST['extra_text']);
+            $extra_text = wp_kses_post($_POST['extra_text']);
             $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
             $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
             $email_text = sanitize_text_field($_POST['email_text']);
@@ -473,11 +473,11 @@ function leanwi_add_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="description">Venue Summary</label></th>
-                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_html($venue->description); ?></textarea></td>
+                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo nl2br(esc_html($venue->description)); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="extra_text">More Display Text</label></th>
-                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_html($venue->extra_text); ?></textarea></td>
+                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo nl2br(esc_html($venue->extra_text)); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="location">Location</label></th>
@@ -585,10 +585,10 @@ function leanwi_edit_venue_page() {
                 // The nonce is valid; proceed with form processing.
                 $name = sanitize_text_field($_POST['name']);
                 $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
-                $description = sanitize_textarea_field($_POST['description']);
+                $description = wp_kses_post($_POST['description']);
                 $location = sanitize_text_field($_POST['location']);
                 $image_url = esc_url($_POST['image_url']);
-                $extra_text = sanitize_text_field($_POST['extra_text']);
+                $extra_text = wp_kses_post($_POST['extra_text']);
                 $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
                 $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
                 $email_text = sanitize_text_field($_POST['email_text']);
@@ -690,11 +690,11 @@ function leanwi_edit_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="description">Venue Summary</label></th>
-                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_html((string)$venue->description); ?></textarea></td>
+                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo nl2br(esc_html($venue->description)); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="extra_text">More Display Text</label></th>
-                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_html((string)$venue->extra_text); ?></textarea></td>
+                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo nl2br(esc_html($venue->extra_text)); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="location">Location</label></th>
