@@ -60,29 +60,73 @@ function leanwi_check_for_plugin_updates($transient) {
 add_filter('site_transient_update_plugins', 'leanwi_check_for_plugin_updates');
 
 
-function leanwi_plugin_update_info($false, $action, $response) {
-    // Define the plugin slug (folder name of your plugin)
-    $plugin_slug = basename(__DIR__);
+function leanwi_plugin_update_info($res, $action, $args) {
+    // Ensure that we only affect the 'query_plugins' action
+    if ( 'query_plugins' === $action ) {
+        // Check if the plugin in question is being queried
+        if ( isset( $args->browse ) && 'featured' === $args->browse ) {
+            // If it's a featured request, we just return early and ignore our plugin
+            return $res; // Don't return any plugin data for the 'featured' tab
+        }
 
-    if (isset($response->slug) && $response->slug === $plugin_slug) {
-        // Define GitHub repo URL and API endpoint
-        $repo = 'brendan-leanwi/LEANWI-Book-A-Room';
-        $api_url = "https://api.github.com/repos/{$repo}/releases/latest";
+        // Otherwise, we check if the 'slug' matches and if we need to fetch update info
+        if ( isset( $args->slug ) && 'leanwi-book-a-room' === $args->slug ) {
+            // Define GitHub repo URL and API endpoint
+            $repo = 'brendan-leanwi/LEANWI-Book-A-Room';
+            $api_url = "https://api.github.com/repos/{$repo}/releases/latest";
 
-        $remote_info = wp_remote_get($api_url);
-        if (!is_wp_error($remote_info)) {
-            $release = json_decode(wp_remote_retrieve_body($remote_info));
-            if (isset($release->body)) {
-                $response->sections = array(
-                    'description' => $release->body,
-                );
+            // Fetch release information from GitHub API
+            $remote_info = wp_remote_get($api_url, array('timeout' => 15));
+            if (!is_wp_error($remote_info)) {
+                $release = json_decode(wp_remote_retrieve_body($remote_info));
+
+                // Check if we got valid release information
+                if (isset($release->tag_name)) {
+                    // Define the latest version available on GitHub
+                    $latest_version = $release->tag_name; // e.g., 'v1.1.0'
+
+                    // Prepare the plugin response with update information
+                    $res = new stdClass();
+                    $res->plugins = array(
+                        (object) array(
+                            'slug' => 'leanwi-book-a-room',
+                            'name' => 'LEANWI Book A Room',
+                            'version' => '1.2.10', // Your current plugin version
+                            'new_version' => $latest_version, // The latest version from GitHub
+                            'description' => 'Room Booking functionality compatible with LEANWI Divi WordPress websites.',
+                            'homepage' => 'https://github.com/brendan-leanwi/LEANWI-Book-A-Room',
+                            'icons' => array(
+                                'svg' => 'https://example.com/icon.svg',
+                            ),
+                            'rating' => 4.5,
+                            'active_installs' => 1,
+                            'last_updated' => '2024-11-05',
+                            'tags' => array('booking', 'room', 'LEANWI'),
+                            'author' => 'Brendan Tuckey',
+                            'author_profile' => 'https://github.com/brendan-leanwi',
+                            'download_link' => 'https://github.com/brendan-leanwi/LEANWI-Book-A-Room/archive/refs/heads/main.zip',
+                        ),
+                    );
+
+                    // Add necessary fields (e.g., 'results' and 'external')
+                    $res->results = $res->plugins;
+                    $res->external = 1;
+
+                    // Optionally: Add update information like 'update_notice' if needed
+                    if (version_compare($latest_version, '1.0.0', '>')) {
+                        $res->update_notice = 'A new version is available: ' . $latest_version;
+                    }
+                }
             }
         }
     }
 
-    return $response;
+    return $res;
 }
-add_filter('plugins_api', 'leanwi_plugin_update_info', 20, 3);
+add_filter('plugins_api', 'leanwi_plugin_update_info', 10, 3);
+
+
+
 
 function leanwi_override_post_install($true, $hook_extra, $result) {
     global $wp_filesystem;
