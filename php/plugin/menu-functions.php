@@ -473,11 +473,11 @@ function leanwi_add_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="description">Venue Summary</label></th>
-                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo nl2br(esc_html($venue->description)); ?></textarea></td>
+                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_textarea($venue->description); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="extra_text">More Display Text</label></th>
-                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo nl2br(esc_html($venue->extra_text)); ?></textarea></td>
+                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_textarea($venue->extra_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="location">Location</label></th>
@@ -690,11 +690,11 @@ function leanwi_edit_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="description">Venue Summary</label></th>
-                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo nl2br(esc_html($venue->description)); ?></textarea></td>
+                    <td><textarea id="description" name="description" required style="width: 90%;"><?php echo esc_textarea($venue->description); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="extra_text">More Display Text</label></th>
-                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo nl2br(esc_html($venue->extra_text)); ?></textarea></td>
+                    <td><textarea id="extra_text" name="extra_text" style="width: 90%;"><?php echo esc_textarea($venue->extra_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="location">Location</label></th>
