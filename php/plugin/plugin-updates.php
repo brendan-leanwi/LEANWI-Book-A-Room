@@ -1,4 +1,5 @@
 <?php
+namespace LEANWI_Book_A_Room;
 
 function leanwi_check_for_plugin_updates($transient) {
     // Don't proceed if the transient is empty
@@ -57,7 +58,7 @@ function leanwi_check_for_plugin_updates($transient) {
     //error_log("Transient response after check: " . print_r($transient, true));
     return $transient;
 }
-add_filter('site_transient_update_plugins', 'leanwi_check_for_plugin_updates');
+add_filter('site_transient_update_plugins', __NAMESPACE__ . '\\leanwi_check_for_plugin_updates');
 
 
 function leanwi_plugin_update_info($res, $action, $args) {
@@ -123,7 +124,7 @@ function leanwi_plugin_update_info($res, $action, $args) {
 
     return $res;
 }
-add_filter('plugins_api', 'leanwi_plugin_update_info', 10, 3);
+add_filter('plugins_api', __NAMESPACE__ . '\\leanwi_plugin_update_info', 10, 3);
 
 
 
@@ -144,4 +145,4 @@ function leanwi_override_post_install($true, $hook_extra, $result) {
 
     return $result;
 }
-add_filter('upgrader_post_install', 'leanwi_override_post_install', 10, 3);
+add_filter('upgrader_post_install', __NAMESPACE__ . '\\leanwi_override_post_install', 10, 3);

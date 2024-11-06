@@ -1,5 +1,5 @@
 <?php
-
+namespace LEANWI_Book_A_Room;
 /**************************************************************************************************
  * Main Menu and Main Page
  **************************************************************************************************/
@@ -11,7 +11,7 @@ function leanwi_add_admin_menu() {
         'LEANWI-Book-A-Room',     // Menu title (for the plugin name in the dashboard)
         'manage_options',         // Capability
         'leanwi-book-a-room-main', // Menu slug
-        'leanwi_main_page',       // Callback function
+        __NAMESPACE__ . '\\leanwi_main_page',       // Callback function
         'dashicons-calendar',     // Menu icon (optional)
         6                         // Position
     );
@@ -23,7 +23,7 @@ function leanwi_add_admin_menu() {
         'Documentation',              // Menu title (this will be the first submenu item)
         'manage_options',             // Capability
         'leanwi-book-a-room-main',    // Menu slug (reuse 'leanwi-book-a-room-main' to link it to the parent page)
-        'leanwi_main_page'            // Callback function (this will now display the Documentation page)
+        __NAMESPACE__ . '\\leanwi_main_page'            // Callback function (this will now display the Documentation page)
     );
 
     // Sub-menu: "Venues"
@@ -33,7 +33,7 @@ function leanwi_add_admin_menu() {
         'Venues',                     // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-venues',  // Menu slug
-        'leanwi_venues_page'          // Callback function to display venues
+        __NAMESPACE__ . '\\leanwi_venues_page'          // Callback function to display venues
     );
 
     // Sub-menu: "Add Venue"
@@ -43,7 +43,7 @@ function leanwi_add_admin_menu() {
         'Add Venue',
         'manage_options',
         'leanwi-add-venue',
-        'leanwi_add_venue_page'
+        __NAMESPACE__ . '\\leanwi_add_venue_page'
     );
 
     // Sub-menu: "Delete Venue"
@@ -53,7 +53,7 @@ function leanwi_add_admin_menu() {
         'Delete Venue',
         'manage_options',
         'leanwi-delete-venue',
-        'leanwi_delete_venue_page'
+        __NAMESPACE__ . '\\leanwi_delete_venue_page'
     );
 
     // Sub-menu: "Edit Venue"
@@ -63,7 +63,7 @@ function leanwi_add_admin_menu() {
         'Edit Venue',                 // Menu title
         'manage_options',             // Capability
         'leanwi-edit-venue',          // Menu slug
-        'leanwi_edit_venue_page'      // Callback function to display the edit venue form
+        __NAMESPACE__ . '\\leanwi_edit_venue_page'      // Callback function to display the edit venue form
     );
 
     // Sub-menu: "Categories"
@@ -73,7 +73,7 @@ function leanwi_add_admin_menu() {
         'Categories',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-categories',// Menu slug
-        'leanwi_categories_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_categories_page'        // Callback function to display settings
     );
 
     // Sub-menu: "Add Category"
@@ -83,7 +83,7 @@ function leanwi_add_admin_menu() {
         'Add Category',
         'manage_options',
         'leanwi-add-category',
-        'leanwi_add_category_page'
+        __NAMESPACE__ . '\\leanwi_add_category_page'
     );
 
     // Sub-menu: "Edit Category"
@@ -93,7 +93,7 @@ function leanwi_add_admin_menu() {
         'Edit Category',                 // Menu title
         'manage_options',             // Capability
         'leanwi-edit-category',          // Menu slug
-        'leanwi_edit_category_page'      // Callback function to display the edit venue form
+        __NAMESPACE__ . '\\leanwi_edit_category_page'      // Callback function to display the edit venue form
     );
 
     // Sub-menu: "Audiences"
@@ -103,7 +103,7 @@ function leanwi_add_admin_menu() {
         'Audiences',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-audiences',// Menu slug
-        'leanwi_audiences_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_audiences_page'        // Callback function to display settings
     );
 
     // Sub-menu: "Add Audience"
@@ -113,7 +113,7 @@ function leanwi_add_admin_menu() {
         'Add Audience',
         'manage_options',
         'leanwi-add-audience',
-        'leanwi_add_audience_page'
+        __NAMESPACE__ . '\\leanwi_add_audience_page'
     );
 
     // Sub-menu: "Edit Audience"
@@ -123,7 +123,7 @@ function leanwi_add_admin_menu() {
         'Edit Audience',                 // Menu title
         'manage_options',             // Capability
         'leanwi-edit-audience',          // Menu slug
-        'leanwi_edit_audience_page'      // Callback function to display the edit venue form
+        __NAMESPACE__ . '\\leanwi_edit_audience_page'      // Callback function to display the edit venue form
     );
 
     // Sub-menu: "Affirmations"
@@ -133,7 +133,7 @@ function leanwi_add_admin_menu() {
         'Affirmations',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-affirmations',// Menu slug
-        'leanwi_affirmations_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_affirmations_page'        // Callback function to display settings
     );
 
     // Sub-menu: "Add Affirmation"
@@ -143,7 +143,7 @@ function leanwi_add_admin_menu() {
         'Add Affirmation',
         'manage_options',
         'leanwi-add-affirmation',
-        'leanwi_add_affirmation_page'
+        __NAMESPACE__ . '\\leanwi_add_affirmation_page'
     );
 
     // Sub-menu: "Delete Affirmation"
@@ -153,7 +153,7 @@ function leanwi_add_admin_menu() {
         'Delete Affirmation',
         'manage_options',
         'leanwi-delete-affirmation',
-        'leanwi_delete_affirmation_page'
+        __NAMESPACE__ . '\\leanwi_delete_affirmation_page'
     );
 
     // Sub-menu: "Edit Affirmation"
@@ -163,7 +163,7 @@ function leanwi_add_admin_menu() {
         'Edit Affirmation',                 // Menu title
         'manage_options',             // Capability
         'leanwi-edit-affirmation',          // Menu slug
-        'leanwi_edit_affirmation_page'      // Callback function to display the edit venue form
+        __NAMESPACE__ . '\\leanwi_edit_affirmation_page'      // Callback function to display the edit venue form
     );
 
     // Sub-menu: "Reports"
@@ -173,7 +173,7 @@ function leanwi_add_admin_menu() {
         'Reporting',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-reports',// Menu slug
-        'leanwi_reports_page'        // Callback function to display the reports page
+        __NAMESPACE__ . '\\leanwi_reports_page'        // Callback function to display the reports page
     );
 
     // Sub-menu: "Settings"
@@ -183,12 +183,12 @@ function leanwi_add_admin_menu() {
         'Settings',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-settings',// Menu slug
-        'leanwi_settings_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_settings_page'        // Callback function to display settings
     );
 }
 
 // Hook to create the admin menu
-add_action('admin_menu', 'leanwi_add_admin_menu');
+add_action('admin_menu', __NAMESPACE__ . '\\leanwi_add_admin_menu');
 
 // Hide the Add and Edit pages submenus from the left-hand navigation menu using CSS
 function leanwi_hide_add_edit_submenus_css() {
@@ -225,7 +225,7 @@ function leanwi_hide_add_edit_submenus_css() {
         }
     </style>';
 }
-add_action('admin_head', 'leanwi_hide_add_edit_submenus_css');
+add_action('admin_head', __NAMESPACE__ . '\\leanwi_hide_add_edit_submenus_css');
 
 // Function to display the main page
 function leanwi_main_page() {
@@ -1523,7 +1523,7 @@ function leanwi_purge_reports() {
         exit;
     }   
 }
-add_action('admin_init', 'leanwi_purge_reports');
+add_action('admin_init', __NAMESPACE__ . '\\leanwi_purge_reports');
 
 // AJAX handler for fetching updated report count
 function leanwi_get_report_count() {
@@ -1543,7 +1543,7 @@ function leanwi_get_report_count() {
     // Return the count
     wp_send_json_success(['report_count' => $report_count]);
 }
-add_action('wp_ajax_leanwi_get_report_count', 'leanwi_get_report_count');
+add_action('wp_ajax_leanwi_get_report_count', __NAMESPACE__ . '\\leanwi_get_report_count');
 
 
 /**************************************************************************************************
@@ -1602,7 +1602,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_minutes_interval',      // Field ID
         'Minutes Interval',             // Label for the field
-        'leanwi_minutes_interval_field',// Function to display the dropdown
+        __NAMESPACE__ . '\\leanwi_minutes_interval_field',// Function to display the dropdown
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1611,7 +1611,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_booking_months',  // Field ID
         'Booking Months in Advance',         // Label for the field
-        'leanwi_booking_months_field', // Function to display the input
+        __NAMESPACE__ . '\\leanwi_booking_months_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1620,7 +1620,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_show_zero_cost',       // Field ID
         'Show Cost to Users if Zero?', // Label for the field
-        'leanwi_show_zero_cost_field', // Function to display the dropdown
+        __NAMESPACE__ . '\\leanwi_show_zero_cost_field', // Function to display the dropdown
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1629,7 +1629,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_show_categories',       // Field ID
         'Show Categories to Users?',     // Label for the field
-        'leanwi_show_categories_field', // Function to display the dropdown
+        __NAMESPACE__ . '\\leanwi_show_categories_field', // Function to display the dropdown
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1638,7 +1638,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_show_audiences',        // Field ID
         'Show Audiences to Users?',      // Label for the field
-        'leanwi_show_audiences_field',  // Function to display the dropdown
+        __NAMESPACE__ . '\\leanwi_show_audiences_field',  // Function to display the dropdown
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1647,7 +1647,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_send_admin_booking_email',       // Field ID
         'Send Admin a Copy of the Booking Email?',     // Label for the field
-        'leanwi_send_admin_booking_email_field', // Function to display the dropdown
+        __NAMESPACE__ . '\\leanwi_send_admin_booking_email_field', // Function to display the dropdown
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1656,7 +1656,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_admin_email_address',  // Field ID
         'Email Address for Booking Emails',         // Label for the field
-        'leanwi_admin_email_address_field', // Function to display the input
+        __NAMESPACE__ . '\\leanwi_admin_email_address_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1665,7 +1665,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_highlighted_button_border_color',  // Field ID
         'Border color for highlighted buttons',         // Label for the field
-        'leanwi_highlighted_button_border_color_field', // Function to display the input
+        __NAMESPACE__ . '\\leanwi_highlighted_button_border_color_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1674,7 +1674,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_highlighted_button_bg_color',  // Field ID
         'Background color for highlighted buttons',         // Label for the field
-        'leanwi_highlighted_button_bg_color_field', // Function to display the input
+        __NAMESPACE__ . '\\leanwi_highlighted_button_bg_color_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1683,7 +1683,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_highlighted_button_text_color',  // Field ID
         'Text color for highlighted buttons',         // Label for the field
-        'leanwi_highlighted_button_text_color_field', // Function to display the input
+        __NAMESPACE__ . '\\leanwi_highlighted_button_text_color_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1692,7 +1692,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_enable_recaptcha',
         'Enable reCAPTCHA',
-        'leanwi_enable_recaptcha_field',
+        __NAMESPACE__ . '\\leanwi_enable_recaptcha_field',
         'leanwi-book-a-room-settings',
         'leanwi_main_section'
     );
@@ -1701,7 +1701,7 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_recaptcha_site_key',
         'reCAPTCHA Site Key',
-        'leanwi_recaptcha_site_key_field',
+        __NAMESPACE__ . '\\leanwi_recaptcha_site_key_field',
         'leanwi-book-a-room-settings',
         'leanwi_main_section'
     );
@@ -1710,14 +1710,14 @@ function leanwi_register_settings() {
     add_settings_field(
         'leanwi_recaptcha_secret_key',
         'reCAPTCHA Secret Key',
-        'leanwi_recaptcha_secret_key_field',
+        __NAMESPACE__ . '\\leanwi_recaptcha_secret_key_field',
         'leanwi-book-a-room-settings',
         'leanwi_main_section'
     );
 }
 
 // Hook the settings registration function
-add_action('admin_init', 'leanwi_register_settings');
+add_action('admin_init', __NAMESPACE__ . '\\leanwi_register_settings');
 
 // Function to display the Minutes Interval dropdown
 function leanwi_minutes_interval_field() {

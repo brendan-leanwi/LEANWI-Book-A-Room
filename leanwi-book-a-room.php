@@ -1,4 +1,5 @@
 <?php
+namespace LEANWI_Book_A_Room;
 /*
 Plugin Name:  LEANWI Book A Room
 GitHub URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
@@ -20,10 +21,10 @@ require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue
 require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updates.php';
 
 // Hook to run when the plugin is activated
-register_activation_hook(__FILE__, 'leanwi_create_tables');
+register_activation_hook(__FILE__, __NAMESPACE__ . '\\leanwi_create_tables');
 
 // Hook to run when the plugin is uninstalled
-register_uninstall_hook(__FILE__, 'leanwi_drop_tables');
+register_uninstall_hook(__FILE__, __NAMESPACE__ . '\\leanwi_drop_tables');
 
 // Register the JavaScript files
 function leanwi_enqueue_scripts() {
@@ -77,10 +78,10 @@ function leanwi_enqueue_scripts() {
         wp_enqueue_script('staff-venue-booking-js');
     }
 }
-add_action('wp_enqueue_scripts', 'leanwi_enqueue_scripts');
+add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\leanwi_enqueue_scripts');
 
 // Add this to your plugin or theme's PHP file
 function enqueue_custom_styles() {
     wp_enqueue_style('custom-calendar-style', plugin_dir_url(__FILE__) . 'css/booking-style.css');
 }
-add_action('wp_enqueue_scripts', 'enqueue_custom_styles');
+add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_custom_styles');

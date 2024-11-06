@@ -1,4 +1,6 @@
 <?php
+namespace LEANWI_Book_A_Room;
+
 // Function to create the necessary tables on plugin activation
 function leanwi_create_tables() {
     // Load WordPress environment to access $wpdb
