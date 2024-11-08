@@ -148,8 +148,13 @@ if ($success && !is_email($email)) {
 }
 
 if ($success) {
-    // Ensure the page URL ends without a trailing '/' before appending the query string
-    $page_url = rtrim($page_url, '/'); // Remove the trailing '/' if it exists
+    // Ensure $page_url has no query parameters
+    $parsed_url = parse_url($page_url);
+    $page_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
+    if (isset($parsed_url['path'])) {
+        $page_url .= $parsed_url['path'];
+    }
+    $page_url = rtrim($page_url, '/'); // Remove any trailing '/'
 
     // Email details
     $to = sanitize_email($email);
