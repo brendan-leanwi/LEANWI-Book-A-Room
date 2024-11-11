@@ -36,6 +36,7 @@ if(get_option('leanwi_enable_recaptcha') === 'yes')
 }
 
 // Sanitize incoming POST data
+$passer = sanitize_text_field($_POST['passer']);
 $day = sanitize_text_field($_POST['day']);
 $name = sanitize_text_field($_POST['name']);
 $organization = sanitize_text_field($_POST['organization']);
@@ -84,7 +85,7 @@ if (empty($name) || empty($email) || empty($start_time) || empty($end_time)) {
 }
 
 // Check if the start time is in the past
-if ($startDateTime < $currentDateTime) {
+if ($passer != "staff" && $startDateTime < $currentDateTime) {
     $success = false;
     $errorMessage = 'The selected start time is in the past. You will need to add a booking with a start time in the future.';
 }

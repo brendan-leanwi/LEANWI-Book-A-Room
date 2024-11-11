@@ -19,6 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('previous_booking_h2').textContent = "Your Booking ID has been Entered:";
     }
 
+    // Get the passer query parameter
+    const passer = getQueryParam('passer');
+    
     // Update the CSS variables in the :root selector
     document.documentElement.style.setProperty('--highlighted-button-bg', highlightedButtonBgColor);
     document.documentElement.style.setProperty('--highlighted-button-border', highlightedButtonBorderColor);
@@ -756,6 +759,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append('minutes_interval', bookingSettings.minutesInterval);
                 formData.append('admin_email_address', bookingSettings.adminEmailAddress);
                 formData.append('send_admin_email', bookingSettings.sendAdminEmail);
+                formData.append('passer', passer);
             
                 document.body.style.cursor = 'wait'; // Set cursor before fetch starts
                 fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
