@@ -56,7 +56,7 @@ function leanwi_create_tables() {
     // SQL for creating leanwi_booking_participant table
     $sql5 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_participant (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        unique_id CHAR(7) NOT NULL,
+        unique_id CHAR(7) NOT NULL UNIQUE,
         venue_id INT NOT NULL,
         organization VARCHAR(255),
         name VARCHAR(255) NOT NULL,
@@ -138,6 +138,23 @@ function leanwi_create_tables() {
         ),
         array('%d', '%s', '%d') // Data types
     );
+
+    // Check if the unique index already exists
+    $index_check = $wpdb->get_var( "
+        SELECT COUNT(*) 
+        FROM information_schema.statistics 
+        WHERE table_schema = DATABASE() 
+          AND table_name = '{$wpdb->prefix}leanwi_booking_participant' 
+          AND index_name = 'unique_id'
+    " );
+
+    // If index doesn't exist, add the unique index
+    if ( $index_check == 0 ) {
+        $wpdb->query( "
+            ALTER TABLE {$wpdb->prefix}leanwi_booking_participant
+            ADD UNIQUE (unique_id)
+        " );
+    }
 }
 
 
