@@ -774,7 +774,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        const messageContainer = document.getElementById('booking-message');
+                        messageContainer.innerHTML = data.message + (data.unique_id ? `<br><strong>${data.unique_id}</strong>` : '');
+                        messageContainer.style.display = 'block'; // Show the message div
                         contactFormContainer.style.display = 'none';
                     } else {
                         console.error('Submit Error:', data.message);
@@ -788,6 +790,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .finally(() => {
                     document.body.style.cursor = 'default'; // Reset cursor after fetch completes
                 });
+                
             }
         });   
         
@@ -967,6 +970,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const deleteNonce = document.querySelector('#delete_booking_nonce').value; // Retrieve delete nonce
 
             if (confirm(`Are you sure you want to delete the booking with ID: ${uniqueId}?`)) {
+                // Prompt for cancellation reason
+                const cancellationReason = prompt("Please provide a reason for the cancellation (optional):");
+
                 // Update cursor and button state to "wait"
                 setLoadingState(true);
                 // Make a fetch call to delete the booking
@@ -979,7 +985,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         unique_id: uniqueId, 
                         admin_email_address: adminEmailAddress,
                         send_admin_email: sendAdminEmail,
-                        delete_booking_nonce: deleteNonce // Include the nonce
+                        delete_booking_nonce: deleteNonce, // Include the nonce
+                        cancellation_reason: cancellationReason || '' // Pass the reason or an empty string if none provided
                     }),
                 })
                 .then(response => {

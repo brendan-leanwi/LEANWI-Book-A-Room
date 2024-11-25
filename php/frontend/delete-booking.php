@@ -14,6 +14,7 @@ if (!isset($data['delete_booking_nonce']) || !wp_verify_nonce($data['delete_book
 $unique_id = isset($data['unique_id']) ? sanitize_text_field($data['unique_id']) : '';
 $admin_email_address = isset($data['admin_email_address']) ? sanitize_email($data['admin_email_address']) : '';
 $send_admin_email = isset($data['send_admin_email']) ? sanitize_text_field($data['send_admin_email']) : 'no';
+$cancellation_reason = isset($data['cancellation_reason']) ? sanitize_text_field($data['cancellation_reason']) : '';
 
 if (!empty($unique_id)) {
     $table_name = esc_sql($wpdb->prefix . 'leanwi_booking_participant');
@@ -46,10 +47,13 @@ if (!empty($unique_id)) {
             $subject = 'Your Booking Cancellation';
             $message = "<p>Hi <strong>" . esc_html($name) . "</strong>,</p>" .
                 "<p>Your booking for booking ID <strong>" . esc_html($unique_id) . "</strong> scheduled to start on " . 
-                esc_html($formatted_start_time) . " has been cancelled.</p>" .
-                "<p>If this was done in error, please rebook.</p>" .
-                "<p>If this is a surprise, check with library staff before making another booking.</p>" .
-                "<p>Best regards,<br>Booking Team</p>";
+                esc_html($formatted_start_time) . " has been cancelled.</p>";
+            if(!empty($cancellation_reason)) {
+                $message .= "<p>REASON GIVEN: " . esc_html($cancellation_reason) . "</p>";
+            }
+            $message .= "<p>If this was done in error, please rebook.</p>" .
+                "<p>If you are unsure as to the reason please contact library staff before making another booking.</p>" .
+                "<p>Best regards,<br>Library Staff Booking Team</p>";
             $headers = "MIME-Version: 1.0" . "\r\n";
             $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
             $mail_sent = wp_mail($to, $subject, $message, $headers);

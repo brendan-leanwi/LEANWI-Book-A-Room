@@ -263,6 +263,7 @@
     }
 }
 
+
 /*************************************************************************************/
 /* AFFIRMATIONS STYLING */
 /*************************************************************************************/
@@ -282,4 +283,101 @@
 .affirmations-table td:first-child {
     text-align: center; /* Center-align checkbox */
     width: 5%;
+}
+
+/*************************************************************************************/
+/* SUCCESS MESSAGE STYLING */
+/*************************************************************************************/
+
+#booking-message {
+    padding: 15px !important;
+    border: 2px solid #4CAF50 !important;
+    border-radius: 5px !important;
+    background-color: #eafaf1 !important;
+    color: #2d7a3b !important;
+    font-family: Arial, sans-serif !important;
+    text-align: center !important; /* Centers the text */
+    margin: 20px auto !important; /* Centers the box horizontally */
+    max-width: 800px !important; /* Optional: Restricts the width of the box */
+}
+
+/***********************************************************************************
+* VENUE GRID STYLING
+*************************************************************************************/
+/* Center the form */
+#booking-date-selector {
+    text-align: center !important;
+    margin-bottom: 20px !important;
+}
+
+#booking-date-selector label {
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+#booking-date-selector input[type="date"],
+#booking-date-selector input[type="submit"] {
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#booking-date-selector input[type="submit"] {
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    cursor: pointer;
+}
+
+#booking-date-selector input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Style the table */
+.booking-grid-table {
+    width: 80% !important;
+    margin: 0 auto !important; /* Center the table horizontally */
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.booking-grid-table th,
+.booking-grid-table td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.booking-grid-table thead {
+    background-color: #ced0d3;
+}
+
+.booking-grid-table tbody td {
+    background-color: #ffffff; /*Don't need this if it's white but may want to change later*/
+}
+
+/* Style time slots column */
+.booking-grid-table tbody td:first-child {
+    background-color: #e9ecef; /* Light grey color */
+    font-weight: bold;
+    color: #495057; /* Darker text for contrast */
+}
+
+/* Style N/A cells */
+.booking-grid-table .na-cell {
+    background-color: #d6d8db; /* Light grey color */
+    color: #6c757d; /* Darker grey text */
+    font-weight: bold;
+}
+
+/* Style Booked cells */
+.booking-grid-table .booked-cell {
+    background-color: #f8d7da; /* Light red color */
+    color: #721c24; /* Dark red text */
+    font-weight: bold;
 }

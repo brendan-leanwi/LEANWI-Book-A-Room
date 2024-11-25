@@ -79,9 +79,9 @@ $bookingAlreadyExisted = false;
 $currentDateTime = new DateTime($current_time); // Create a DateTime object for the current time
 $startDateTime = new DateTime($start_time); // Create a DateTime object for the start time
 
-if (empty($name) || empty($email) || empty($start_time) || empty($end_time)) {
+if (empty($name) || empty($start_time) || empty($end_time)) {
     $success = false;
-    $errorMessage = 'Name, email, start time, and end time are required.';
+    $errorMessage = 'Name, start time, and end time are required.';
 }
 
 // Check if the start time is in the past
@@ -142,12 +142,13 @@ if ($success) {
     }
 }
 
-// Send email if booking is successful
-if ($success && !is_email($email)) {
+// If we were passed an email but it's not valid return an error
+if ($success && !empty($email) && !is_email($email)) {
     $success = false;
     $errorMessage = 'Invalid email address. Failed to send confirmation email to user.';
 }
 
+// Send email if booking is successful
 if ($success) {
     // Ensure $page_url has no query parameters
     $parsed_url = parse_url($page_url);
@@ -199,30 +200,31 @@ if ($success) {
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
 
-    // Send email using wp_mail
-    $mail_sent = wp_mail($to, $subject, $message, $headers);
+    if(is_email($email)) {
+        // Send email using wp_mail
+        $mail_sent = wp_mail($to, $subject, $message, $headers);
 
-    // Handle email sending result (if necessary)
-    if (!$mail_sent) {
-        $errorMessage = 'Booking successful, but failed to send confirmation email to user.';
+        // Handle email sending result (if necessary)
+        if (!$mail_sent) {
+            $errorMessage = "Booking successful, but failed to send confirmation email to user. Please take note of your booking number now: ";
+        }
     }
-    else {
-        if ($send_admin_email === 'yes' && !empty($admin_email_address)){
-            if (!is_email($admin_email_address)) {
-                $success = false;
-                $errorMessage = 'Invalid admin email address. Failed to send confirmation email to administrator.';
-            }
-            
-            $to = $admin_email_address;
-            $subject = 'A booking has been made!';
-            if ($bookingAlreadyExisted) {
-                $subject = 'A booking has been updated';
-            }
-            $admin_message = "<p>Hello administrator, the following booking has been made.<br></p> $message";
-            $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
-            if (!$admin_mail_sent) {
-                $errorMessage = 'Booking successful, but failed to send confirmation email to administrator.';
-            }
+    
+    if ($send_admin_email === 'yes' && !empty($admin_email_address)){
+        if (!is_email($admin_email_address)) {
+            $success = false;
+            $errorMessage += 'Invalid admin email address. Failed to send confirmation email to administrator.';
+        }
+        
+        $to = $admin_email_address;
+        $subject = 'A booking has been made!';
+        if ($bookingAlreadyExisted) {
+            $subject = 'A booking has been updated';
+        }
+        $admin_message = "<p>Hello administrator, the following booking has been made.<br></p> $message";
+        $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
+        if (!$admin_mail_sent) {
+            $errorMessage += 'Booking successful, but failed to send confirmation email to administrator.';
         }
     }
 }
@@ -231,7 +233,8 @@ if ($success) {
 header('Content-Type: application/json');
 $response = [
     'success' => $success,
-    'message' => $success ? 'Booking successful!' : esc_html($errorMessage)
+    'message' => $success ? "Booking successful! If an email address was not provided please take note of your booking number now: " : esc_html($errorMessage),
+    'unique_id' => $unique_id
 ];
 
 echo json_encode($response);

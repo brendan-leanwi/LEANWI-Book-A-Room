@@ -109,10 +109,10 @@ function display_venue_details($atts) {
             <input type="text" id="organization" name="organization" style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <input type="email" id="email" name="email" style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
             <label for="phone">Phone Number:</label>
-            <input type="text" id="phone" name="phone" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <input type="text" id="phone" name="phone" style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
             <label for="participants">Number of Participants:</label>
             <input type="number" id="participants" name="participants" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
@@ -146,6 +146,10 @@ function display_venue_details($atts) {
             <button type="submit" class="book-button">Save Booking</button>
         </form>
 
+    </div>
+
+    <div id="booking-message" class="booking-message" style="display: none;">
+        <!-- Message will be injected here -->
     </div>
 
 

@@ -596,7 +596,7 @@ function leanwi_edit_venue_page() {
                 $page_url = esc_url($_POST['page_url']);
                 $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
                 $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
-
+        
                 // Update the venue in the database
                 $updated = $wpdb->update(
                     $venue_table,
@@ -617,39 +617,52 @@ function leanwi_edit_venue_page() {
                     ),
                     array('venue_id' => $venue_id)
                 );
-                if($updated) {
-                    // Update the open and close hours
-                    foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
-                        $open_hour = intval($_POST[$day . '_open_hour']);
-                        $open_minute = intval($_POST[$day . '_open_minute']);
-                        $close_hour = intval($_POST[$day . '_close_hour']);
-                        $close_minute = intval($_POST[$day . '_close_minute']);
-
-                        // Update the hours in the database
-                        $wpdb->update(
-                            $hours_table,
-                            array(
-                                'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
-                                'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
-                            ),
-                            array(
-                                'venue_id' => $venue_id,
-                                'day_of_week' => ucfirst($day)
-                            )
-                        );
-                    }  
+        
+                if ($updated === false) {
+                    $error_message = $wpdb->last_query;
+                    echo '<div class="error"><p>Error updating venue: ' . esc_html($error_message) . '</p></div>';
                 } else {
-                    echo '<div class="error"><p>Error updating venue. Please try again.</p></div>';
+                    echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
                 }
-
-                echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
-                $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id)); // Refresh venue details
-            
+        
+                // Continue updating venue hours regardless of venue update result
+                foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
+                    $open_hour = intval($_POST[$day . '_open_hour']);
+                    $open_minute = intval($_POST[$day . '_open_minute']);
+                    $close_hour = intval($_POST[$day . '_close_hour']);
+                    $close_minute = intval($_POST[$day . '_close_minute']);
+        
+                    // Update the hours in the database
+                    $hours_updated = $wpdb->update(
+                        $hours_table,
+                        array(
+                            'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
+                            'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                        ),
+                        array(
+                            'venue_id' => $venue_id,
+                            'day_of_week' => ucfirst($day)
+                        )
+                    );
+        
+                    if ($hours_updated === false) {
+                        $error_message = $wpdb->last_query;
+                        echo '<div class="error"><p>Error updating venue hours: ' . esc_html($error_message) .
+                        ' VenueId: ' . $venue_id . ' DoW: ' . ucfirst($day) . ' Open Time: ' .
+                        sprintf('%02d:%02d:00', $open_hour, $open_minute) . ' Close Time: ' .
+                        sprintf('%02d:%02d:00', $close_hour, $close_minute) . '</p></div>';
+                        exit;  // Stop execution if hours update fails
+                    }
+                }
+                
+                // Refresh venue details
+                $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id));
+                
             } else {
                 // Nonce is invalid; handle the error accordingly.
                 wp_die('Nonce verification failed.');
             }
-        }
+        }        
     }
 
     // If venue not found

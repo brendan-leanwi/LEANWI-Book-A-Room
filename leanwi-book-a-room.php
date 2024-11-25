@@ -19,6 +19,9 @@ require_once plugin_dir_path(__FILE__) . 'php/plugin/schema.php'; //File contain
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-details.php'; // Contains the page and shortcode for the venue_details shortcode
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue-details.php'; // Contains the page and shortcode for the staff_venue_details shortcode
 require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updates.php';
+require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-grid.php'; // Contains the page and shortcode for the venue_grid shortcode
+require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue-grid.php';
+require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-recurring-bookings.php';
 
 // Hook to run when the plugin is activated
 register_activation_hook(__FILE__, __NAMESPACE__ . '\\leanwi_create_tables');
@@ -55,12 +58,13 @@ function leanwi_enqueue_scripts() {
 
         wp_enqueue_script('venue-booking-js');
     }
-    else if (is_page() && has_shortcode(get_post()->post_content, 'staff_venue_details')) {
+
+    if (is_page() && has_shortcode(get_post()->post_content, 'staff_venue_details')) {
         wp_register_script(
             'staff-venue-booking-js',
             plugin_dir_url(__FILE__) . 'js/staff-venue-booking.js',
             array('jquery'),
-            filemtime(plugin_dir_path(__FILE__) . 'js/staff-venue-booking.js'), // Version based on file modification time
+            filemtime(plugin_dir_path(__FILE__) . 'js/staff-venue-booking.js'), 
             true
         );
 
@@ -77,11 +81,55 @@ function leanwi_enqueue_scripts() {
 
         wp_enqueue_script('staff-venue-booking-js');
     }
+
+    if (is_page() && has_shortcode(get_post()->post_content, 'venue_grid')) {
+        wp_register_script(
+            'venue-grid-js',
+            plugin_dir_url(__FILE__) . 'js/venue-grid.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/venue-grid.js'), 
+            true
+        );
+
+        wp_enqueue_script('venue-grid-js');
+    }
+
+    if (is_page() && has_shortcode(get_post()->post_content, 'staff_venue_grid')) {
+        wp_register_script(
+            'staff-venue-grid-js',
+            plugin_dir_url(__FILE__) . 'js/staff-venue-grid.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/staff-venue-grid.js'), 
+            true
+        );
+
+        wp_enqueue_script('staff-venue-grid-js');
+    }
+
+    if (is_page() && has_shortcode(get_post()->post_content, 'staff_recurring_bookings')) {
+        wp_register_script(
+            'staff-recurring-bookings-js',
+            plugin_dir_url(__FILE__) . 'js/staff-recurring-bookings.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/staff-recurring-bookings.js'), 
+            true
+        );
+
+        wp_enqueue_script('staff-recurring-bookings-js');
+    }
 }
 add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\leanwi_enqueue_scripts');
 
-// Add this to your plugin or theme's PHP file
+
 function enqueue_custom_styles() {
-    wp_enqueue_style('custom-calendar-style', plugin_dir_url(__FILE__) . 'css/booking-style.css');
+    if (is_page() && (
+        has_shortcode(get_post()->post_content, 'venue_grid') || 
+        has_shortcode(get_post()->post_content, 'staff_venue_grid') || 
+        has_shortcode(get_post()->post_content, 'staff_recurring_bookings') || 
+        has_shortcode(get_post()->post_content, 'staff_venue_details') || 
+        has_shortcode(get_post()->post_content, 'venue_details'))) 
+    {
+        wp_enqueue_style('custom-calendar-style', plugin_dir_url(__FILE__) . 'css/booking-style.css');
+    }
 }
 add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_custom_styles');

@@ -53,14 +53,24 @@ function leanwi_create_tables() {
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
+    $sql5 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_recurrence (
+        recurrence_id INT AUTO_INCREMENT PRIMARY KEY,
+        recurrence_type ENUM('daily', 'weekly', 'monthly', 'nth_weekday') NOT NULL,
+        recurrence_interval INT DEFAULT 1, -- Number of days/weeks/months between recurrences
+        recurrence_end_date DATE NOT NULL, -- When the recurrence stops
+        recurrence_day_of_week TINYINT, -- For weekly or nth_weekday recurrences (0=Sunday, 6=Saturday)
+        recurrence_week_of_month TINYINT -- For nth_weekday recurrences (1=First, 2=Second, -1=last, -2=2nd last...)
+    ) $engine $charset_collate;";
+
     // SQL for creating leanwi_booking_participant table
-    $sql5 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_participant (
+    $sql6 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_participant (
         id INT AUTO_INCREMENT PRIMARY KEY,
         unique_id CHAR(7) NOT NULL UNIQUE,
         venue_id INT NOT NULL,
+        recurrence_id INT,
         organization VARCHAR(255),
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
         phone VARCHAR(20),
         start_time DATETIME NOT NULL,
         end_time DATETIME NOT NULL,
@@ -69,11 +79,12 @@ function leanwi_create_tables() {
         category_id INT,
         audience_id INT,
         total_cost DECIMAL(10,2) DEFAULT 0.00,
-        FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
+        FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE,
+        FOREIGN KEY (recurrence_id) REFERENCES {$wpdb->prefix}leanwi_booking_recurrence(recurrence_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
     // SQL for creating leanwi_booking_category table
-    $sql6 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_affirmation (
+    $sql7 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_affirmation (
         id INT AUTO_INCREMENT PRIMARY KEY,
         affirmation TEXT NOT NULL
     ) $engine $charset_collate;";
@@ -116,6 +127,11 @@ function leanwi_create_tables() {
     if ($wpdb->last_error) {
         error_log('DB Error6: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
     }
+    dbDelta($sql7);
+    // Debug logging to track SQL execution
+    if ($wpdb->last_error) {
+        error_log('DB Error7: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+    }
 
     // Insert default category
     $wpdb->insert(
@@ -138,23 +154,6 @@ function leanwi_create_tables() {
         ),
         array('%d', '%s', '%d') // Data types
     );
-
-    // Check if the unique index already exists
-    $index_check = $wpdb->get_var( "
-        SELECT COUNT(*) 
-        FROM information_schema.statistics 
-        WHERE table_schema = DATABASE() 
-          AND table_name = '{$wpdb->prefix}leanwi_booking_participant' 
-          AND index_name = 'unique_id'
-    " );
-
-    // If index doesn't exist, add the unique index
-    if ( $index_check == 0 ) {
-        $wpdb->query( "
-            ALTER TABLE {$wpdb->prefix}leanwi_booking_participant
-            ADD UNIQUE (unique_id)
-        " );
-    }
 }
 
 
