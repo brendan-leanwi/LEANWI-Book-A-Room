@@ -170,6 +170,13 @@
     font-weight: bold; /* Make the font bold */
 }
 
+.button-container {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+    justify-content: center; /* Center buttons if needed */
+    align-items: center; /* Align buttons vertically */
+}
+
 .find-button {
     background-color: var(--highlighted-button-bg);
     border: 2px solid var(--highlighted-button-border);
@@ -214,6 +221,7 @@
     margin-bottom: 20px; /* Add space below the buttons */
 }
 
+.recurring-choices-container,
 .booking-container {
     border: 2px solid #ccc; /* Adjust the border color and thickness */
     padding: 15px; /* Space inside the border */
@@ -380,4 +388,104 @@
     background-color: #f8d7da; /* Light red color */
     color: #721c24; /* Dark red text */
     font-weight: bold;
+}
+
+/***********************************************************************************
+* RECURRING BOOKING STYLING
+*************************************************************************************/
+#recurrence-details-container .info-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: var(--highlighted-button-bg);
+    color: #fff;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 5px;
+    position: relative;
+}
+
+#recurrence-details-container .info-icon::before {
+    content: "i";
+    display: inline-block;
+    font-family: Arial, sans-serif;
+}
+
+#recurrence-details-container .info-icon:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 20px;
+    top: -5px;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    z-index: 10;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+#recurrence-details-container .info-icon:hover::before {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background-color: #333;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    z-index: 9;
+}
+
+/* Add margin above the table */
+.existing-recurrence-container {
+    margin-top: 50px !important;
+}
+
+/* Style the table */
+#existing-recurrence-container .styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    background-color: #f9f9f9;
+    margin: 0 auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#existing-recurrence-container .styled-table thead tr {
+    background-color: #b8babd;
+    color: #ffffff;
+    text-align: left;
+}
+
+#existing-recurrence-container .styled-table th, .styled-table td {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+}
+
+#existing-recurrence-container .styled-table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Add hover effect */
+#existing-recurrence-container .styled-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Center the "View" link */
+#existing-recurrence-container .styled-table td:last-child {
+    text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #existing-recurrence-container .styled-table {
+        font-size: 12px;
+    }
 }

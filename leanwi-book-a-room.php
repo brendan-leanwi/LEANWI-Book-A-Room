@@ -21,6 +21,7 @@ require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue
 require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updates.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-grid.php'; // Contains the page and shortcode for the venue_grid shortcode
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue-grid.php';
+require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-name-search.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-recurring-bookings.php';
 
 // Hook to run when the plugin is activated
@@ -106,6 +107,18 @@ function leanwi_enqueue_scripts() {
         wp_enqueue_script('staff-venue-grid-js');
     }
 
+    if (is_page() && has_shortcode(get_post()->post_content, 'staff_name_search')) {
+        wp_register_script(
+            'staff-name-search-js',
+            plugin_dir_url(__FILE__) . 'js/staff-name-search.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/staff-name-search.js'), 
+            true
+        );
+
+        wp_enqueue_script('staff-name-search-js');
+    }
+
     if (is_page() && has_shortcode(get_post()->post_content, 'staff_recurring_bookings')) {
         wp_register_script(
             'staff-recurring-bookings-js',
@@ -114,6 +127,16 @@ function leanwi_enqueue_scripts() {
             filemtime(plugin_dir_path(__FILE__) . 'js/staff-recurring-bookings.js'), 
             true
         );
+
+        // Localize the maximum booking slots setting and maxMonths
+        wp_localize_script('staff-recurring-bookings-js', 'bookingSettings', array(
+            'minutesInterval' => intval(get_option('leanwi_minutes_interval', 30)), // Default to 30 minutes if not set
+            'highlightedButtonBgColor' => get_option('leanwi_highlighted_button_bg_color', '#ffe0b3'), // Highlighted button Background color
+            'highlightedButtonBorderColor' => get_option('leanwi_highlighted_button_border_color', '#ff9800'), // Highlighted button Border color
+            'highlightedButtonTextColor' => get_option('leanwi_highlighted_button_text_color', '#000000'), // Highlighted button Text color
+            'enableRecaptcha' => get_option('leanwi_enable_recaptcha', 'no'),
+            'recaptchaSiteKey' => get_option('leanwi_recaptcha_site_key', '')
+        ));
 
         wp_enqueue_script('staff-recurring-bookings-js');
     }

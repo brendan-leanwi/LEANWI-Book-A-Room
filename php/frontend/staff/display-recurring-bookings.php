@@ -8,132 +8,192 @@
 
 // Register the shortcode for the venue grid
 function display_recurring_bookings() {
-    
-    $minutes_interval = intval(get_option('leanwi_minutes_interval', 15));
+
+    // Fetch venues from the database
     global $wpdb;
+    $venues_table = "{$wpdb->prefix}leanwi_booking_venue";
+    $venues = $wpdb->get_results("SELECT venue_id, name, capacity FROM $venues_table WHERE historic = 0 ORDER BY name ASC");
 
-    // Get the selected or today's date
-    $today_date = isset($_GET['selected_date']) ? sanitize_text_field($_GET['selected_date']) : date('Y-m-d');
-    $day_of_week = date('l', strtotime($today_date));
-    
-    // Query venue hours using the day of week for the selected date
-    $venue_hours = $wpdb->get_results($wpdb->prepare("
-        SELECT vh.venue_id, vh.open_time, vh.close_time, v.name, v.page_url, v.capacity, v.description, v.location
-        FROM {$wpdb->prefix}leanwi_booking_venue_hours vh
-        JOIN {$wpdb->prefix}leanwi_booking_venue v ON vh.venue_id = v.venue_id
-        WHERE vh.day_of_week = %s
-        AND NOT (vh.open_time = '00:00:00' AND vh.close_time = '00:00:00')
-    ", $day_of_week));
-
-    // Query bookings for the selected date
-    $bookings = $wpdb->get_results($wpdb->prepare("
-        SELECT venue_id, start_time, end_time, unique_id, organization, name
-        FROM {$wpdb->prefix}leanwi_booking_participant
-        WHERE DATE(start_time) = %s
-    ", $today_date));
-
-    // Calculate time slots for the selected date
-    $time_slots = [];
-    $earliest_time = '23:59:59';
-    $latest_time = '00:00:00';
-    foreach ($venue_hours as $vh) {
-        $earliest_time = min($earliest_time, $vh->open_time);
-        $latest_time = max($latest_time, $vh->close_time);
+    if (!$venues) {
+        echo "<p>No venues available for selection.</p>";
+        return;
     }
 
-    // Generate time slots based on the open and close time
-    $current_time = strtotime($earliest_time);
-    while ($current_time < strtotime($latest_time)) {
-        $time_slots[] = date('h:i a', $current_time);
-        $current_time = strtotime('+' . $minutes_interval . ' minutes', $current_time);
+    $time_options = generate_time_options();
+    $use_recaptcha = get_option('leanwi_enable_recaptcha', 'no'); // Check if reCAPTCHA is enabled
+    $recaptcha_site_key = get_option('leanwi_recaptcha_site_key', ''); // Retrieve the reCAPTCHA site key
+
+    ob_start();
+    ?>
+    <div class="recurring-choices-container" id="recurring-choices-container" style="display: block">
+        <p><h2 id="recurring_choices_heading" style="text-align: center;">Make a new recurrent booking or find an existing one</h2></p>
+        <p> </p>
+        <form id="recurring-choices" method="POST">
+            <div class="button-container">
+                <button type="submit" class="find-button">Add a recurrent Booking</button>
+                <button type="button" id="retrieve-recurrence" class="find-button">Find a recurrent Booking</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="existing-recurrence-container" id="existing-recurrence-container" style="display: none;">
+        <table id="recurrenceTable" class="styled-table">
+            <thead>
+                <tr>
+                    <th>Venue Name</th>
+                    <th>Recurrence Type</th>
+                    <th>Interval</th>
+                    <th>End Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Organization</th>
+                    <th>Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="recurrenceTableBody">
+                <!-- Rows will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <?php
+    // Only include reCAPTCHA script if enabled
+    if ('yes' === $use_recaptcha && !empty($recaptcha_site_key)) {
+        ?>
+        <script src="https://www.google.com/recaptcha/api.js?render=<?php echo esc_js($recaptcha_site_key); ?>"></script>
+        <?php
     }
+    ?>
+    <div class="recurrence-details-container" id="recurrence-details-container" style="display: none">
+        <form id="recurrence-details-form" method="POST" style="max-width: 600px; margin: 0 auto;">
+            <?php wp_nonce_field('submit_recurrence_action', 'submit_recurrence_nonce'); ?>
+            <?php wp_nonce_field('delete_recurrence_action', 'delete_recurrence_nonce'); ?>
+            
+            <p><br></p>
+            <input type="hidden" id="recurrence_id" name="recurrence_id" value="0">
 
-    // Build grid
-    $grid = [];
-    foreach ($venue_hours as $vh) {
-        foreach ($time_slots as $slot) {
-            $slot_time = strtotime($today_date . ' ' . $slot);
-    
-            // Check if the slot time is within the open and close time for the venue
-            if ($slot_time < strtotime($today_date . ' ' . $vh->open_time) || $slot_time >= strtotime($today_date . ' ' . $vh->close_time)) {
-                $grid[$vh->venue_id][$slot] = '<td class="na-cell">N/A</td>';
-            } else {
-                $is_booked = false;
-                $booking_cell_content = '';
-    
-                foreach ($bookings as $booking) {
-                    // Compare slot times with bookings' start and end times
-                    if (
-                        $booking->venue_id == $vh->venue_id &&
-                        $slot_time >= strtotime($booking->start_time) &&
-                        $slot_time < strtotime($booking->end_time)
-                    ) {
-                        $is_booked = true;
-    
-                        // Display organization if available, otherwise name
-                        $display_name = !empty($booking->organization)
-                            ? esc_html($booking->organization)
-                            : esc_html($booking->name);
-    
-                        // Construct link to the booking
-                        $booking_link = esc_url($vh->page_url . '?booking_id=' . $booking->unique_id);
-    
-                        // Build the cell content
-                        $booking_cell_content = '<a href="' . $booking_link . '" class="booking-link">'
-                            . $display_name . '</a>';
-                        break;
-                    }
-                }
-    
-                $grid[$vh->venue_id][$slot] = $is_booked
-                    ? '<td class="booked-cell">' . $booking_cell_content . '</td>'
-                    : '<td></td>';
-            }
-        }
-    }
 
-    // Output the date picker form
-    echo '<form id="booking-date-selector" method="GET" action="">
-    <label for="selected_date">Staff Selected Date:</label>
-    <input type="date" id="selected_date" name="selected_date" value="' . esc_attr($today_date) . '">
-    <input type="submit" value="Update Grid">
-    </form>';
+            <label for="venue_id">Select Venue:</label>
+            <select id="venue_id" name="venue_id" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <option value="" disabled selected>Select a venue</option>
+                <?php foreach ($venues as $venue): ?>
+                    <option value="<?php echo esc_attr($venue->venue_id); ?>">
+                        <?php echo esc_html("{$venue->name} (Capacity: {$venue->capacity})"); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
 
-    $formatted_date = date('F j, Y', strtotime($today_date));
-    echo '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
+            <!-- Recurrence Type -->
+            <label for="recurrence_type">Recurrence Type:</label>
+            <select id="recurrence_type" name="recurrence_type" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <option value="" disabled selected>Select recurrence type</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="nth_weekday">Nth Weekday</option>
+            </select>
 
-    // Output the grid as a table
-    echo '<table class="booking-grid-table">';
-    echo '<thead>';
-    echo '<tr><th>Time Slot</th>';
-    foreach ($venue_hours as $vh) {
-        // Build the tooltip text
-        $tooltip = sprintf(
-            "Capacity: %s\nLocation: %s\nDescription: %s",
-            esc_html($vh->capacity),
-            esc_html($vh->location),
-            esc_html($vh->description)
-        );
-        echo '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" class="venue-link" title="' . esc_attr($tooltip) . '">' 
-            . esc_html($vh->name) 
-            . ' <span class="link-icon">↗</span></a></th>';
-    }
-    
-    echo '</tr>';
-    echo '</thead>';
-    echo '<tbody>';
-    foreach ($time_slots as $slot) {
-        echo '<tr>';
-        echo '<td>' . esc_html($slot) . '</td>';
-        foreach ($venue_hours as $vh) {
-            echo $grid[$vh->venue_id][$slot];
-        }
-        echo '</tr>';
-    }
-    echo '</tbody>';
-    echo '</table>';
+            <label for="start_time">Start Time:</label>
+            <select id="start_time" name="start_time" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <option value="" disabled selected>Select a start time</option>
+                <?php foreach ($time_options as $time): ?>
+                    <option value="<?php echo esc_attr($time); ?>"><?php echo esc_html($time); ?></option>
+                <?php endforeach; ?>
+            </select>
 
+            <label for="end_time">End Time:</label>
+            <select id="end_time" name="end_time" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <option value="" disabled selected>Select an end time</option>
+                <?php foreach ($time_options as $time): ?>
+                    <option value="<?php echo esc_attr($time); ?>"><?php echo esc_html($time); ?></option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Recurrence Interval -->
+            <label for="recurrence_interval">Recurrence Interval: <span class="info-icon" class="info-icon" title="Number of days/weeks/months between recurrences."></span></label>
+            <input type="number" id="recurrence_interval" name="recurrence_interval" min="1" value="1" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <!-- Recurrence Day of Week -->
+            <label for="recurrence_day_of_week">Recurrence Day of Week: <span class="info-icon" title="Only required for weekly or nth weekday recurrences."></span></label>
+            <select id="recurrence_day_of_week" name="recurrence_day_of_week" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <option value="" selected>Select a day</option>
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+            </select>
+
+            <!-- Recurrence Start Date -->
+            <label for="recurrence_start_date">Recurrence Start Date:</label>
+            <input type="date" id="recurrence_start_date" name="recurrence_start_date" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <!-- Recurrence End Date -->
+            <label for="recurrence_end_date">Recurrence End Date:</label>
+            <input type="date" id="recurrence_end_date" name="recurrence_end_date" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+
+            <!-- Recurrence Week of Month -->
+            <label for="recurrence_week_of_month">Recurrence Week of Month: <span class="info-icon" title="1=First, 2=Second, -1=Last, -2=2nd Last. Only for nth weekday recurrences."></span></label>
+            <input type="number" id="recurrence_week_of_month" name="recurrence_week_of_month" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            
+            <label for="name">Organization:</label>
+            <input type="text" id="organization" name="organization" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <label for="phone">Phone Number:</label>
+            <input type="text" id="phone" name="phone" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <label for="participants">Number of Participants:</label>
+            <input type="number" id="participants" name="participants" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <label for="notes">Booking Notes:</label>
+            <textarea id="notes" name="notes" style="width: 100%; height: 100px; padding: 8px; margin-bottom: 10px;"></textarea>
+
+            <!-- Category Section -->
+            <label for="category">Category:</label>
+            <select id="category" name="category" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>           
+
+            <!-- Audience Section -->
+            <label for="audience">Audience:</label>
+            <select id="audience" name="audience" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
+
+            <div class="button-container">
+                <button type="submit" id="book_button" class="book-button">Save Recurrence and add Bookings</button>
+                <button type="button" id="delete_booking" class="book-button" style="background-color: red; color: white; display: none;">Delete Recurrence and future Bookings</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="booking-message" class="booking-message" style="display: none;">
+        <!-- Message will be injected here -->
+    </div>
+
+    <?php
+    return ob_get_clean();
 }
 
 add_shortcode('staff_recurring_bookings', 'display_recurring_bookings');
+
+// Generate the time options in 15-minute intervals
+function generate_time_options() {
+    $times = [];
+    $start = strtotime('5:00 AM');
+    $end = strtotime('11:45 PM');
+
+    while ($start <= $end) {
+        $times[] = date('g:i A', $start);
+        $start = strtotime('+15 minutes', $start);
+    }
+    return $times;
+}
+
 ?>

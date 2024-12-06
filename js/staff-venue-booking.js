@@ -227,7 +227,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
         function fetchDayBookings(venueId, date) {
             currentDetailsDate = date;
-            console.log('venueId: ', venueId, 'date: ', date);
             return fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/get-day-bookings.php?venue_id=${venueId}&date=${date}`)
                 .then(response => {
                     if (!response.ok) {

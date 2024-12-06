@@ -57,9 +57,22 @@ function leanwi_create_tables() {
         recurrence_id INT AUTO_INCREMENT PRIMARY KEY,
         recurrence_type ENUM('daily', 'weekly', 'monthly', 'nth_weekday') NOT NULL,
         recurrence_interval INT DEFAULT 1, -- Number of days/weeks/months between recurrences
+        recurrence_start_date DATE NOT NULL, -- When the recurrence is to start
         recurrence_end_date DATE NOT NULL, -- When the recurrence stops
         recurrence_day_of_week TINYINT, -- For weekly or nth_weekday recurrences (0=Sunday, 6=Saturday)
-        recurrence_week_of_month TINYINT -- For nth_weekday recurrences (1=First, 2=Second, -1=last, -2=2nd last...)
+        recurrence_week_of_month TINYINT, -- For nth_weekday recurrences (1=First, 2=Second, -1=last, -2=2nd last...)
+        start_time TIME NOT NULL, -- HH:MM Hours and minutes the recurrence will start (No year/yonth/day necessary)
+        end_time TIME NOT NULL, -- HH:MM Hours and minutes the recurrence will end (No year/yonth/day necessary)
+        venue_id INT NOT NULL,
+        organization VARCHAR(255),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        number_of_participants INT NOT NULL,
+        booking_notes TEXT,
+        category_id INT,
+        audience_id INT
+        --historic TINYINT(1) DEFAULT 0 ????
     ) $engine $charset_collate;";
 
     // SQL for creating leanwi_booking_participant table
@@ -79,8 +92,7 @@ function leanwi_create_tables() {
         category_id INT,
         audience_id INT,
         total_cost DECIMAL(10,2) DEFAULT 0.00,
-        FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE,
-        FOREIGN KEY (recurrence_id) REFERENCES {$wpdb->prefix}leanwi_booking_recurrence(recurrence_id) ON DELETE CASCADE
+        FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
     // SQL for creating leanwi_booking_category table
@@ -170,4 +182,3 @@ function leanwi_drop_tables() {
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_user");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_venue");
 }
-
