@@ -22,6 +22,8 @@ require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updates.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-grid.php'; // Contains the page and shortcode for the venue_grid shortcode
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-venue-grid.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-name-search.php';
+require_once plugin_dir_path(__FILE__) . 'php/frontend/display-booking-search.php';
+require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-booking-search.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-recurring-bookings.php';
 
 // Hook to run when the plugin is activated
@@ -119,6 +121,30 @@ function leanwi_enqueue_scripts() {
         wp_enqueue_script('staff-name-search-js');
     }
 
+    if (is_page() && has_shortcode(get_post()->post_content, 'booking_search')) {
+        wp_register_script(
+            'booking-search-js',
+            plugin_dir_url(__FILE__) . 'js/booking-search.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/booking-search.js'), 
+            true
+        );
+
+        wp_enqueue_script('booking-search-js');
+    }
+
+    if (is_page() && has_shortcode(get_post()->post_content, 'staff_booking_search')) {
+        wp_register_script(
+            'staff-booking-search-js',
+            plugin_dir_url(__FILE__) . 'js/staff-booking-search.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/staff-booking-search.js'), 
+            true
+        );
+
+        wp_enqueue_script('staff-booking-search-js');
+    }
+
     if (is_page() && has_shortcode(get_post()->post_content, 'staff_recurring_bookings')) {
         wp_register_script(
             'staff-recurring-bookings-js',
@@ -150,7 +176,10 @@ function enqueue_custom_styles() {
         has_shortcode(get_post()->post_content, 'staff_venue_grid') || 
         has_shortcode(get_post()->post_content, 'staff_recurring_bookings') || 
         has_shortcode(get_post()->post_content, 'staff_venue_details') || 
-        has_shortcode(get_post()->post_content, 'venue_details'))) 
+        has_shortcode(get_post()->post_content, 'venue_details') || 
+        has_shortcode(get_post()->post_content, 'booking_search') ||
+        has_shortcode(get_post()->post_content, 'staff_booking_search') ||
+        has_shortcode(get_post()->post_content, 'staff_name_search')))
     {
         wp_enqueue_style('custom-calendar-style', plugin_dir_url(__FILE__) . 'css/booking-style.css');
     }

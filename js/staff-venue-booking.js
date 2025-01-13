@@ -294,6 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const actionCell = document.createElement('td');
             const viewLink = document.createElement('a');
             viewLink.href = `${page_url}?booking_id=${unique_id}&passer=staff`;
+            viewLink.target = '_blank';
             viewLink.textContent = 'View';
             viewLink.classList.add('button'); // Add WordPress button styling if needed
             actionCell.appendChild(viewLink);

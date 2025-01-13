@@ -49,6 +49,7 @@ function display_venue_grid() {
 
     // Build grid
     $grid = [];
+    date_default_timezone_set('America/Chicago');
     foreach ($venue_hours as $vh) {
         foreach ($time_slots as $slot) {
             $slot_time = strtotime($today_date . ' ' . $slot);
@@ -69,13 +70,19 @@ function display_venue_grid() {
                         break;
                     }
                 }
-                $grid[$vh->venue_id][$slot] = $is_booked
-                    ? '<td class="booked-cell">Booked</td>'
-                    : '<td></td>';
+    
+                // Check if slot time is in the past
+                if (!$is_booked && $slot_time < time()) {
+                    $grid[$vh->venue_id][$slot] = '<td class="na-cell">N/A</td>';
+                } else {
+                    $grid[$vh->venue_id][$slot] = $is_booked
+                        ? '<td class="booked-cell">Booked</td>'
+                        : '<td class="available-cell"><a href="' . esc_url($vh->page_url) . '?selected_date=' . esc_attr($today_date) . '&time_slot=' . urlencode(date('H:i', $slot_time)) . '" target="_blank">Available Slot</a></td>';
+                }
             }
         }
     }
-
+    
     // Output the date picker form
     echo '<form id="booking-date-selector" method="GET" action="">
     <label for="selected_date">Selected Date:</label>

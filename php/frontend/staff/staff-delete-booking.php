@@ -33,11 +33,12 @@ if (!empty($unique_id)) {
         $formatted_start_time = date('F j, Y \a\t g:ia', strtotime($start_time));
 
         // Check if start_time is in the past
-        $current_time = current_time('mysql'); // Get current time in MySQL format
-        if (strtotime($start_time) < strtotime($current_time)) {
-            echo json_encode(['success' => false, 'message' => 'Cannot cancel the booking because the start time is in the past.']);
-            exit;
-        }
+        // Currently am going to allow staff to delete old booking record in case booking was never attended
+        //$current_time = current_time('mysql'); // Get current time in MySQL format
+        //if (strtotime($start_time) < strtotime($current_time)) {
+        //    echo json_encode(['success' => false, 'message' => 'Cannot cancel the booking because the start time is in the past.']);
+        //    exit;
+        //}
 
         // Start a transaction to ensure atomicity
         $wpdb->query('START TRANSACTION');

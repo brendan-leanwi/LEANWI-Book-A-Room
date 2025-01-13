@@ -76,10 +76,10 @@ function display_staff_venue_grid() {
                             : esc_html($booking->name);
     
                         // Construct link to the booking
-                        $booking_link = esc_url($vh->page_url . '?booking_id=' . $booking->unique_id);
+                        $booking_link = esc_url($vh->page_url . '?booking_id=' . $booking->unique_id . '&passer=staff');
     
                         // Build the cell content
-                        $booking_cell_content = '<a href="' . $booking_link . '" class="booking-link">'
+                        $booking_cell_content = '<a href="' . $booking_link . '" class="booking-link" target="_blank">'
                             . $display_name . '</a>';
                         break;
                     }
@@ -87,52 +87,53 @@ function display_staff_venue_grid() {
     
                 $grid[$vh->venue_id][$slot] = $is_booked
                     ? '<td class="booked-cell">' . $booking_cell_content . '</td>'
-                    : '<td></td>';
+                    : '<td class="available-cell"><a href="' . esc_url($vh->page_url) . '?selected_date=' . esc_attr($today_date) . '&time_slot=' . urlencode(date('H:i', $slot_time)) . '" target="_blank">Available Slot</a></td>';
             }
         }
     }
 
-    // Output the date picker form
-    echo '<form id="booking-date-selector" method="GET" action="">
+    // Build the date picker form
+    $output = '<form id="booking-date-selector" method="GET" action="">
     <label for="selected_date">Staff Selected Date:</label>
     <input type="date" id="selected_date" name="selected_date" value="' . esc_attr($today_date) . '">
     <input type="submit" value="Update Grid">
     </form>';
 
     $formatted_date = date('F j, Y', strtotime($today_date));
-    echo '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
+    $output .= '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
 
-    // Output the grid as a table
-    echo '<table class="booking-grid-table">';
-    echo '<thead>';
-    echo '<tr><th>Time Slot</th>';
+    // Build the grid as a table
+    $output .= '<table class="booking-grid-table">';
+    $output .= '<thead>';
+    $output .= '<tr><th>Time Slot</th>';
     foreach ($venue_hours as $vh) {
-        // Build the tooltip text
-        $tooltip = sprintf(
-            "Capacity: %s\nLocation: %s\nDescription: %s",
-            esc_html($vh->capacity),
-            esc_html($vh->location),
-            esc_html($vh->description)
-        );
-        echo '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" class="venue-link" title="' . esc_attr($tooltip) . '">' 
-            . esc_html($vh->name) 
-            . ' <span class="link-icon">↗</span></a></th>';
+    // Build the tooltip text
+    $tooltip = sprintf(
+        "Capacity: %s\nLocation: %s\nDescription: %s",
+        esc_html($vh->capacity),
+        esc_html($vh->location),
+        esc_html($vh->description)
+    );
+    $output .= '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" class="venue-link" title="' . esc_attr($tooltip) . '">'
+        . esc_html($vh->name)
+        . ' <span class="link-icon">↗</span></a></th>';
     }
-    
-    echo '</tr>';
-    echo '</thead>';
-    echo '<tbody>';
+    $output .= '</tr>';
+    $output .= '</thead>';
+    $output .= '<tbody>';
     foreach ($time_slots as $slot) {
-        echo '<tr>';
-        echo '<td>' . esc_html($slot) . '</td>';
-        foreach ($venue_hours as $vh) {
-            echo $grid[$vh->venue_id][$slot];
-        }
-        echo '</tr>';
+    $output .= '<tr>';
+    $output .= '<td>' . esc_html($slot) . '</td>';
+    foreach ($venue_hours as $vh) {
+        $output .= $grid[$vh->venue_id][$slot];
     }
-    echo '</tbody>';
-    echo '</table>';
+    $output .= '</tr>';
+    }
+    $output .= '</tbody>';
+    $output .= '</table>';
 
+    // Return the output
+    return $output;
 }
 
 add_shortcode('staff_venue_grid', 'display_staff_venue_grid');

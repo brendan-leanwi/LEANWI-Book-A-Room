@@ -17,10 +17,28 @@ document.addEventListener("DOMContentLoaded", function () {
     if (bookingId) {
         document.getElementById('unique_id').value = bookingId;
         document.getElementById('previous_booking_h2').textContent = "Your Booking ID has been Entered:";
+        
+        const retrieveBookingForm = document.querySelector('#retrieve-booking');
+        if (retrieveBookingForm) {
+            // Trigger the form submission after the calendar is fully updated
+            console.log("updateCalendar hasbookingId");
+            updateCalendar(venueId, () => {
+                setTimeout(() => {
+                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                    retrieveBookingForm.dispatchEvent(submitEvent);
+                }, 0);
+            });
+        }
     }
 
     // Get the passer query parameter
     const passer = getQueryParam('passer');
+
+    // Get the selected_date query parameter
+    const passedDate = getQueryParam('selected_date');
+
+    // Get the time_slot query parameter
+    const passedTimeSlot = getQueryParam('time_slot');
     
     // Update the CSS variables in the :root selector
     document.documentElement.style.setProperty('--highlighted-button-bg', highlightedButtonBgColor);
@@ -42,8 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(venue => {
             document.getElementById('venue-name').textContent = escapeHtml(venue.name);
             document.getElementById('venue-capacity').textContent = escapeHtml(venue.capacity);
-            //document.getElementById('venue-description').textContent = escapeHtml(venue.description);
-            //document.getElementById('venue-extra-text').textContent = escapeHtml(venue.extra_text);
             document.getElementById('venue-description').innerHTML = escapeHtml(venue.description).replace(/\n/g, '<br>');
             document.getElementById('venue-extra-text').innerHTML = escapeHtml(venue.extra_text).replace(/\n/g, '<br>');
             document.getElementById('venue-location').textContent = escapeHtml(venue.location);
@@ -59,7 +75,45 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById('cost-info').style.display = 'none'; // Hide the Cost line
             }
 
-            updateCalendar(venueId);
+            // Check if passedDate and passedTimeSlot are available in the query parameters
+            if (passedDate && passedTimeSlot) {
+                const [year, month, day] = passedDate.split('-').map(Number);
+                const targetDate = new Date(year, month - 1, day); // JavaScript months are 0-indexed
+            
+                currentMonth.setFullYear(targetDate.getFullYear());
+                currentMonth.setMonth(targetDate.getMonth());
+                console.log("updateCalendar passedDate and Timeslot");
+                updateCalendar(venueId, () => {
+                    highlightDayInCalendar(day);
+            
+                    fetchAvailableTimes(venueId, passedDate).then(availableTimes => {
+                        if (availableTimes.length > 0) {
+                            showContactForm(availableTimes, passedDate);
+            
+                            // Highlight the passed time slot
+                            const timeSelectDiv = document.querySelector('#time-select');
+                            const timeButtons = timeSelectDiv.querySelectorAll('.time-button');
+            
+                            timeButtons.forEach(button => {
+                                console.log('Checking:', button.dataset.timeValue, 'against:', passedTimeSlot); // Debugging log
+                                if (button.dataset.timeValue === passedTimeSlot) {
+                                    button.classList.add('selected');
+                                    button.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            });
+                        } else {
+                            alert('No available times for this date.');
+                        }
+                    });
+                });
+            }
+                        
+            else {
+                if (!bookingId) {
+                    console.log("updateCalendar Normal pageload");
+                    updateCalendar(venueId);
+                }
+            }
         })
         .catch(error => console.error('Error fetching venue details:', error))
         .finally(() => {
@@ -114,8 +168,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.body.style.cursor = 'default'; // Reset cursor after fetch completes
             });
 
-        let selectedDayElement = null; // Store the selected day element for later
-        function updateCalendar(venueId, callback, bookingData = null) {
+        let selectedDayElement = null; // Stores the selected day element for later
+        function updateCalendar(venueId, callback) {
             document.body.style.cursor = 'wait';
             // Fetch the available days for the venue
             fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-days.php?venue_id=${encodeURIComponent(venueId)}`)
@@ -305,6 +359,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (currentMonth > today) {  // Won't go to any month prior to today
                 currentMonth.setMonth(currentMonth.getMonth() - 1); 
                 currentMonth.setDate(1); // Reset to the first day of the month
+                console.log("updateCalendar prev Month click");
                 updateCalendar(venueId);
             }
         });
@@ -332,6 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (currentMonth < maxMonthLimit) {
                 currentMonth.setMonth(currentMonth.getMonth() + 1);
                 currentMonth.setDate(1); // Reset to the first day to avoid jump issues
+                console.log("updateCalendar next Month click");
                 updateCalendar(venueId);
             }
         });
@@ -362,7 +418,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         
-        updateCalendar(venueId);
+        //console.log("updateCalendar randomly placed call?");
+        //updateCalendar(venueId);
         
         function fetchAvailableTimes(venueId, date, uniqueId = null) {
             currentDetailsDate = date;
@@ -866,6 +923,7 @@ document.addEventListener("DOMContentLoaded", function () {
             contactFormContainer.style.display = 'block';
 
             // Highlight selected day on the calendar
+            console.log("HighlightSelectedDay populateBookingFormFields: ", booking.start_time);
             highlightSelectedDay(booking.start_time);
         }
 
@@ -909,6 +967,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 currentMonth.setFullYear(bookingYear);
                 currentMonth.setMonth(bookingMonth);
 
+                console.log("updateCalendar highlightSelectedDay");
                 updateCalendar(venueId, () => {
                     highlightDayInCalendar(bookingDay); // Highlight the correct day AFTER the calendar month has been loaded
                 }); 

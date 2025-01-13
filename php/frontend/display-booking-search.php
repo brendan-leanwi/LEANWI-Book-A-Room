@@ -1,19 +1,19 @@
 <?php
 /**
- * Plugin Name: Display Name Search
- * Description: A plugin to allow the user to display bookings based on a name or organization search.
+ * Plugin Name: Display Booking Search
+ * Description: A plugin to allow the user to display bookings based on agiven booking ref.
  * Version: 1.1
  * Author: Brendan Tuckey
  */
 
 // Register the shortcode for the venue grid
-function display_staff_name_search() {
+function display_booking_search() {
     global $wpdb;
 
     // Check if a search query is submitted
-    $search_query = isset($_GET['staff_search']) ? sanitize_text_field($_GET['staff_search']) : '';
-    $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : date('Y-m-d');
-    $end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : date('Y-m-d', strtotime('+1 month'));
+    $search_query = isset($_GET['booking_search']) ? sanitize_text_field($_GET['booking_search']) : '';
+    //$start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : date('Y-m-d');
+    //$end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : date('Y-m-d', strtotime('+1 month'));
     $results_html = '';
 
     // If a search query is provided, search the database
@@ -32,10 +32,9 @@ function display_staff_name_search() {
                 p.start_time
             FROM $table_participants p
             JOIN $table_venues v ON p.venue_id = v.venue_id
-            WHERE (p.name LIKE %s OR p.organization LIKE %s)
-            AND p.start_time BETWEEN %s AND %s
+            WHERE (p.unique_id = %s)
             ORDER BY p.start_time ASC
-        ", '%' . $search_query . '%', '%' . $search_query . '%', $start_date, $end_date));
+        ", $search_query));
 
         // Create results table HTML
         if (!empty($results)) {
@@ -49,7 +48,7 @@ function display_staff_name_search() {
             </tr></thead><tbody>';
 
             foreach ($results as $row) {
-                $booking_url = esc_url($row->page_url . '?booking_id=' . $row->unique_id . '&passer=staff');
+                $booking_url = esc_url($row->page_url . '?booking_id=' . $row->unique_id);
 
                 $results_html .= sprintf(
                     '<tr>
@@ -58,7 +57,7 @@ function display_staff_name_search() {
                         <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                         <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-                            <a href="%s" style="color: blue; text-decoration: underline;" target="_blank">View</a>
+                            <a href="%s" style="color: blue; text-decoration: underline;">View</a>
                         </td>
                     </tr>',
                     esc_html($row->venue_name),
@@ -78,12 +77,10 @@ function display_staff_name_search() {
     // Return the search form and results
     return '
         <form method="get" style="margin-bottom: 20px;">
-            <input type="text" name="staff_search" value="' . esc_attr($search_query) . '" placeholder="Search by name or organization" style="padding: 8px; width: 70%;" required>
-            <input type="date" name="start_date" value="' . esc_attr($start_date) . '" style="padding: 8px;">
-            <input type="date" name="end_date" value="' . esc_attr($end_date) . '" style="padding: 8px;">
+            <input type="text" name="booking_search" value="' . esc_attr($search_query) . '" placeholder="Enter your Booking ID" style="padding: 8px; width: 70%;" required>
             <button type="submit" style="padding: 8px;">Search</button>
         </form>
         ' . $results_html;
 }
-add_shortcode('staff_name_search', 'display_staff_name_search');
+add_shortcode('booking_search', 'display_booking_search');
 ?>
