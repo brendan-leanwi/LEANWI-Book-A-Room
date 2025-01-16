@@ -95,11 +95,12 @@ function leanwi_create_tables() {
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
-    // SQL for creating leanwi_booking_category table
+    // SQL for creating leanwi_booking_affirmation table
     $sql7 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_affirmation (
         id INT AUTO_INCREMENT PRIMARY KEY,
         affirmation TEXT NOT NULL
     ) $engine $charset_collate;";
+
 
     // Execute the SQL queries
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -179,6 +180,6 @@ function leanwi_drop_tables() {
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_category");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_audience");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_affirmation");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_user");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_venue");
+    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_recurrence");
 }

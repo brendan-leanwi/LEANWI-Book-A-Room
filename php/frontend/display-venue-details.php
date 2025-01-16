@@ -5,6 +5,17 @@
  * Version: 1.0
  * Author: Brendan Tuckey
  */
+// Hook into WordPress to ensure functions like wp_get_current_user are available.
+add_action('wp_enqueue_scripts', function () {
+    // Check if the current user has the "booking_staff" role.
+    $current_user = wp_get_current_user();
+    $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
+
+    // Pass the result to JavaScript.
+    echo '<script>';
+    echo 'const isBookingStaff = ' . json_encode($is_booking_staff) . ';';
+    echo '</script>';
+});
 
 // Register the shortcode for the venue details
 function display_venue_details($atts) {
@@ -89,6 +100,10 @@ function display_venue_details($atts) {
     }
     ?>
     <div id="contact-form-container" style="display: none;">
+        <?php 
+        $current_user = wp_get_current_user();
+        $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
+        ?>
         <form id="booking-form" method="POST" style="max-width: 600px; margin: 0 auto;">
             <?php wp_nonce_field('submit_booking_action', 'submit_booking_nonce'); ?>
             <p><br></p>
@@ -98,7 +113,7 @@ function display_venue_details($atts) {
             <p><br></p>
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
             <input type="hidden" id="day" name="day">
-            
+
             <label for="time">Select Time(s):</label>
             <div id="time-select" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
 
@@ -147,11 +162,6 @@ function display_venue_details($atts) {
         </form>
 
     </div>
-
-    <div id="booking-message" class="booking-message" style="display: none;">
-        <!-- Message will be injected here -->
-    </div>
-
 
     <?php
     return ob_get_clean();

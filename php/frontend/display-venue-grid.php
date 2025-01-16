@@ -26,7 +26,7 @@ function display_venue_grid() {
 
     // Query bookings for the selected date
     $bookings = $wpdb->get_results($wpdb->prepare("
-        SELECT venue_id, start_time, end_time
+        SELECT venue_id, start_time, end_time, unique_id, organization, name
         FROM {$wpdb->prefix}leanwi_booking_participant
         WHERE DATE(start_time) = %s
     ", $today_date));
@@ -50,53 +50,32 @@ function display_venue_grid() {
     // Build grid
     $grid = [];
     date_default_timezone_set('America/Chicago');
+
+    //Check if the user has staff privileges to display grid accordingling
+    $current_user = wp_get_current_user();
+    $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
+
     foreach ($venue_hours as $vh) {
         foreach ($time_slots as $slot) {
             $slot_time = strtotime($today_date . ' ' . $slot);
-    
-            // Check if the slot time is within the open and close time for the venue
-            if ($slot_time < strtotime($today_date . ' ' . $vh->open_time) || $slot_time >= strtotime($today_date . ' ' . $vh->close_time)) {
-                $grid[$vh->venue_id][$slot] = '<td class="na-cell">N/A</td>';
-            } else {
-                $is_booked = false;
-                foreach ($bookings as $booking) {
-                    // Compare slot times with bookings' start and end times
-                    if (
-                        $booking->venue_id == $vh->venue_id &&
-                        $slot_time >= strtotime($booking->start_time) &&
-                        $slot_time < strtotime($booking->end_time)
-                    ) {
-                        $is_booked = true;
-                        break;
-                    }
-                }
-    
-                // Check if slot time is in the past
-                if (!$is_booked && $slot_time < time()) {
-                    $grid[$vh->venue_id][$slot] = '<td class="na-cell">N/A</td>';
-                } else {
-                    $grid[$vh->venue_id][$slot] = $is_booked
-                        ? '<td class="booked-cell">Booked</td>'
-                        : '<td class="available-cell"><a href="' . esc_url($vh->page_url) . '?selected_date=' . esc_attr($today_date) . '&time_slot=' . urlencode(date('H:i', $slot_time)) . '" target="_blank">Available Slot</a></td>';
-                }
-            }
+            $grid[$vh->venue_id][$slot] = build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings);
         }
     }
     
     // Output the date picker form
-    echo '<form id="booking-date-selector" method="GET" action="">
+    $output = '<form id="booking-date-selector" method="GET" action="">
     <label for="selected_date">Selected Date:</label>
     <input type="date" id="selected_date" name="selected_date" value="' . esc_attr($today_date) . '">
     <input type="submit" value="Update Grid">
     </form>';
 
     $formatted_date = date('F j, Y', strtotime($today_date));
-    echo '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
+    $output .= '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
 
     // Output the grid as a table
-    echo '<table class="booking-grid-table">';
-    echo '<thead>';
-    echo '<tr><th>Time Slot</th>';
+    $output .= '<table class="booking-grid-table">';
+    $output .= '<thead>';
+    $output .= '<tr><th>Time Slot</th>';
     foreach ($venue_hours as $vh) {
         // Build the tooltip text
         $tooltip = sprintf(
@@ -105,25 +84,69 @@ function display_venue_grid() {
             esc_html($vh->location),
             esc_html($vh->description)
         );
-        echo '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" class="venue-link" title="' . esc_attr($tooltip) . '">' 
+        $output .= '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" class="venue-link" title="' . esc_attr($tooltip) . '">' 
             . esc_html($vh->name) 
             . ' <span class="link-icon">↗</span></a></th>';
     }
     
-    echo '</tr>';
-    echo '</thead>';
-    echo '<tbody>';
+    $output .= '</tr>';
+    $output .= '</thead>';
+    $output .= '<tbody>';
     foreach ($time_slots as $slot) {
-        echo '<tr>';
-        echo '<td>' . esc_html($slot) . '</td>';
+        $output .= '<tr>';
+        $output .= '<td>' . esc_html($slot) . '</td>';
         foreach ($venue_hours as $vh) {
-            echo $grid[$vh->venue_id][$slot];
+            $output .= $grid[$vh->venue_id][$slot];
         }
-        echo '</tr>';
+        $output .= '</tr>';
     }
-    echo '</tbody>';
-    echo '</table>';
+    $output .= '</tbody>';
+    $output .= '</table>';
 
+    return $output;
+
+}
+
+function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings) {
+    // Check if the slot time is within the venue's open and close times
+    if ($slot_time < strtotime($today_date . ' ' . $vh->open_time) || $slot_time >= strtotime($today_date . ' ' . $vh->close_time)) {
+        return '<td class="na-cell">N/A</td>';
+    }
+
+    $is_booked = false;
+    $booking_cell_content = '';
+
+    foreach ($bookings as $booking) {
+        // Check if the current time slot matches a booking
+        if (
+            $booking->venue_id == $vh->venue_id &&
+            $slot_time >= strtotime($booking->start_time) &&
+            $slot_time < strtotime($booking->end_time)
+        ) {
+            $is_booked = true;
+
+            if ($is_booking_staff) {
+                // If the user is a Booking Staff, include booking details and a link
+                $display_name = !empty($booking->organization)
+                    ? esc_html($booking->organization)
+                    : esc_html($booking->name);
+
+                $booking_link = esc_url($vh->page_url . '?booking_id=' . $booking->unique_id);
+                $booking_cell_content = '<a href="' . $booking_link . '" class="booking-link" target="_blank">' . $display_name . '</a>';
+            }
+            break;
+        }
+    }
+
+    // If not booked and the time slot is in the past, mark it as N/A for non-staff
+    if (!$is_booking_staff && !$is_booked && $slot_time < time()) {
+        return '<td class="na-cell">N/A</td>';
+    }
+
+    // Return the appropriate cell based on booking status
+    return $is_booked
+        ? '<td class="booked-cell">' . ($is_booking_staff ? $booking_cell_content : 'Booked') . '</td>'
+        : '<td class="available-cell"><a href="' . esc_url($vh->page_url) . '?selected_date=' . esc_attr($today_date) . '&time_slot=' . urlencode(date('H:i', $slot_time)) . '" target="_blank">Available Slot</a></td>';
 }
 
 add_shortcode('venue_grid', 'display_venue_grid');

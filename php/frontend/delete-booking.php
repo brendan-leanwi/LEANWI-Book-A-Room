@@ -11,6 +11,8 @@ if (!isset($data['delete_booking_nonce']) || !wp_verify_nonce($data['delete_book
     exit;
 }
 
+//$isBookingStaff = isset($data['is_booking_staff']) && $data['is_booking_staff'] === 'true';
+$isBookingStaff = isset($data['is_booking_staff']) && filter_var($data['is_booking_staff'], FILTER_VALIDATE_BOOLEAN);
 $unique_id = isset($data['unique_id']) ? sanitize_text_field($data['unique_id']) : '';
 $admin_email_address = isset($data['admin_email_address']) ? sanitize_email($data['admin_email_address']) : '';
 $send_admin_email = isset($data['send_admin_email']) ? sanitize_text_field($data['send_admin_email']) : 'no';
@@ -29,8 +31,8 @@ if (!empty($unique_id)) {
         $formatted_start_time = date('F j, Y \a\t g:ia', strtotime($start_time));
 
         $current_time = current_time('mysql');
-        if (strtotime($start_time) < strtotime($current_time)) {
-            echo wp_json_encode(['success' => false, 'message' => 'Cannot cancel booking because the start time is in the past.']);
+        if (!$isBookingStaff && strtotime($start_time) < strtotime($current_time)) {
+            echo wp_json_encode(['success' => false, 'message' => 'Cannot cancel booking because the start time is in the past. Please contact the library if this booking needs to be cancelled.']);
             exit;
         }
 
@@ -44,10 +46,10 @@ if (!empty($unique_id)) {
             $wpdb->query('COMMIT');
 
             $to = sanitize_email($email);
-            $subject = 'Your Booking Cancellation';
+            $subject = 'Your Booking has been cancelled' .  ($isBookingStaff ? ' by library staff' : '.');
             $message = "<p>Hi <strong>" . esc_html($name) . "</strong>,</p>" .
                 "<p>Your booking for booking ID <strong>" . esc_html($unique_id) . "</strong> scheduled to start on " . 
-                esc_html($formatted_start_time) . " has been cancelled.</p>";
+                esc_html($formatted_start_time) . ($isBookingStaff ? " has been cancelled by a member of our staff.</p>" : " has been cancelled.</p>");
             if(!empty($cancellation_reason)) {
                 $message .= "<p>REASON GIVEN: " . esc_html($cancellation_reason) . "</p>";
             }

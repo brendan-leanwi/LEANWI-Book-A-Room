@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     const venueId = document.getElementById('venue_id').value;
 
+    // Let's show in the cosole log whether the user is staff or not
+    console.log("Is Booking Staff:", isBookingStaff);
+
     // Get the user-defined colors from bookingSettings
     const highlightedButtonBgColor = bookingSettings.highlightedButtonBgColor || '#ffe0b3';
     const highlightedButtonBorderColor = bookingSettings.highlightedButtonBorderColor || '#ff9800';
@@ -30,9 +33,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
-
-    // Get the passer query parameter
-    const passer = getQueryParam('passer');
 
     // Get the selected_date query parameter
     const passedDate = getQueryParam('selected_date');
@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const dayData = availableDays.find(day => day.day_of_week === dayName);
 
                         // If the day is in the past, grey it out (compare only dates)
-                        if (currentDateMidnight < todayMidnight && year === today.getFullYear() && month === today.getMonth()) {
+                        if (!isBookingStaff && currentDateMidnight < todayMidnight && year === today.getFullYear() && month === today.getMonth()) {
                             // Grey out past days in the current month
                             dayElement.style.backgroundColor = '#f0f0f0';
                             dayElement.style.color = '#ccc';
@@ -660,50 +660,61 @@ document.addEventListener("DOMContentLoaded", function () {
 
             function handleTimeSelection(button, index) {
                 const isSelected = button.classList.contains('selected');
-
+            
                 if (isSelected) {
                     deselectFollowingButtons(index);
                 } else {
                     const selectedButtons = Array.from(timeSelectDiv.querySelectorAll('.selected'));
                     const lastSelectedIndex = selectedButtons.length 
                             ? getTimeIndex(selectedButtons[selectedButtons.length - 1], availableTimes)
-                            : -1;
-
-                    if (lastSelectedIndex >= 0 && !isContinuousSelection(index, lastSelectedIndex) && !hasIntermediateBookedSlots(Math.min(index, lastSelectedIndex), Math.max(index, lastSelectedIndex))) {
-                        alert('A booking must use continuous times without a booked or empty slot in between.');
-                        return;
+                            : null;
+            
+                    if (lastSelectedIndex !== null) {
+                        const startIndex = Math.min(index, lastSelectedIndex);
+                        const endIndex = Math.max(index, lastSelectedIndex);
+            
+                        // Check if the range has any intermediate booked slots
+                        if (hasIntermediateBookedSlots(startIndex, endIndex)) {
+                            alert('A booking must use continuous times without a booked or empty slot in between.');
+                            return;
+                        }
+            
+                        // Select all buttons in the range
+                        selectRange(startIndex, endIndex);
+                    } else {
+                        button.classList.add('selected'); // First selection
                     }
-
-                    button.classList.add('selected');
                 }
-
+            
                 updateTotalCost();
             }
-
+            
             function deselectFollowingButtons(index) {
                 const buttons = Array.from(timeSelectDiv.querySelectorAll('button'));
                 for (let i = index; i < buttons.length; i++) {
                     buttons[i].classList.remove('selected');
                 }
             }
-
+            
+            function hasIntermediateBookedSlots(start, end) {
+                for (let i = start + 1; i < end; i++) {
+                    if (availableTimes[i].booked && !availableTimes[i].is_booked_for_unique_id) return true;
+                }
+                return false;
+            }
+            
+            function selectRange(startIndex, endIndex) {
+                const buttons = Array.from(timeSelectDiv.querySelectorAll('button'));
+                for (let i = startIndex; i <= endIndex; i++) {
+                    buttons[i].classList.add('selected');
+                }
+            }
+            
             function updateTotalCost() {
                 const selectedTimes = Array.from(timeSelectDiv.querySelectorAll('.selected')).map(btn => btn.textContent);
                 totalCostDisplay.textContent = (selectedTimes.length * slotCost).toFixed(2);
                 contactFormContainer.dataset.selectedTimes = selectedTimes.join(',');
             }
-
-            function isContinuousSelection(currentIndex, lastIndex) {
-                return Math.abs(currentIndex - lastIndex) === 1;
-            }
-            
-            function hasIntermediateBookedSlots(start, end) {
-                for (let i = start + 1; i < end; i++) {
-                    if (availableTimes[i].booked) return true;
-                }
-                return false;
-            }
-            
         }
 
         //Function to display start and end time on cursor hover
@@ -816,8 +827,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append('minutes_interval', bookingSettings.minutesInterval);
                 formData.append('admin_email_address', bookingSettings.adminEmailAddress);
                 formData.append('send_admin_email', bookingSettings.sendAdminEmail);
-                formData.append('passer', passer);
-            
+                formData.append('is_booking_staff', isBookingStaff);
+
                 document.body.style.cursor = 'wait'; // Set cursor before fetch starts
                 fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
                     method: 'POST',
@@ -831,10 +842,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .then(data => {
                     if (data.success) {
-                        const messageContainer = document.getElementById('booking-message');
-                        messageContainer.innerHTML = data.message + (data.unique_id ? `<br><strong>${data.unique_id}</strong>` : '');
-                        messageContainer.style.display = 'block'; // Show the message div
-                        contactFormContainer.style.display = 'none';
+                        const message = data.message + (data.unique_id ? `\n\nBooking Reference: ${data.unique_id}` : '');
+                        alert(message); // Show the message in an alert box
+
+                        // Refresh the page after the user clicks "OK" without any parameters
+                        location.href = location.pathname;
+
                     } else {
                         console.error('Submit Error:', data.message);
                         alert(data.message);
@@ -894,6 +907,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     handleAvailableTimes(booking);
                 } else {
                     alert(data.error || 'Booking retrieval unsuccessful.');
+                    document.getElementById('unique_id').value = '';
+                    existingRecord = false;
                 }
             })
             .catch(error => {
@@ -983,7 +998,11 @@ document.addEventListener("DOMContentLoaded", function () {
         
                 // Check if the day matches the booking date
                 if (day === bookingDay) {
-                    dayElement.classList.add('highlighted'); // Highlight the matched day
+                    if (selectedDayElement) {
+                        selectedDayElement.classList.remove('highlighted'); // Remove highlight from previous selection
+                    }
+                    dayElement.classList.add('highlighted'); // Highlight the clicked day
+                    selectedDayElement = dayElement; // Store the selected day
                     dayElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Scroll into view
                 }
             });
@@ -1045,7 +1064,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         admin_email_address: adminEmailAddress,
                         send_admin_email: sendAdminEmail,
                         delete_booking_nonce: deleteNonce, // Include the nonce
-                        cancellation_reason: cancellationReason || '' // Pass the reason or an empty string if none provided
+                        cancellation_reason: cancellationReason || '', // Pass the reason or an empty string if none provided
+                        is_booking_staff: Boolean(isBookingStaff)
                     }),
                 })
                 .then(response => {
@@ -1057,10 +1077,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     if (data.success) {
                         alert('Booking deleted successfully.');
-                        resetBookingForm();
                     } else {
                         alert('Failed to delete booking: ' + data.message);
                     }
+                    // Refresh the page without parameters
+                    location.href = location.pathname;
                 })
                 .catch(error => {
                     console.error('Error deleting booking:', error);

@@ -10,6 +10,15 @@
 function display_staff_name_search() {
     global $wpdb;
 
+    // Check if the user has staff privileges
+    $current_user = wp_get_current_user();
+    $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
+
+    // If the user is not a staff member, display a restricted access message
+    if (!$is_booking_staff) {
+        return '';
+    }
+
     // Check if a search query is submitted
     $search_query = isset($_GET['staff_search']) ? sanitize_text_field($_GET['staff_search']) : '';
     $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : date('Y-m-d');
@@ -76,7 +85,7 @@ function display_staff_name_search() {
     }
 
     // Return the search form and results
-    return '
+    return '<H2>Search by Name</H2> 
         <form method="get" style="margin-bottom: 20px;">
             <input type="text" name="staff_search" value="' . esc_attr($search_query) . '" placeholder="Search by name or organization" style="padding: 8px; width: 70%;" required>
             <input type="date" name="start_date" value="' . esc_attr($start_date) . '" style="padding: 8px;">

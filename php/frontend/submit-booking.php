@@ -36,7 +36,7 @@ if(get_option('leanwi_enable_recaptcha') === 'yes')
 }
 
 // Sanitize incoming POST data
-$passer = sanitize_text_field($_POST['passer']);
+$isBookingStaff = isset($_POST['is_booking_staff']) && $_POST['is_booking_staff'] === 'true';
 $day = sanitize_text_field($_POST['day']);
 $name = sanitize_text_field($_POST['name']);
 $organization = sanitize_text_field($_POST['organization']);
@@ -85,9 +85,9 @@ if (empty($name) || empty($start_time) || empty($end_time)) {
 }
 
 // Check if the start time is in the past
-if ($passer != "staff" && $startDateTime < $currentDateTime) {
+if (!$isBookingStaff && $startDateTime < $currentDateTime) {
     $success = false;
-    $errorMessage = 'The selected start time is in the past. You will need to add a booking with a start time in the future.';
+    $errorMessage = 'The start time for this booking is in the past. You may only add or make changes to a booking with a future start time.';
 }
 
 if ($success) {
@@ -95,17 +95,32 @@ if ($success) {
 
     // Check if the unique_id already exists
     if (!empty($unique_id)) {
-        $bookingAlreadyExisted = true;
-        // Delete the existing entry if it exists for this unique_id
-        $delete_result = $wpdb->delete(
-            $participant_table,
-            ['unique_id' => $unique_id],
-            ['%s']
+        // Query the existing entry for the unique_id
+        $existing_entry = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT end_time FROM $participant_table WHERE unique_id = %s",
+                $unique_id
+            )
         );
 
-        if ($delete_result === false) {
-            $success = false;
-            $errorMessage = 'Failed to remove the previous booking for unique ID: ' . $unique_id;
+        // Check if the existing entry has an end_time in the past
+        $endDateTime = new DateTime($existing_entry->end_time);
+        if ($endDateTime < $currentDateTime) {
+            // The booking has already ended; keep the existing entry and generate a new unique_id
+            $unique_id = substr(md5(rand()), 0, 7); // Generate a new unique ID
+        } else {
+            // The booking is still active; delete the existing entry
+            $bookingAlreadyExisted = true;
+            $delete_result = $wpdb->delete(
+                $participant_table,
+                ['unique_id' => $unique_id],
+                ['%s']
+            );
+
+            if ($delete_result === false) {
+                $success = false;
+                $errorMessage = 'Failed to remove the previous booking for unique ID: ' . $unique_id;
+            }
         }
     }
     else{

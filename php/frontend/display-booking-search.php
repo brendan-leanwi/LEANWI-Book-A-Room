@@ -57,7 +57,7 @@ function display_booking_search() {
                         <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                         <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                         <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-                            <a href="%s" style="color: blue; text-decoration: underline;">View</a>
+                            <a href="%s" style="color: blue; text-decoration: underline;" target="_blank">View</a>
                         </td>
                     </tr>',
                     esc_html($row->venue_name),
