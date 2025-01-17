@@ -21,8 +21,9 @@ function display_venue_grid() {
         FROM {$wpdb->prefix}leanwi_booking_venue_hours vh
         JOIN {$wpdb->prefix}leanwi_booking_venue v ON vh.venue_id = v.venue_id
         WHERE vh.day_of_week = %s
-        AND NOT (vh.open_time = '00:00:00' AND vh.close_time = '00:00:00')
     ", $day_of_week));
+    //Removed code from above select statement
+    //AND NOT (vh.open_time = '00:00:00' AND vh.close_time = '00:00:00')
 
     // Query bookings for the selected date
     $bookings = $wpdb->get_results($wpdb->prepare("

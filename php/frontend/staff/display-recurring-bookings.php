@@ -11,6 +11,16 @@ function display_recurring_bookings() {
 
     // Fetch venues from the database
     global $wpdb;
+    
+    // Check if the user has staff privileges
+    $current_user = wp_get_current_user();
+    $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
+
+    // If the user is not a staff member, display a restricted access message
+    if (!$is_booking_staff) {
+        return 'You do not have the permissions required to use this page.';
+    }
+
     $venues_table = "{$wpdb->prefix}leanwi_booking_venue";
     $venues = $wpdb->get_results("SELECT venue_id, name, capacity FROM $venues_table WHERE historic = 0 ORDER BY name ASC");
 

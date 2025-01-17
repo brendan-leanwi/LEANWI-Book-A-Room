@@ -174,23 +174,41 @@ try {
             // Nth weekday logic
             $month = $current_date->format('m');
             $year = $current_date->format('Y');
-
-            // Calculate the nth weekday of the month
-            $first_day_of_month = new DateTime("first day of {$year}-{$month}");
-
-            // Determine the weekday of the first day of the month (0=Sunday, 1=Monday, etc.)
-            $first_day_weekday = (int)$first_day_of_month->format('w');
-
-            // Calculate the offset to the desired day of the week
-            $day_offset = ($recurrence_day_of_week - $first_day_weekday + 7) % 7;
-            $nth_weekday = clone $first_day_of_month;
-            $nth_weekday->modify("+{$day_offset} days");
-
-            // Add weeks to reach the nth occurrence
-            if ($recurrence_week_of_month > 1) {
-                $nth_weekday->modify("+".($recurrence_week_of_month - 1)." weeks");
+        
+            if ($recurrence_week_of_month > 0) {
+                // Positive week_of_month (e.g., 2nd Wednesday)
+                $first_day_of_month = new DateTime("first day of {$year}-{$month}");
+        
+                // Determine the weekday of the first day of the month (0=Sunday, 1=Monday, etc.)
+                $first_day_weekday = (int)$first_day_of_month->format('w');
+        
+                // Calculate the offset to the desired day of the week
+                $day_offset = ($recurrence_day_of_week - $first_day_weekday + 7) % 7;
+                $nth_weekday = clone $first_day_of_month;
+                $nth_weekday->modify("+{$day_offset} days");
+        
+                // Add weeks to reach the nth occurrence
+                if ($recurrence_week_of_month > 1) {
+                    $nth_weekday->modify("+".($recurrence_week_of_month - 1)." weeks");
+                }
+            } else {
+                // Negative week_of_month (e.g., -1 for the last Wednesday)
+                $last_day_of_month = new DateTime("last day of {$year}-{$month}");
+        
+                // Determine the weekday of the last day of the month (0=Sunday, 1=Monday, etc.)
+                $last_day_weekday = (int)$last_day_of_month->format('w');
+        
+                // Calculate the offset to the desired day of the week
+                $day_offset = ($last_day_weekday - $recurrence_day_of_week + 7) % 7;
+                $nth_weekday = clone $last_day_of_month;
+                $nth_weekday->modify("-{$day_offset} days");
+        
+                // Subtract weeks to reach the nth occurrence from the end of the month
+                if ($recurrence_week_of_month < -1) {
+                    $nth_weekday->modify("-".(abs($recurrence_week_of_month) - 1)." weeks");
+                }
             }
-
+        
             // Ensure the calculated date is still in the correct month
             if ($nth_weekday->format('m') == $month) {
                 $recurringDates[] = [
@@ -199,12 +217,14 @@ try {
                     'end_time' => $nth_weekday->format('Y-m-d') . ' ' . $end_time_value->format('H:i:s'),
                 ];
             }
-
+        
             // Debug the calculated date
             error_log("Calculated nth_weekday: " . $nth_weekday->format('Y-m-d'));
-
-            $start_time_value->modify("+1 month"); // Move to the next month
-        } else {
+        
+            // Move to the next recurrence interval
+            $start_time_value->modify("+{$recurrence_interval} months");
+        }
+         else {
             // Handle daily, weekly, monthly
             $recurringDates = handleOtherRecurrences(
                 $recurringDates,
@@ -224,8 +244,8 @@ try {
         $existingBooking = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->prefix}leanwi_booking_participant 
             WHERE venue_id = %d 
-            AND ((start_time <= %s AND end_time > %s) OR (start_time < %s AND end_time >= %s))",
-            $venue_id, $booking['end_time'], $booking['start_time'], $booking['end_time'], $booking['start_time']
+            AND ((start_time < %s AND end_time > %s))",
+        $venue_id, $booking['end_time'], $booking['start_time']
         ));
 
         if ($existingBooking > 0) {

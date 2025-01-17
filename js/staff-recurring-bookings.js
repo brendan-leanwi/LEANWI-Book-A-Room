@@ -277,13 +277,12 @@ function validateRecurrenceDates() {
     const startDateInput = document.getElementById('recurrence_start_date');
     const endDateInput = document.getElementById('recurrence_end_date');
 
-    const startDate = new Date(startDateInput.value);
-    const endDate = new Date(endDateInput.value);
+    const startDate = getLocalDate(startDateInput.value);
+    const endDate = getLocalDate(endDateInput.value);
     const today = new Date();
     
     // Reset time to midnight for today to only compare dates
     today.setHours(0, 0, 0, 0);
-
     if (startDate < today) {
         alert('Recurrence Start Date cannot be in the past.');
         return false;
@@ -300,6 +299,12 @@ function validateRecurrenceDates() {
     }
 
     return true;
+}
+
+// Helper function to parse the date input and adjust for local time
+function getLocalDate(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // Month is 0-indexed in JavaScript
 }
 
 function handleSubmit() {
