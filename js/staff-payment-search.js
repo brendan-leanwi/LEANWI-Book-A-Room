@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault(); // Prevent navigation
             const bookingId = this.getAttribute('data-booking-id');
             const newStatus = this.getAttribute('data-new-status'); // Get the new payment status
+            const nonce = this.getAttribute('data-nonce'); // Get the nonce
 
             document.body.style.cursor = 'wait';
 
@@ -32,7 +33,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: JSON.stringify({ 
                     booking_id: bookingId,
-                    new_status: newStatus 
+                    new_status: newStatus, 
+                    nonce: nonce // Include the nonce
                 }),
             })
             .then(response => response.json())

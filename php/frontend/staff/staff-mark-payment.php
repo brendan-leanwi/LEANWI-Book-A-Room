@@ -9,6 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $booking_id = sanitize_text_field($input['booking_id']);
     $new_status = isset($input['new_status']) ? (int) $input['new_status'] : null;
+    $nonce = isset($input['nonce']) ? $input['nonce'] : '';
+
+    // Verify the nonce
+    if (!wp_verify_nonce($nonce, 'mark_payment_nonce')) {
+        echo json_encode(['success' => false, 'message' => 'Invalid nonce.']);
+        exit;
+    }
 
     if ($new_status === null) {
         echo json_encode(['success' => false, 'message' => 'Invalid payment status.']);

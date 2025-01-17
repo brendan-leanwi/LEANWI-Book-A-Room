@@ -124,6 +124,9 @@ function display_payment_name_search() {
             $toggle_text = $row->has_paid == 0 ? 'Mark as Paid' : 'Mark as Unpaid';
             $new_payment_status = $row->has_paid == 0 ? 1 : 0;
         
+            // Generate a nonce for the AJAX request
+            $mark_payment_nonce = wp_create_nonce('mark_payment_nonce');
+
             $results_html .= sprintf(
                 '<tr>
                     <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
@@ -138,6 +141,7 @@ function display_payment_name_search() {
                         <a href="#" class="toggle-paid-link" 
                            data-booking-id="%s" 
                            data-new-status="%s" 
+                           data-nonce="%s"
                            style="color: blue; text-decoration: underline;">%s</a>
                     </td>
                 </tr>',
@@ -150,6 +154,7 @@ function display_payment_name_search() {
                 $booking_url,
                 esc_attr($row->unique_id),
                 esc_attr($new_payment_status), // Pass the new payment status
+                esc_attr($mark_payment_nonce), // Include the nonce
                 esc_html($toggle_text) // Show the correct action text
             );
         }
