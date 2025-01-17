@@ -92,6 +92,7 @@ function leanwi_create_tables() {
         category_id INT,
         audience_id INT,
         total_cost DECIMAL(10,2) DEFAULT 0.00,
+        has_paid TINYINT(1) DEFAULT 0,
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 

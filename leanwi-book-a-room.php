@@ -20,6 +20,7 @@ require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-details.php
 require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updates.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-grid.php'; // Contains the page and shortcode for the venue_grid shortcode
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-name-search.php';
+require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-payment-search.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-booking-search.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-recurring-bookings.php';
 
@@ -82,6 +83,18 @@ function leanwi_enqueue_scripts() {
 
         wp_enqueue_script('staff-name-search-js');
     }
+    
+    if (is_page() && has_shortcode(get_post()->post_content, 'staff_payment_search')) {
+        wp_register_script(
+            'staff-payment-search-js',
+            plugin_dir_url(__FILE__) . 'js/staff-payment-search.js',
+            array('jquery'),
+            filemtime(plugin_dir_path(__FILE__) . 'js/staff-payment-search.js'), 
+            true
+        );
+
+        wp_enqueue_script('staff-payment-search-js');
+    }
 
     if (is_page() && has_shortcode(get_post()->post_content, 'booking_search')) {
         wp_register_script(
@@ -126,7 +139,8 @@ function enqueue_custom_styles() {
         has_shortcode(get_post()->post_content, 'staff_recurring_bookings') || 
         has_shortcode(get_post()->post_content, 'venue_details') || 
         has_shortcode(get_post()->post_content, 'booking_search') ||
-        has_shortcode(get_post()->post_content, 'staff_name_search')))
+        has_shortcode(get_post()->post_content, 'staff_name_search') ||
+        has_shortcode(get_post()->post_content, 'staff_payment_search')))
     {
         wp_enqueue_style('custom-calendar-style', plugin_dir_url(__FILE__) . 'css/booking-style.css');
     }

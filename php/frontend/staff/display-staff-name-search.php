@@ -58,7 +58,7 @@ function display_staff_name_search() {
             </tr></thead><tbody>';
 
             foreach ($results as $row) {
-                $booking_url = esc_url($row->page_url . '?booking_id=' . $row->unique_id . '&passer=staff');
+                $booking_url = esc_url($row->page_url . '?booking_id=' . $row->unique_id);
 
                 $results_html .= sprintf(
                     '<tr>
