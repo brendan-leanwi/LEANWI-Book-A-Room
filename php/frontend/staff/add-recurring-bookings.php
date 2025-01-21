@@ -135,7 +135,11 @@ try {
     $inserted = $wpdb->insert($table_name, $data);
 
     if (!$inserted) {
-        throw new Exception('Failed to save the recurring booking.');
+        // Capture the last error
+        $error_message = $wpdb->last_error;
+
+        // Throw an exception with the error message
+        throw new Exception('Failed to save the recurring booking. Error: ' . $error_message);
     }
     // Retrieve the last inserted ID
     $recurrence_id = $wpdb->insert_id;

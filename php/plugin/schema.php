@@ -56,13 +56,13 @@ function leanwi_create_tables() {
     $sql5 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_recurrence (
         recurrence_id INT AUTO_INCREMENT PRIMARY KEY,
         recurrence_type ENUM('daily', 'weekly', 'monthly', 'nth_weekday') NOT NULL,
-        recurrence_interval INT DEFAULT 1, -- Number of days/weeks/months between recurrences
-        recurrence_start_date DATE NOT NULL, -- When the recurrence is to start
-        recurrence_end_date DATE NOT NULL, -- When the recurrence stops
-        recurrence_day_of_week TINYINT, -- For weekly or nth_weekday recurrences (0=Sunday, 6=Saturday)
-        recurrence_week_of_month TINYINT, -- For nth_weekday recurrences (1=First, 2=Second, -1=last, -2=2nd last...)
-        start_time TIME NOT NULL, -- HH:MM Hours and minutes the recurrence will start (No year/yonth/day necessary)
-        end_time TIME NOT NULL, -- HH:MM Hours and minutes the recurrence will end (No year/yonth/day necessary)
+        recurrence_interval INT DEFAULT 1,
+        recurrence_start_date DATE NOT NULL,
+        recurrence_end_date DATE NOT NULL,
+        recurrence_day_of_week TINYINT,
+        recurrence_week_of_month TINYINT,
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL,
         venue_id INT NOT NULL,
         organization VARCHAR(255),
         name VARCHAR(255) NOT NULL,
@@ -72,7 +72,6 @@ function leanwi_create_tables() {
         booking_notes TEXT,
         category_id INT,
         audience_id INT
-        --historic TINYINT(1) DEFAULT 0 ????
     ) $engine $charset_collate;";
 
     // SQL for creating leanwi_booking_participant table
