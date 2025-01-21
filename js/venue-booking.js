@@ -82,7 +82,6 @@ document.addEventListener("DOMContentLoaded", function () {
             
                 currentMonth.setFullYear(targetDate.getFullYear());
                 currentMonth.setMonth(targetDate.getMonth());
-                console.log("updateCalendar passedDate and Timeslot");
                 updateCalendar(venueId, () => {
                     highlightDayInCalendar(day);
             
@@ -92,13 +91,22 @@ document.addEventListener("DOMContentLoaded", function () {
             
                             // Highlight the passed time slot
                             const timeSelectDiv = document.querySelector('#time-select');
-                            const timeButtons = timeSelectDiv.querySelectorAll('.time-button');
+                            const contactFormContainer = document.getElementById('contact-form-container');
+                            const timeButtons = timeSelectDiv.querySelectorAll('button');
             
                             timeButtons.forEach(button => {
-                                console.log('Checking:', button.dataset.timeValue, 'against:', passedTimeSlot); // Debugging log
                                 if (button.dataset.timeValue === passedTimeSlot) {
                                     button.classList.add('selected');
-                                    button.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    button.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                                    
+                                    // Update the data-selected-times attribute
+                                    const selectedTimes = contactFormContainer.dataset.selectedTimes
+                                    ? contactFormContainer.dataset.selectedTimes.split(',')
+                                    : [];
+                                    if (!selectedTimes.includes(passedTimeSlot)) {
+                                        selectedTimes.push(passedTimeSlot);
+                                        contactFormContainer.dataset.selectedTimes = selectedTimes.join(',');
+                                    }
                                 }
                             });
                         } else {
@@ -243,8 +251,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                 }
                                 dayElement.classList.add('highlighted'); // Highlight the clicked day
                                 selectedDayElement = dayElement; // Store the selected day
-
-                                console.log('dateFormatted',dateFormatted);
 
                                 fetchAvailableTimes(venueId, dateFormatted)
                                     .then(availableTimes => {
@@ -763,6 +769,10 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
             const formData = new FormData(this);
         
+            // Get the submit button and disable it
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true; // Disable the button immediately to prevent further clicks
+
             // Execute reCAPTCHA if enabled
             if (bookingSettings.enableRecaptcha) {
                 grecaptcha.execute(bookingSettings.recaptchaSiteKey, { action: 'submit' })
@@ -771,6 +781,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     formData.append('g-recaptcha-response', token);
                     // Call the fetch function after appending the token
                     submitForm(formData);
+                })
+                .catch(function (error) {
+                    console.error('reCAPTCHA error:', error);
+                    submitButton.disabled = false; // Re-enable the button in case of reCAPTCHA failure
                 });
             } else {
                 // If reCAPTCHA is not enabled, submit the form directly
@@ -780,9 +794,6 @@ document.addEventListener("DOMContentLoaded", function () {
             function submitForm(formData) {
                 const contactFormContainer = document.getElementById('contact-form-container');
                 const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
-                
-                console.log("document.getElementById('category').value", document.getElementById('category').value);
-                console.log("document.getElementById('audience').value", document.getElementById('audience').value);
                 
                 // Add the nonce
                 formData.append('submit_booking_nonce', document.querySelector('#submit_booking_nonce').value);
@@ -797,12 +808,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (existingRecord) {
                     const uniqueId = document.getElementById('unique_id').value;
                     formData.append('unique_id', uniqueId);
-                    console.log('Unique ID:', uniqueId);
                 }
             
                 // Ensure at least one time slot is selected
                 if (selectedTimes.length === 0) {
                     alert('Please select at least one time slot.');
+                    submitButton.disabled = false; // Re-enable the button
                     return;
                 }
             
@@ -810,12 +821,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
                 if (selectedTimes.length > maxSlots) {
                     alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
+                    submitButton.disabled = false; // Re-enable the button
                     return;
                 }
             
                 // Assuming selectedTimes contains time strings in 'h:mm a' format (e.g., '9:00 am')
                 const currentDateFormatted = returnCurrentDate();
-                console.log('selectedTimes[0]', selectedTimes[0], 'selectedTimes[selectedTimes.length - 1]', selectedTimes[selectedTimes.length - 1]);
                 const startTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[0]}`); // Convert start time
                 const endTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}`); // Convert end time
 
@@ -859,6 +870,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .finally(() => {
                     document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                    
+                    // Can keep submit button disabled as the page gets refreshed after saving the booking anyway.
+                    // This stops possibility of user being able to click again after 'Ok' click in alert message
+                    //submitButton.disabled = false; 
                 });
                 
             }

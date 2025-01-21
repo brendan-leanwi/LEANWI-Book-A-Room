@@ -27,10 +27,6 @@ function display_venue_details($atts) {
         $atts
     );
 
-    // Get the passer query parameter
-    $staffLooking = isset($_GET['passer']) && sanitize_text_field($_GET['passer']) === 'staff'; // Default to false if not set
-
-
     // Get the settings for categories and audiences
     $show_categories = get_option('leanwi_show_categories', 'no'); // Default to 'no' if option not set
     $show_audiences = get_option('leanwi_show_audiences', 'no'); // Default to 'no' if option not set
@@ -136,13 +132,13 @@ function display_venue_details($atts) {
             <textarea id="notes" name="notes" style="width: 100%; height: 100px; padding: 8px; margin-bottom: 10px;"></textarea>
 
             <!-- Category Section -->
-            <label for="category" style="display: <?php echo ($show_categories === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;">Category:</label>
-            <select id="category" name="category" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_categories === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;"></select>
+            <label for="category" style="display: <?php echo ($show_categories === 'yes' || $is_booking_staff) ? 'block' : 'none'; ?>;">Category:</label>
+            <select id="category" name="category" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_categories === 'yes' || $is_booking_staff) ? 'block' : 'none'; ?>;"></select>
             <!--<input type="hidden" name="category" value="1"> Default value for category -->
 
             <!-- Audience Section -->
-            <label for="audience" style="display: <?php echo ($show_audiences === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;">Audience:</label>
-            <select id="audience" name="audience" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_audiences === 'yes' || $staffLooking) ? 'block' : 'none'; ?>;"></select>
+            <label for="audience" style="display: <?php echo ($show_audiences === 'yes' || $is_booking_staff) ? 'block' : 'none'; ?>;">Audience:</label>
+            <select id="audience" name="audience" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_audiences === 'yes' || $is_booking_staff) ? 'block' : 'none'; ?>;"></select>
             <!--<input type="hidden" name="audience" value="1"> Default value for audience -->
 
             <p><br></p>

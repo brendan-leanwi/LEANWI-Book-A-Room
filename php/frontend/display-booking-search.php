@@ -14,7 +14,62 @@ function display_booking_search() {
     $search_query = isset($_GET['booking_search']) ? sanitize_text_field($_GET['booking_search']) : '';
     //$start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : date('Y-m-d');
     //$end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : date('Y-m-d', strtotime('+1 month'));
-    $results_html = '';
+    $results_html = '<style>
+
+    /* Wrapper for centering the table */
+    .table-container {
+        display: flex; /* Use flexbox to center */
+        justify-content: center; /* Center horizontally */
+        padding: 20px; /* Optional: Add some padding around the table */
+    }
+
+    /* Center the table and make it responsive */
+    table {
+        border-collapse: collapse; /* Remove gaps between table cells */
+        width: 100%; /* Allow table to scale responsively */
+        max-width: 800px; /* Set a max width */
+        border: 1px solid #ddd; /* Optional: Add a border around the table */
+    }
+
+    /* Consistent cell borders and padding */
+    table td, table th {
+        border: 1px solid #ddd; /* Single border around cells */
+        padding: 8px;
+        text-align: left; /* Align text to the left for readability */
+    }
+
+    /* Responsive styling for smaller screens */
+    @media screen and (max-width: 768px) {
+        table {
+            display: block;
+            width: 100%;
+            overflow-x: auto; /* Allow horizontal scrolling */
+        }
+        thead {
+            display: none; /* Hide table headers */
+        }
+        tbody tr {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border: none;
+        }
+        tbody td::before {
+            content: attr(data-label);
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+    }
+    </style>';
 
     // If a search query is provided, search the database
     if ($search_query) {
@@ -38,6 +93,7 @@ function display_booking_search() {
 
         // Create results table HTML
         if (!empty($results)) {
+            $results_html .= '<div class="table-container">';
             $results_html .= '<table style="width:100%; border-collapse: collapse; margin-top: 20px;">';
             $results_html .= '<thead><tr>
                 <th style="border: 1px solid #ddd; padding: 8px;">Venue Name</th>
@@ -52,11 +108,11 @@ function display_booking_search() {
 
                 $results_html .= sprintf(
                     '<tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                        <td data-label="Venue Name" style="border: 1px solid #ddd; padding: 8px;">%s</td>
+                        <td data-label="Name" style="border: 1px solid #ddd; padding: 8px;">%s</td>
+                        <td data-label="Organization" style="border: 1px solid #ddd; padding: 8px;">%s</td>
+                        <td data-label="Start Time" style="border: 1px solid #ddd; padding: 8px;">%s</td>
+                        <td data-label="Action" style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                             <a href="%s" style="color: blue; text-decoration: underline;" target="_blank">View</a>
                         </td>
                     </tr>',
@@ -68,7 +124,7 @@ function display_booking_search() {
                 );
             }
 
-            $results_html .= '</tbody></table>';
+            $results_html .= '</tbody></table></div>';
         } else {
             $results_html = '<p>No results found for your search.</p>';
         }

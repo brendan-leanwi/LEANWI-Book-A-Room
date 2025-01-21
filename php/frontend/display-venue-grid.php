@@ -13,24 +13,30 @@ function display_venue_grid() {
     global $wpdb;
 
     $today_date = isset($_GET['selected_date']) ? sanitize_text_field($_GET['selected_date']) : date('Y-m-d');
+    $selected_venue_id = isset($_GET['venue_id']) ? intval($_GET['venue_id']) : 0; // Get the selected venue ID
     $day_of_week = date('l', strtotime($today_date));
-    
-    // Query venue hours using the day of week for the selected date
-    $venue_hours = $wpdb->get_results($wpdb->prepare("
+
+    // Query all venues for the dropdown
+    $venues = $wpdb->get_results("SELECT venue_id, name FROM {$wpdb->prefix}leanwi_booking_venue");
+
+    // Query venue hours using the day of the week and selected venue (if any)
+    $venue_hours_query = "
         SELECT vh.venue_id, vh.open_time, vh.close_time, v.name, v.page_url, v.capacity, v.description, v.location
         FROM {$wpdb->prefix}leanwi_booking_venue_hours vh
         JOIN {$wpdb->prefix}leanwi_booking_venue v ON vh.venue_id = v.venue_id
         WHERE vh.day_of_week = %s
-    ", $day_of_week));
-    //Removed code from above select statement
-    //AND NOT (vh.open_time = '00:00:00' AND vh.close_time = '00:00:00')
+    ";
+    $venue_hours_query .= $selected_venue_id ? $wpdb->prepare(" AND vh.venue_id = %d", $selected_venue_id) : "";
+    $venue_hours = $wpdb->get_results($wpdb->prepare($venue_hours_query, $day_of_week));
 
-    // Query bookings for the selected date
-    $bookings = $wpdb->get_results($wpdb->prepare("
+    // Query bookings for the selected date and venue (if applicable)
+    $bookings_query = "
         SELECT venue_id, start_time, end_time, unique_id, organization, name
         FROM {$wpdb->prefix}leanwi_booking_participant
         WHERE DATE(start_time) = %s
-    ", $today_date));
+    ";
+    $bookings_query .= $selected_venue_id ? $wpdb->prepare(" AND venue_id = %d", $selected_venue_id) : "";
+    $bookings = $wpdb->get_results($wpdb->prepare($bookings_query, $today_date));
 
     // Calculate time slots for the selected date
     $time_slots = [];
@@ -52,7 +58,7 @@ function display_venue_grid() {
     $grid = [];
     date_default_timezone_set('America/Chicago');
 
-    //Check if the user has staff privileges to display grid accordingling
+    // Check if the user has staff privileges to display grid accordingly
     $current_user = wp_get_current_user();
     $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
 
@@ -62,14 +68,45 @@ function display_venue_grid() {
             $grid[$vh->venue_id][$slot] = build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings);
         }
     }
-    
-    // Output the date picker form
-    $output = '<form id="booking-date-selector" method="GET" action="">
-    <label for="selected_date">Selected Date:</label>
-    <input type="date" id="selected_date" name="selected_date" value="' . esc_attr($today_date) . '">
-    <input type="submit" value="Update Grid">
-    </form>';
 
+    // Output the date picker form and venue dropdown
+    $output = '
+        <style>
+            #booking-date-selector {
+                display: flex;
+                flex-wrap: wrap; /* Ensure elements wrap nicely on smaller screens */
+                gap: 5px; /* Add spacing between elements */
+                justify-content: center; /* Center-align the form elements */
+                margin-bottom: 5px; /* Add space below the form */
+            }
+
+            #booking-date-selector label,
+            #booking-date-selector input[type="date"],
+            #booking-date-selector select,
+            #booking-date-selector input[type="submit"] {
+                margin: 5px 0; /* Add top and bottom margin to each element */
+                padding: 8px; /* Add padding for better touch targets */
+                font-size: 14px; /* Ensure readability on smaller screens */
+            }
+        </style>';
+    $output .= '<form id="booking-date-selector" method="GET" action="">';
+    $output .= '<label for="selected_date">Selected Date:</label>';
+    $output .= '<input type="date" id="selected_date" name="selected_date" value="' . esc_attr($today_date) . '">';
+    
+    // Venue dropdown
+    $output .= '<label for="venue_id" style="margin-left: 10px;">Select Venue:</label>';
+    $output .= '<select id="venue_id" name="venue_id" style="margin-left: 5px;">';
+    $output .= '<option value="0">All Venues</option>'; // Default option to show all venues
+    foreach ($venues as $venue) {
+        $selected = $selected_venue_id == $venue->venue_id ? 'selected' : '';
+        $output .= '<option value="' . esc_attr($venue->venue_id) . '" ' . $selected . '>' . esc_html($venue->name) . '</option>';
+    }
+    $output .= '</select>';
+
+    $output .= '<input type="submit" value="Update Page" style="margin-left: 10px;">';
+    $output .= '</form>';
+
+    // Display the date and grid header
     $formatted_date = date('F j, Y', strtotime($today_date));
     $output .= '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
 
@@ -89,7 +126,6 @@ function display_venue_grid() {
             . esc_html($vh->name) 
             . ' <span class="link-icon">↗</span></a></th>';
     }
-    
     $output .= '</tr>';
     $output .= '</thead>';
     $output .= '<tbody>';
@@ -105,8 +141,8 @@ function display_venue_grid() {
     $output .= '</table>';
 
     return $output;
-
 }
+
 
 function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings) {
     // Check if the slot time is within the venue's open and close times

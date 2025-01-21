@@ -79,6 +79,8 @@ $bookingAlreadyExisted = false;
 $currentDateTime = new DateTime($current_time); // Create a DateTime object for the current time
 $startDateTime = new DateTime($start_time); // Create a DateTime object for the start time
 
+$sendEmail = true;
+
 if (empty($name) || empty($start_time) || empty($end_time)) {
     $success = false;
     $errorMessage = 'Name, start time, and end time are required.';
@@ -103,13 +105,18 @@ if ($success) {
             )
         );
 
-        // Check if the existing entry has an end_time in the past
+        // Check if the existing entry has an end_time in the past and
         $endDateTime = new DateTime($existing_entry->end_time);
-        if ($endDateTime < $currentDateTime) {
+        if (!$isBookingStaff && $endDateTime < $currentDateTime) {
             // The booking has already ended; keep the existing entry and generate a new unique_id
             $unique_id = substr(md5(rand()), 0, 7); // Generate a new unique ID
-        } else {
-            // The booking is still active; delete the existing entry
+        }
+        else {
+            if ($isBookingStaff && $endDateTime < $currentDateTime) {
+                // The booking has already ended and booking staff are making changes - don't send an email in this case
+                $sendEmail = false;
+            }
+            // The booking is still active or a staff member is updating it; delete the existing entry
             $bookingAlreadyExisted = true;
             $delete_result = $wpdb->delete(
                 $participant_table,
@@ -164,7 +171,7 @@ if ($success && !empty($email) && !is_email($email)) {
 }
 
 // Send email if booking is successful
-if ($success) {
+if ($sendEmail && $success) {
     // Ensure $page_url has no query parameters
     $parsed_url = parse_url($page_url);
     $page_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];

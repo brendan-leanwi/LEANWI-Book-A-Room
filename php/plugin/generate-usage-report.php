@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Create a CSV file
     $upload_dir = wp_upload_dir();
-    $csv_file_path = $upload_dir['basedir'] . '/leanwi_reports/';
-    $csv_file_url = $upload_dir['baseurl'] . '/leanwi_reports/';
+    $csv_file_path = $upload_dir['basedir'] . '/leanwi_booking_reports/';
+    $csv_file_url = $upload_dir['baseurl'] . '/leanwi_booking_reports/';
 
     // Ensure the reports folder exists
     if (!file_exists($csv_file_path)) {
@@ -59,9 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Generate a file name with a timestamp
     if (!empty($venue_info)) {
-        $csv_filename = 'report_venue_' . $venue_id . '_' . time() . '.csv';
+        $csv_filename = 'usage_report_venue_' . $venue_id . '_' . time() . '.csv';
     } else {
-        $csv_filename = 'report_' . time() . '.csv';
+        $csv_filename = 'usage_report_' . time() . '.csv';
     }
     $csv_file_path .= $csv_filename;
     $csv_file_url .= $csv_filename;

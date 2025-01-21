@@ -1390,7 +1390,8 @@ function leanwi_reports_page() {
     ?>
     <div class="wrap">
         <h1>Reports</h1>
-        <form id="leanwi-report-form" method="post" action="<?php echo plugins_url('LEANWI-Book-A-Room/php/plugin/generate-report.php'); ?>">
+        <form id="leanwi-usage-report-form" method="post" action="<?php echo plugins_url('LEANWI-Book-A-Room/php/plugin/generate-usage-report.php'); ?>">
+            <h2>Room Usage Reporting</h2>
             <?php wp_nonce_field('leanwi_generate_report', 'leanwi_generate_report_nonce'); ?>
             <div class="form-row">
                 <div class="form-group">
@@ -1424,13 +1425,54 @@ function leanwi_reports_page() {
                 </div>
             </div>
             <div class="form-row">
-                <input type="submit" value="Generate Report" class="button button-primary">
+                <input type="submit" value="Generate Usage Report" class="button button-primary">
             </div>
         </form>
+        <hr>
+
+        <form id="leanwi-payment-report-form" method="post" action="<?php echo plugins_url('LEANWI-Book-A-Room/php/plugin/generate-payment-report.php'); ?>">
+            <h2>Payment Reporting</h2>
+            <?php wp_nonce_field('leanwi_generate_report', 'leanwi_generate_report_nonce'); ?>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" id="start_date" name="start_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date:</label>
+                    <input type="date" id="end_date" name="end_date" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                <label for="venue_info">Select Venue:</label>
+                    <select id="venue_info" name="venue_info">
+                        <option value="">-- All Venues --</option>
+                        <?php foreach ($venues as $venue): ?>
+                            <option value="<?php echo esc_attr($venue['venue_id']) . '|' . esc_attr($venue['name']); ?>">
+                                <?php echo esc_html($venue['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="include_paid">Include Paid:</label>
+                    <input type="checkbox" id="include_paid" name="include_paid" value="yes">
+                </div>
+                <div class="form-group">
+                    <label for="include_unpaid">Include Unpaid:</label>
+                    <input type="checkbox" id="include_unpaid" name="include_unpaid" value="yes">
+                </div>
+            </div>
+            <div class="form-row">
+                <input type="submit" value="Generate Payment Report" class="button button-primary">
+            </div>
+        </form>
+        <hr>
 
         <!-- Handle form submission so we can update the number of reports we have on the server after the report has been created -->
         <script type="text/javascript">
-            document.getElementById("leanwi-report-form").onsubmit = function(event) {
+            function handleFormSubmit(event) {
                 const form = this;
                 const originalAction = form.action; // Save the original action
                 
@@ -1469,9 +1511,11 @@ function leanwi_reports_page() {
                 // Submit the form to trigger the download
                 form.submit();
             };
+            // Attach the event listener to both forms
+            document.getElementById("leanwi-usage-report-form").onsubmit = handleFormSubmit;
+            document.getElementById("leanwi-payment-report-form").onsubmit = handleFormSubmit;
         </script>
 
-        <hr>
         <div class="purge-reports-section">
             <p>You currently have <?php echo esc_html($report_count); ?> reports sitting on the server.</p>
             <form method="post" action="" onsubmit="return confirmPurge();">
@@ -1501,7 +1545,7 @@ function leanwi_reports_page() {
             display: block; /* Make label take full width */
             margin-bottom: 5px; /* Space between label and input */
         }
-        #leanwi-report-form input[type="date"] {
+        #leanwi-usage-report-form input[type="date"] {
             padding: 5px; /* Padding inside the date input */
             width: 150px; /* Set a fixed width for the date inputs */
         }
