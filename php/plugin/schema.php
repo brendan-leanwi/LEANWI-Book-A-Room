@@ -147,27 +147,47 @@ function leanwi_create_tables() {
         error_log('DB Error7: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
     }
 
-    // Insert default category
-    $wpdb->insert(
-        "{$wpdb->prefix}leanwi_booking_category",
-        array(
-            'category_id' => 1,
-            'category_name' => 'Uncategorized',
-            'historic' => 0
-        ),
-        array('%d', '%s', '%d') // Data types
+    // Check if the category_id = 1 already exists
+    $category_exists = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM `{$wpdb->prefix}leanwi_booking_category` WHERE `category_id` = %d",
+            1
+        )
     );
 
-    // Insert default audience
-    $wpdb->insert(
-        "{$wpdb->prefix}leanwi_booking_audience",
-        array(
-            'audience_id' => 1,
-            'audience_name' => 'Uncategorized',
-            'historic' => 0
-        ),
-        array('%d', '%s', '%d') // Data types
+    if (!$category_exists) {
+        // Insert default category
+        $wpdb->insert(
+            "{$wpdb->prefix}leanwi_booking_category",
+            array(
+                'category_id' => 1,
+                'category_name' => 'Uncategorized',
+                'historic' => 0
+            ),
+            array('%d', '%s', '%d') // Data types
+        );
+    }
+
+    // Check if the audience_id = 1 already exists
+    $audience_exists = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM `{$wpdb->prefix}leanwi_booking_audience` WHERE `audience_id` = %d",
+            1
+        )
     );
+
+    if (!$audience_exists) {
+        // Insert default audience
+        $wpdb->insert(
+            "{$wpdb->prefix}leanwi_booking_audience",
+            array(
+                'audience_id' => 1,
+                'audience_name' => 'Uncategorized',
+                'historic' => 0
+            ),
+            array('%d', '%s', '%d') // Data types
+        );
+    }
 
     // Define the table name
     $table_name = $wpdb->prefix . 'leanwi_booking_participant';
