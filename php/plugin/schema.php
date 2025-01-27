@@ -202,9 +202,13 @@ function leanwi_create_tables() {
 
     if (empty($column_exists)) {
         // Add the 'physical_address' column if it doesn't exist
-        $wpdb->query(
+        $result =  $wpdb->query(
             "ALTER TABLE `$table_name` ADD `physical_address` VARCHAR(255) AFTER `phone`"
         );
+
+        if ($result === false) {
+            error_log("Failed to add `physical_address` column to `$table_name`: " . $wpdb->last_error);
+        }
     }
 }
 
