@@ -84,6 +84,7 @@ function leanwi_create_tables() {
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255),
         phone VARCHAR(20),
+        physical_address VARCHAR(255),
         start_time DATETIME NOT NULL,
         end_time DATETIME NOT NULL,
         number_of_participants INT NOT NULL,
@@ -167,6 +168,24 @@ function leanwi_create_tables() {
         ),
         array('%d', '%s', '%d') // Data types
     );
+
+    // Define the table name
+    $table_name = $wpdb->prefix . 'leanwi_booking_participant';
+
+    // Check if the 'physical_address' column exists
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM `$table_name` LIKE %s",
+            'physical_address'
+        )
+    );
+
+    if (empty($column_exists)) {
+        // Add the 'physical_address' column if it doesn't exist
+        $wpdb->query(
+            "ALTER TABLE `$table_name` ADD `physical_address` VARCHAR(255) AFTER `phone`"
+        );
+    }
 }
 
 
