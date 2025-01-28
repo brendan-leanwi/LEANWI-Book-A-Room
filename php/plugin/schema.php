@@ -150,7 +150,7 @@ function leanwi_create_tables() {
     // Check if the category_id = 1 already exists
     $category_exists = $wpdb->get_var(
         $wpdb->prepare(
-            "SELECT COUNT(*) FROM `{$wpdb->prefix}leanwi_booking_category` WHERE `category_id` = %d",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}leanwi_booking_category WHERE category_id = %d",
             1
         )
     );
@@ -171,7 +171,7 @@ function leanwi_create_tables() {
     // Check if the audience_id = 1 already exists
     $audience_exists = $wpdb->get_var(
         $wpdb->prepare(
-            "SELECT COUNT(*) FROM `{$wpdb->prefix}leanwi_booking_audience` WHERE `audience_id` = %d",
+            "SELECT COUNT(*) FROM {$wpdb->prefix}leanwi_booking_audience WHERE audience_id = %d",
             1
         )
     );
