@@ -4,13 +4,17 @@ namespace LEANWI_Book_A_Room;
 // Function to create the necessary tables on plugin activation
 function leanwi_create_tables() {
     // Load WordPress environment to access $wpdb
+    error_log("leanwi_create_tables() 1");
     require_once $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 
+    error_log("leanwi_create_tables() 2");
     global $wpdb;
 
+    error_log("leanwi_create_tables() 3");
     $charset_collate = $wpdb->get_charset_collate();
     $engine = "ENGINE=InnoDB";
 
+    error_log("leanwi_create_tables() 4");
     // SQL for creating leanwi_booking_venue table
     $sql1 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue (
         venue_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,6 +33,7 @@ function leanwi_create_tables() {
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
+error_log("leanwi_create_tables() 5");
     // SQL for creating leanwi_booking_venue_hours table
     $sql2 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue_hours (
         hour_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -39,6 +44,7 @@ function leanwi_create_tables() {
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
+error_log("leanwi_create_tables() 6");
     // SQL for creating leanwi_booking_category table
     $sql3 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_category (
         category_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -46,6 +52,7 @@ function leanwi_create_tables() {
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
+error_log("leanwi_create_tables() 7");
     // SQL for creating leanwi_booking_audience table
     $sql4 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_audience (
         audience_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,6 +60,7 @@ function leanwi_create_tables() {
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
+error_log("leanwi_create_tables() 8");
     $sql5 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_recurrence (
         recurrence_id INT AUTO_INCREMENT PRIMARY KEY,
         recurrence_type ENUM('daily', 'weekly', 'monthly', 'nth_weekday') NOT NULL,
@@ -74,6 +82,7 @@ function leanwi_create_tables() {
         audience_id INT
     ) $engine $charset_collate;";
 
+error_log("leanwi_create_tables() 9");
     // SQL for creating leanwi_booking_participant table
     $sql6 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_participant (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,6 +105,7 @@ function leanwi_create_tables() {
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
+error_log("leanwi_create_tables() 10");
     // SQL for creating leanwi_booking_affirmation table
     $sql7 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_affirmation (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -103,6 +113,7 @@ function leanwi_create_tables() {
     ) $engine $charset_collate;";
 
 
+error_log("leanwi_create_tables() 11");
     // Execute the SQL queries
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
