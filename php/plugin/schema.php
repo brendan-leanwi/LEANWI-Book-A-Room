@@ -102,6 +102,7 @@ error_log("leanwi_create_tables() 9");
         audience_id INT,
         total_cost DECIMAL(10,2) DEFAULT 0.00,
         has_paid TINYINT(1) DEFAULT 0,
+        feedback_request_sent TINYINT(1) DEFAULT 0,
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
@@ -243,7 +244,6 @@ error_log("leanwi_create_tables() 11");
         error_log("audience_id already exists");
     }
 
-    error_log($wpdb->prefix . 'leanwi_booking_participant');
     // Define the table name
     $table_name = $wpdb->prefix . 'leanwi_booking_participant';
 
@@ -269,6 +269,31 @@ error_log("leanwi_create_tables() 11");
     }
     else {
         error_log("physical_address column already exists");
+    }
+
+    //-----------------------------------------------------------------------------------------------------
+    // Check if the 'feedback_request_sent' column exists in the leanwi_booking_participant table
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'feedback_request_sent'
+        )
+    );
+
+    error_log("column_exists? " . print_r($column_exists, true)); // Log full array
+    if (count($column_exists) === 0) {
+        error_log("feedback_request_sent column does not exist");
+        // Add the 'feedback_request_sent' column if it doesn't exist
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name ADD feedback_request_sent TINYINT(1) DEFAULT 0 AFTER has_paid"
+        );
+
+        if ($result === false) {
+            error_log("Failed to add feedback_request_sent column to $table_name: " . $wpdb->last_error);
+        }
+    }
+    else {
+        error_log("feedback_request_sent column already exists");
     }
 }
 
