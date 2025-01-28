@@ -147,6 +147,7 @@ function leanwi_create_tables() {
         error_log('DB Error7: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
     }
 
+    error_log("{$wpdb->prefix}leanwi_booking_category");
     // Check if the category_id = 1 already exists
     $category_exists = $wpdb->get_var(
         $wpdb->prepare(
@@ -156,6 +157,7 @@ function leanwi_create_tables() {
     );
 
     if (!$category_exists) {
+        error_log("category_id does not exist");
         // Insert default category
         $wpdb->insert(
             "{$wpdb->prefix}leanwi_booking_category",
@@ -167,7 +169,11 @@ function leanwi_create_tables() {
             array('%d', '%s', '%d') // Data types
         );
     }
+    else{
+        error_log("category_id already exists");
+    }
 
+    error_log("{$wpdb->prefix}leanwi_booking_audience");
     // Check if the audience_id = 1 already exists
     $audience_exists = $wpdb->get_var(
         $wpdb->prepare(
@@ -177,6 +183,7 @@ function leanwi_create_tables() {
     );
 
     if (!$audience_exists) {
+        error_log("audience_id does not exist");
         // Insert default audience
         $wpdb->insert(
             "{$wpdb->prefix}leanwi_booking_audience",
@@ -188,7 +195,11 @@ function leanwi_create_tables() {
             array('%d', '%s', '%d') // Data types
         );
     }
+    else {
+        error_log("audience_id already exists");
+    }
 
+    error_log($wpdb->prefix . 'leanwi_booking_participant');
     // Define the table name
     $table_name = $wpdb->prefix . 'leanwi_booking_participant';
 
@@ -200,7 +211,9 @@ function leanwi_create_tables() {
         )
     );
 
+    error_log("column_exists? ". $column_exists);
     if (empty($column_exists)) {
+        error_log("physical_address column does not exist");
         // Add the 'physical_address' column if it doesn't exist
         $result =  $wpdb->query(
             "ALTER TABLE $table_name ADD physical_address VARCHAR(255) AFTER phone"
@@ -209,6 +222,9 @@ function leanwi_create_tables() {
         if ($result === false) {
             error_log("Failed to add physical_address column to $table_name: " . $wpdb->last_error);
         }
+    }
+    else {
+        error_log("physical_address column already exists");
     }
 }
 
