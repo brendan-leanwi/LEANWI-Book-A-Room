@@ -195,7 +195,7 @@ function leanwi_create_tables() {
     // Check if the 'physical_address' column exists
     $column_exists = $wpdb->get_results(
         $wpdb->prepare(
-            "SHOW COLUMNS FROM `$table_name` LIKE %s",
+            "SHOW COLUMNS FROM $table_name LIKE %s",
             'physical_address'
         )
     );
@@ -203,11 +203,11 @@ function leanwi_create_tables() {
     if (empty($column_exists)) {
         // Add the 'physical_address' column if it doesn't exist
         $result =  $wpdb->query(
-            "ALTER TABLE `$table_name` ADD `physical_address` VARCHAR(255) AFTER `phone`"
+            "ALTER TABLE $table_name ADD physical_address VARCHAR(255) AFTER phone"
         );
 
         if ($result === false) {
-            error_log("Failed to add `physical_address` column to `$table_name`: " . $wpdb->last_error);
+            error_log("Failed to add physical_address column to $table_name: " . $wpdb->last_error);
         }
     }
 }
