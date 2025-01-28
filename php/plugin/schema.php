@@ -110,42 +110,75 @@ function leanwi_create_tables() {
     // Doesn't work as one call like this - perhaps it runs them all at the same time?
     //dbDelta([$sql1, $sql2, $sql3, $sql4, $sql5, $sql6]);
     //*************************************************************************************** */
-    
-    dbDelta($sql1);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error1: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
-    dbDelta($sql2);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error2: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
-    dbDelta($sql3);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error3: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
-    dbDelta($sql4);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error4: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
-    dbDelta($sql5);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error5: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
-    dbDelta($sql6);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error6: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
-    dbDelta($sql7);
-    // Debug logging to track SQL execution
-    if ($wpdb->last_error) {
-        error_log('DB Error7: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
-    }
+    try {
+        dbDelta($sql1);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error1: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
+
+    try {
+        dbDelta($sql2);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error2: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
+
+    try {
+        dbDelta($sql3);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error3: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
+
+    try {
+        dbDelta($sql4);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error4: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
+
+    try {
+        dbDelta($sql5);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error5: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
+
+    try {
+        dbDelta($sql6);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error6: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
+
+    try {
+        dbDelta($sql7);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error7: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }    
 
     error_log("{$wpdb->prefix}leanwi_booking_category");
     // Check if the category_id = 1 already exists
