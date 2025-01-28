@@ -211,8 +211,8 @@ function leanwi_create_tables() {
         )
     );
 
-    error_log("column_exists? ". $column_exists);
-    if (empty($column_exists)) {
+    error_log("column_exists? " . print_r($column_exists, true)); // Log full array
+    if (count($column_exists) === 0) {
         error_log("physical_address column does not exist");
         // Add the 'physical_address' column if it doesn't exist
         $result =  $wpdb->query(
