@@ -73,7 +73,7 @@ function leanwi_add_admin_menu() {
         'Categories',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-categories',// Menu slug
-        __NAMESPACE__ . '\\leanwi_categories_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_categories_page'        // Callback function to display CATEGORIES
     );
 
     // Sub-menu: "Add Category"
@@ -103,7 +103,7 @@ function leanwi_add_admin_menu() {
         'Audiences',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-audiences',// Menu slug
-        __NAMESPACE__ . '\\leanwi_audiences_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_audiences_page'        // Callback function to display audiences
     );
 
     // Sub-menu: "Add Audience"
@@ -133,7 +133,7 @@ function leanwi_add_admin_menu() {
         'Affirmations',                   // Menu title
         'manage_options',             // Capability
         'leanwi-book-a-room-affirmations',// Menu slug
-        __NAMESPACE__ . '\\leanwi_affirmations_page'        // Callback function to display settings
+        __NAMESPACE__ . '\\leanwi_affirmations_page'        // Callback function to display affirmations
     );
 
     // Sub-menu: "Add Affirmation"
@@ -1650,6 +1650,8 @@ function leanwi_register_settings() {
     register_setting('leanwi_plugin_settings_group', 'leanwi_show_audiences');
     register_setting('leanwi_plugin_settings_group', 'leanwi_send_admin_booking_email');
     register_setting('leanwi_plugin_settings_group', 'leanwi_admin_email_address');
+    register_setting('leanwi_plugin_settings_group', 'leanwi_email_from_name');
+    register_setting('leanwi_plugin_settings_group', 'leanwi_feedback_form_link');
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_border_color');
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_bg_color');
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_text_color');
@@ -1733,8 +1735,26 @@ function leanwi_register_settings() {
     // Add Admin email address field
     add_settings_field(
         'leanwi_admin_email_address',  // Field ID
-        'Email Address for Booking Emails',         // Label for the field
+        'Booking Admin Email Address',         // Label for the field
         __NAMESPACE__ . '\\leanwi_admin_email_address_field', // Function to display the input
+        'leanwi-book-a-room-settings',  // Page slug
+        'leanwi_main_section'           // Section ID
+    );
+
+    // Add email from name field
+    add_settings_field(
+        'leanwi_email_from_name',  // Field ID
+        'Email From Name',         // Label for the field
+        __NAMESPACE__ . '\\leanwi_email_from_name_field', // Function to display the input
+        'leanwi-book-a-room-settings',  // Page slug
+        'leanwi_main_section'           // Section ID
+    );
+
+    // Add Admin email address field
+    add_settings_field(
+        'leanwi_feedback_form_link',  // Field ID
+        'URL Link to Feedback Form',         // Label for the field
+        __NAMESPACE__ . '\\leanwi_feedback_form_link_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1874,6 +1894,18 @@ function leanwi_send_admin_booking_email_field() {
 function leanwi_admin_email_address_field() {
     $value = get_option('leanwi_admin_email_address', ''); // Get saved value or default to an empty string
     echo '<input type="email" id="leanwi_admin_email_address" name="leanwi_admin_email_address" value="' . esc_attr($value) . '"  style="width: 75%;"/>';
+}
+
+// Function to display the email from name input
+function leanwi_email_from_name_field() {
+    $value = get_option('leanwi_email_from_name', 'Library Booking Team'); // Get saved value or default to an empty string
+    echo '<input type="text" id="leanwi_email_from_name" name="leanwi_email_from_name" value="' . esc_attr($value) . '"  style="width: 75%;"/>';
+}
+
+// Function to display the admin email address input
+function leanwi_feedback_form_link_field() {
+    $value = get_option('leanwi_feedback_form_link', ''); // Get saved value or default to an empty string
+    echo '<input type="url" id="leanwi_feedback_form_link" name="leanwi_feedback_form_link" value="' . esc_attr($value) . '"  style="width: 75%;"/>';
 }
 
 // Function to display the highlighted border color input

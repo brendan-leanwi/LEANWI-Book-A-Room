@@ -17,6 +17,7 @@ $unique_id = isset($data['unique_id']) ? sanitize_text_field($data['unique_id'])
 $admin_email_address = isset($data['admin_email_address']) ? sanitize_email($data['admin_email_address']) : '';
 $send_admin_email = isset($data['send_admin_email']) ? sanitize_text_field($data['send_admin_email']) : 'no';
 $cancellation_reason = isset($data['cancellation_reason']) ? sanitize_text_field($data['cancellation_reason']) : '';
+$email_from_name = get_option('leanwi_email_from_name', 'Library Booking Team');
 
 if (!empty($unique_id)) {
     $table_name = esc_sql($wpdb->prefix . 'leanwi_booking_participant');
@@ -55,7 +56,8 @@ if (!empty($unique_id)) {
             }
             $message .= "<p>If this was done in error, please rebook.</p>" .
                 "<p>If you are unsure as to the reason please contact library staff before making another booking.</p>" .
-                "<p>Best regards,<br>Library Staff Booking Team</p>";
+                "<p>Regards,</p>" .
+                "<p>" . $email_from_name . "</p>";
             $headers = "MIME-Version: 1.0" . "\r\n";
             $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
             $mail_sent = wp_mail($to, $subject, $message, $headers);

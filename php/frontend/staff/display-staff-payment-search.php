@@ -142,12 +142,19 @@ function display_payment_name_search() {
                     <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                         <a href="%s" style="color: blue; text-decoration: underline;" target="_blank">View</a>
-                    </td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                         <a href="#" class="toggle-paid-link" 
                            data-booking-id="%s" 
                            data-new-status="%s" 
                            data-nonce="%s"
                            style="color: blue; text-decoration: underline;">%s</a>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                        <a href="#" class="send-feedback-request-link" 
+                           data-booking-id="%s" 
+                           data-nonce="%s"
+                           style="color: blue; text-decoration: underline;">Send Feedback Request</a>
                     </td>
                 </tr>',
                 esc_html($row->venue_name),
@@ -156,11 +163,14 @@ function display_payment_name_search() {
                 esc_html($row->start_time),
                 esc_html($row->total_cost),
                 esc_html($row->has_paid == 0 ? 'No' : 'Yes'),
+                esc_html($row->feedback_request_sent == 0 ? 'No' : 'Yes'),
                 $booking_url,
                 esc_attr($row->unique_id),
                 esc_attr($new_payment_status), // Pass the new payment status
                 esc_attr($mark_payment_nonce), // Include the nonce
-                esc_html($toggle_text) // Show the correct action text
+                esc_html($toggle_text), // Show the correct action text
+                esc_attr($row->unique_id),
+                esc_attr($mark_payment_nonce)
             );
         }
 

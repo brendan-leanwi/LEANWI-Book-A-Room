@@ -67,6 +67,7 @@ $endDateTime = new DateTime($end_time);
 $endDateTime->modify("+$minutes_interval minutes");
 $adjusted_end_time = $endDateTime->format('Y-m-d H:i:s'); // Format the adjusted end time as 'YYYY-MM-DD HH:MM:SS'
 
+$email_from_name = get_option('leanwi_email_from_name', 'Library Booking Team');
 $admin_email_address = isset($_POST['admin_email_address']) ? sanitize_email($_POST['admin_email_address']) : '';
 $send_admin_email = isset($_POST['send_admin_email']) ? sanitize_text_field($_POST['send_admin_email']) : 'no';
 $email_text = isset($_POST['email_text']) ? sanitize_text_field($_POST['email_text']) : '';
@@ -205,7 +206,7 @@ if ($sendEmail && $success) {
     }
 
     $message .= "<p><strong>Here are the details of your booking:</strong></p>" .
-            "<p><strong>Venue:</strong>" . esc_html($venue_name) . "<br>" .
+            "<p><strong>Venue:</strong> " . esc_html($venue_name) . "<br>" .
             "<strong>Date:</strong> " . date('F j, Y', strtotime($start_time)) . "<br>" .
             "<strong>Start Time:</strong> " . date('g:i A', strtotime($start_time)) . "<br>" .
             "<strong>End Time:</strong> " . date('g:i A', strtotime($adjusted_end_time)) . "<br>" .
@@ -217,8 +218,8 @@ if ($sendEmail && $success) {
         $message .= "<p><strong>Total Cost:</strong> $" . number_format($total_cost, 2) . "</p>";
     }
 
-    $message .= "<p>Best regards,<br>" .
-                "Booking Team</p>";
+    $message .= "<p>Regards,</p>" .
+                "<p>" . $email_from_name . "</p>";
 
     // Set headers to send HTML email
     $headers = "MIME-Version: 1.0" . "\r\n";
