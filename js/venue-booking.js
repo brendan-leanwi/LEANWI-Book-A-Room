@@ -944,6 +944,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('organization').value = booking.organization;
             document.getElementById('email').value = booking.email;
             document.getElementById('phone').value = booking.phone;
+            document.getElementById('physical_address').value = booking.physical_address;
             document.getElementById('participants').value = booking.number_of_participants;
             document.getElementById('notes').value = booking.booking_notes;
             document.getElementById('category').value = booking.category_id;

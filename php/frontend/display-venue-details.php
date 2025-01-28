@@ -28,6 +28,7 @@ function display_venue_details($atts) {
     );
 
     // Get the settings for categories and audiences
+    $show_physical_address = get_option('leanwi_show_physical_address', 'no'); // Default to 'no' if option not set
     $show_categories = get_option('leanwi_show_categories', 'no'); // Default to 'no' if option not set
     $show_audiences = get_option('leanwi_show_audiences', 'no'); // Default to 'no' if option not set
     $minutes_interval = intval(get_option('leanwi_minutes_interval', 30));
@@ -124,6 +125,9 @@ function display_venue_details($atts) {
 
             <label for="phone">Phone Number:</label>
             <input type="text" id="phone" name="phone" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+            <label for="physical_address" style="display: <?php echo ($show_physical_address === 'yes') ? 'block' : 'none'; ?>;">Physical Address: <span class="info-icon" class="info-icon" title="We need this information to confirm that you are a local resident. Please contact us before making a booking if you are not a local resident."></span></label>
+            <input type="text" id="physical_address" name="physical_address" <?php echo ($show_physical_address === 'yes') ? 'required' : ''; ?> style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_physical_address === 'yes') ? 'block' : 'none'; ?>;">
 
             <label for="participants">Number of Participants:</label>
             <input type="number" id="participants" name="participants" required style="width: 100%; padding: 8px; margin-bottom: 10px;">

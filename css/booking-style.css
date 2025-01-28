@@ -393,6 +393,8 @@
 /***********************************************************************************
 * RECURRING BOOKING STYLING
 *************************************************************************************/
+
+#contact-form-container .info-icon,
 #recurrence-details-container .info-icon {
     display: inline-block;
     width: 16px;
@@ -409,37 +411,11 @@
     position: relative;
 }
 
+#contact-form-container .info-icon::before,
 #recurrence-details-container .info-icon::before {
     content: "i";
     display: inline-block;
     font-family: Arial, sans-serif;
-}
-
-#recurrence-details-container .info-icon:hover::after {
-    content: attr(title);
-    position: absolute;
-    left: 20px;
-    top: -5px;
-    background-color: #333;
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-    z-index: 10;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-#recurrence-details-container .info-icon:hover::before {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 10px;
-    height: 10px;
-    background-color: #333;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    z-index: 9;
 }
 
 /* Add margin above the table */

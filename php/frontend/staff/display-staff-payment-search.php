@@ -41,7 +41,8 @@ function display_payment_name_search() {
                 p.unique_id, 
                 p.start_time,
                 p.total_cost,
-                p.has_paid
+                p.has_paid,
+                p.feedback_request_sent
             FROM {$table_participants} p
             JOIN {$table_venues} v ON p.venue_id = v.venue_id
             WHERE (p.name LIKE %s OR p.organization LIKE %s)
@@ -78,7 +79,8 @@ function display_payment_name_search() {
                 p.unique_id, 
                 p.start_time,
                 p.total_cost,
-                p.has_paid
+                p.has_paid,
+                p.feedback_request_sent
             FROM {$table_participants} p
             JOIN {$table_venues} v ON p.venue_id = v.venue_id
             WHERE p.start_time BETWEEN %s AND %s
@@ -112,7 +114,9 @@ function display_payment_name_search() {
             <th style="border: 1px solid #ddd; padding: 8px;">Organization</th>
             <th style="border: 1px solid #ddd; padding: 8px;">Start Time</th>
             <th style="border: 1px solid #ddd; padding: 8px;">Total Cost</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Has paid?</th>
+            <th style="border: 1px solid #ddd; padding: 8px;">Has Paid?</th>
+            <th style="border: 1px solid #ddd; padding: 8px;">Feedback Request Sent?</th>
+            <th style="border: 1px solid #ddd; padding: 8px;"> </th>
             <th style="border: 1px solid #ddd; padding: 8px;"> </th>
             <th style="border: 1px solid #ddd; padding: 8px;"> </th>
         </tr></thead><tbody>';
@@ -129,6 +133,7 @@ function display_payment_name_search() {
 
             $results_html .= sprintf(
                 '<tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                     <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                     <td style="border: 1px solid #ddd; padding: 8px;">%s</td>
                     <td style="border: 1px solid #ddd; padding: 8px;">%s</td>

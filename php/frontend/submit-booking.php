@@ -42,6 +42,7 @@ $name = sanitize_text_field($_POST['name']);
 $organization = sanitize_text_field($_POST['organization']);
 $email = sanitize_email($_POST['email']);
 $phone = sanitize_text_field($_POST['phone']);
+$physical_address = sanitize_text_field($_POST['physical_address']);
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
 $notes = sanitize_textarea_field($_POST['notes']);
 $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
@@ -147,6 +148,7 @@ if ($success) {
             'organization'         => $organization,
             'email'                => $email,
             'phone'                => $phone,
+            'physical_address'     => $physical_address,
             'start_time'           => $start_time,
             'end_time'             => $adjusted_end_time,
             'number_of_participants' => $participants,
@@ -155,7 +157,7 @@ if ($success) {
             'audience_id'          => $audience,
             'total_cost'            => $total_cost
         ],
-        ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%f']
+        ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%f']
     );
 
     if ($insert_result === false) {

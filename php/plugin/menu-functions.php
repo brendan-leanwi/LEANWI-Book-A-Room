@@ -1644,6 +1644,7 @@ function leanwi_register_settings() {
     // Register a setting for "minutes_interval" and "maximum_booking_slots"
     register_setting('leanwi_plugin_settings_group', 'leanwi_minutes_interval');
     register_setting('leanwi_plugin_settings_group', 'leanwi_booking_months');
+    register_setting('leanwi_plugin_settings_group', 'leanwi_show_physical_address');
     register_setting('leanwi_plugin_settings_group', 'leanwi_show_zero_cost');
     register_setting('leanwi_plugin_settings_group', 'leanwi_show_categories');
     register_setting('leanwi_plugin_settings_group', 'leanwi_show_audiences');
@@ -1680,6 +1681,15 @@ function leanwi_register_settings() {
         'leanwi_booking_months',  // Field ID
         'Booking Months in Advance',         // Label for the field
         __NAMESPACE__ . '\\leanwi_booking_months_field', // Function to display the input
+        'leanwi-book-a-room-settings',  // Page slug
+        'leanwi_main_section'           // Section ID
+    );
+
+    // Add 'Show Physical Address to Users?' setting field
+    add_settings_field(
+        'leanwi_show_physical_address',       // Field ID
+        'Users Enter a Physical Address?', // Label for the field
+        __NAMESPACE__ . '\\leanwi_show_physical_address_field', // Function to display the dropdown
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -1803,6 +1813,17 @@ function leanwi_minutes_interval_field() {
 function leanwi_booking_months_field() {
     $value = get_option('leanwi_booking_months', ''); // Get saved value or default to an empty string
     echo '<input type="number" id="leanwi_booking_months" name="leanwi_booking_months" value="' . esc_attr($value) . '" />';
+}
+
+// Function to display 'Show Physical_address to Users' dropdown
+function leanwi_show_physical_address_field() {
+    $value = get_option('leanwi_show_physical_address', 'no'); // Default to 'no' if no value is set
+    ?>
+    <select id="leanwi_show_physical_address" name="leanwi_show_physical_address">
+        <option value="yes" <?php selected($value, 'yes'); ?>>Yes</option>
+        <option value="no" <?php selected($value, 'no'); ?>>No</option>
+    </select>
+    <?php
 }
 
 // Function to display 'Show Zero Cost to Users' dropdown

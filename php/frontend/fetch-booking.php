@@ -47,6 +47,7 @@ if (!empty($unique_id)) {
                     'organization' => esc_html($result['organization']),
                     'email' => sanitize_email($result['email']),
                     'phone' => esc_html($result['phone']),
+                    'physical_address' => esc_html($result['physical_address']),
                     'start_time' => esc_html($result['start_time']), 
                     'end_time' => esc_html($result['end_time']), 
                     'number_of_participants' => intval($result['number_of_participants']),
