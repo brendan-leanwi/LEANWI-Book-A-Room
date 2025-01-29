@@ -378,6 +378,8 @@ function leanwi_add_venue_page() {
             $name = sanitize_text_field($_POST['name']);
             $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
             $description = wp_kses_post($_POST['description']);
+            //$description = wp_kses_post($_POST['description']); // Sanitize input
+            $description = wp_unslash($description); // Remove unnecessary escaping
             $location = sanitize_text_field($_POST['location']);
             $image_url = esc_url($_POST['image_url']);
             $extra_text = wp_kses_post($_POST['extra_text']);
@@ -597,6 +599,8 @@ function leanwi_edit_venue_page() {
                 $name = sanitize_text_field($_POST['name']);
                 $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
                 $description = wp_kses_post($_POST['description']);
+                $description = wp_unslash($description);
+
                 $location = sanitize_text_field($_POST['location']);
                 $image_url = esc_url($_POST['image_url']);
                 $extra_text = wp_kses_post($_POST['extra_text']);

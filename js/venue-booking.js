@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(venue => {
             document.getElementById('venue-name').textContent = escapeHtml(venue.name);
             document.getElementById('venue-capacity').textContent = escapeHtml(venue.capacity);
-            document.getElementById('venue-description').innerHTML = escapeHtml(venue.description).replace(/\n/g, '<br>');
+            document.getElementById('venue-description').innerHTML = venue.description.replace(/\\'/g, "'").replace(/\n/g, '<br>');
             document.getElementById('venue-extra-text').innerHTML = escapeHtml(venue.extra_text).replace(/\n/g, '<br>');
             document.getElementById('venue-location').textContent = escapeHtml(venue.location);
             document.getElementById('venue-image').src = venue.image_url;
