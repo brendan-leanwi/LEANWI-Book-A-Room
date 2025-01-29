@@ -43,8 +43,10 @@ function display_venue_grid() {
     $earliest_time = '23:59:59';
     $latest_time = '00:00:00';
     foreach ($venue_hours as $vh) {
-        $earliest_time = min($earliest_time, $vh->open_time);
-        $latest_time = max($latest_time, $vh->close_time);
+        if(!($vh->open_time === '00:00:00' && $vh->close_time === '00:00:00')) {
+            $earliest_time = min($earliest_time, $vh->open_time);
+            $latest_time = max($latest_time, $vh->close_time);
+        }
     }
 
     // Generate time slots based on the open and close time
