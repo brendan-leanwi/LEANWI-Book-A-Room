@@ -32,6 +32,7 @@ if (isset($_GET['venue_id'])) {
             'display_affirmations' => intval($venue['display_affirmations']),
             'extra_text' => wp_kses_post($venue['extra_text']),
             'email_text' => wp_kses_post($venue['email_text']),
+            'booking_notes_label' => !empty($venue['booking_notes_label']) ? wp_kses_post($venue['booking_notes_label']) : '',
             'historic' => intval($venue['historic'])
         ];
 

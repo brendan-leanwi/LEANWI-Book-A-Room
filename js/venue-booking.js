@@ -70,6 +70,9 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('display-affirmations').value = venue.display_affirmations;
             document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
 
+            let bookingNotesLabel = document.getElementById('booking_notes_label');
+            bookingNotesLabel.textContent = venue.booking_notes_label && venue.booking_notes_label.trim() ? venue.booking_notes_label : "Booking Notes:";
+
             // Check if cost should be hidden
             if (bookingSettings.showZeroCost === 'no' && parseFloat(venue.slot_cost) === 0) {
                 document.getElementById('cost-info').style.display = 'none'; // Hide the Cost line

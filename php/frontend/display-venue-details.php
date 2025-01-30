@@ -132,7 +132,7 @@ function display_venue_details($atts) {
             <label for="participants">Number of Participants:</label>
             <input type="number" id="participants" name="participants" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
-            <label for="notes">Booking Notes:</label>
+            <label for="notes" id="booking_notes_label">Booking Notes:</label>
             <textarea id="notes" name="notes" style="width: 100%; height: 100px; padding: 8px; margin-bottom: 10px;"></textarea>
 
             <!-- Category Section -->

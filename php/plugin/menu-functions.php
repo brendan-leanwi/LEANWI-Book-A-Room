@@ -389,6 +389,7 @@ function leanwi_add_venue_page() {
             $page_url = esc_url($_POST['page_url']);
             $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
             $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
+            $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
 
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
@@ -409,6 +410,7 @@ function leanwi_add_venue_page() {
                     'page_url' => $page_url,
                     'conditions_of_use_url' => $conditions_of_use_url,
                     'display_affirmations' => $display_affirmations,
+                    'booking_notes_label' => $booking_notes_label,
                 )
             );
 
@@ -457,9 +459,10 @@ function leanwi_add_venue_page() {
         'page_url' => '',
         'extra_text' => '',
         'slot_cost' => '0.00',
-        'email_text' => 'Thank you for your booking. Please consider this as confirmation of your booking unless we get in touch with you further.',
+        'email_text' => 'Please consider this as confirmation of your booking unless we get in touch with you further.',
         'conditions_of_use_url' => '',
-        'display_affirmations' => 1
+        'display_affirmations' => 1,
+        'booking_notes_label' => ''
     ];
 
     // Initialize hours to default values
@@ -478,7 +481,7 @@ function leanwi_add_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="name">Name</label></th>
-                    <td><input type="text" id="name" name="name" value="<?php echo esc_attr($venue->name); ?>" required /></td>
+                    <td><input type="text" id="name" name="name" value="<?php echo esc_attr($venue->name); ?>" required style="width: 90%;" /></td>
                 </tr>
                 <tr>
                     <th><label for="capacity">Capacity</label></th>
@@ -511,6 +514,10 @@ function leanwi_add_venue_page() {
                 <tr>
                     <th><label for="display_affirmations">Display affirmations for this venue?</label></th>
                     <td><input type="checkbox" id="display_affirmations" name="display_affirmations" <?php echo ($venue->display_affirmations == 1) ? 'checked' : ''; ?>/></td>
+                </tr>
+                <tr>
+                    <th><label for="booking_notes_label">Booking Notes Label Text</label></th>
+                    <td><input type="text" id="booking_notes_label" name="booking_notes_label" value="<?php echo esc_attr($venue->booking_notes_label); ?>" required style="width: 90%;" /></td>
                 </tr>
                 <tr>
                     <th><label for="slot_cost">Cost per slot</label></th>
@@ -611,6 +618,7 @@ function leanwi_edit_venue_page() {
                 $page_url = esc_url($_POST['page_url']);
                 $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
                 $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
+                $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
         
                 // Update the venue in the database
                 $updated = $wpdb->update(
@@ -629,6 +637,7 @@ function leanwi_edit_venue_page() {
                         'page_url' => $page_url,
                         'conditions_of_use_url' => $conditions_of_use_url,
                         'display_affirmations' => $display_affirmations,
+                        'booking_notes_label' => $booking_notes_label,
                     ),
                     array('venue_id' => $venue_id)
                 );
@@ -710,7 +719,7 @@ function leanwi_edit_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="name">Name</label></th>
-                    <td><input type="text" id="name" name="name" value="<?php echo esc_attr($venue->name); ?>" required /></td>
+                    <td><input type="text" id="name" name="name" value="<?php echo esc_attr($venue->name); ?>" required style="width: 90%;" /></td>
                 </tr>
                 <tr>
                     <th><label for="capacity">Capacity</label></th>
@@ -743,6 +752,10 @@ function leanwi_edit_venue_page() {
                 <tr>
                     <th><label for="display_affirmations">Display affirmations for this venue?</label></th>
                     <td><input type="checkbox" id="display_affirmations" name="display_affirmations" <?php echo ($venue->display_affirmations == 1) ? 'checked' : ''; ?>/></td>
+                </tr>
+                <tr>
+                    <th><label for="booking_notes_label">Booking Notes Label Text</label></th>
+                    <td><input type="text" id="booking_notes_label" name="booking_notes_label" value="<?php echo esc_attr($venue->booking_notes_label); ?>" required style="width: 90%;" /></td>
                 </tr>
                 <tr>
                     <th><label for="slot_cost">Cost per slot</label></th>
