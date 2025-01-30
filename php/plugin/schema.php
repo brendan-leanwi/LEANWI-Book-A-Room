@@ -20,9 +20,11 @@ function leanwi_create_tables() {
         location VARCHAR(255),
         max_slots INT NOT NULL DEFAULT 100,
         slot_cost DECIMAL(10,2) DEFAULT 0.00,
+        days_before_booking INT DEFAULT 0,
         image_url VARCHAR(255),
         page_url VARCHAR(255),
         conditions_of_use_url VARCHAR(255),
+        venue_admin_email VARCHAR(255),
         display_affirmations TINYINT(1) DEFAULT 1,
         extra_text TEXT,
         email_text TEXT,
@@ -249,7 +251,6 @@ function leanwi_create_tables() {
         }
     }
 
-    //-----------------------------------------------------------------------------------------------------
     // Check if the 'feedback_request_sent' column exists in the leanwi_booking_participant table
     $column_exists = $wpdb->get_results(
         $wpdb->prepare(
@@ -270,7 +271,6 @@ function leanwi_create_tables() {
         }
     }
 
-    //-----------------------------------------------------------------------------------------------------
     // Define the table name
     $table_name = $wpdb->prefix . 'leanwi_booking_venue';
 
@@ -291,6 +291,46 @@ function leanwi_create_tables() {
 
         if ($result === false) {
             error_log("Failed to add booking_notes_label column to $table_name: " . $wpdb->last_error);
+        }
+    }
+    
+    // Check if the 'days_before_booking' column exists in the leanwi_booking_venue table
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'days_before_booking'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("days_before_booking column does not exist");
+        // Add the 'days_before_booking' column if it doesn't exist
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name ADD days_before_booking INT DEFAULT 0 AFTER slot_cost"
+        );
+
+        if ($result === false) {
+            error_log("Failed to add days_before_booking column to $table_name: " . $wpdb->last_error);
+        }
+    }
+    //-----------------------------------------------------------------------------------------------------
+    // Check if the 'venue_admin_email' column exists in the leanwi_booking_venue table
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'venue_admin_email'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("venue_admin_email column does not exist");
+        // Add the 'venue_admin_email' column if it doesn't exist
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name ADD venue_admin_email VARCHAR(255) AFTER conditions_of_use_url"
+        );
+
+        if ($result === false) {
+            error_log("Failed to add venue_admin_email column to $table_name: " . $wpdb->last_error);
         }
     }
 }

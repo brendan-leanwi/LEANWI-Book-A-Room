@@ -158,7 +158,7 @@ function display_venue_details($atts) {
                 <p><br></p>
             </div>
 
-            <button type="submit" class="book-button">Save Booking</button>
+            <button type="submit" class="book-button">Submit Booking</button>
         </form>
 
     </div>
