@@ -4,17 +4,13 @@ namespace LEANWI_Book_A_Room;
 // Function to create the necessary tables on plugin activation
 function leanwi_create_tables() {
     // Load WordPress environment to access $wpdb
-    error_log("leanwi_create_tables() 1");
     require_once $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 
-    error_log("leanwi_create_tables() 2");
     global $wpdb;
 
-    error_log("leanwi_create_tables() 3");
     $charset_collate = $wpdb->get_charset_collate();
     $engine = "ENGINE=InnoDB";
 
-    error_log("leanwi_create_tables() 4");
     // SQL for creating leanwi_booking_venue table
     $sql1 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue (
         venue_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -30,10 +26,10 @@ function leanwi_create_tables() {
         display_affirmations TINYINT(1) DEFAULT 1,
         extra_text TEXT,
         email_text TEXT,
+        booking_notes_label VARCHAR(255),
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
-error_log("leanwi_create_tables() 5");
     // SQL for creating leanwi_booking_venue_hours table
     $sql2 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue_hours (
         hour_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +40,6 @@ error_log("leanwi_create_tables() 5");
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
-error_log("leanwi_create_tables() 6");
     // SQL for creating leanwi_booking_category table
     $sql3 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_category (
         category_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,7 +47,6 @@ error_log("leanwi_create_tables() 6");
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
-error_log("leanwi_create_tables() 7");
     // SQL for creating leanwi_booking_audience table
     $sql4 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_audience (
         audience_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -60,7 +54,6 @@ error_log("leanwi_create_tables() 7");
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
-error_log("leanwi_create_tables() 8");
     $sql5 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_recurrence (
         recurrence_id INT AUTO_INCREMENT PRIMARY KEY,
         recurrence_type ENUM('daily', 'weekly', 'monthly', 'nth_weekday') NOT NULL,
@@ -82,7 +75,6 @@ error_log("leanwi_create_tables() 8");
         audience_id INT
     ) $engine $charset_collate;";
 
-error_log("leanwi_create_tables() 9");
     // SQL for creating leanwi_booking_participant table
     $sql6 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_participant (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,7 +98,6 @@ error_log("leanwi_create_tables() 9");
         FOREIGN KEY (venue_id) REFERENCES {$wpdb->prefix}leanwi_booking_venue(venue_id) ON DELETE CASCADE
     ) $engine $charset_collate;";
 
-error_log("leanwi_create_tables() 10");
     // SQL for creating leanwi_booking_affirmation table
     $sql7 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_affirmation (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -114,7 +105,6 @@ error_log("leanwi_create_tables() 10");
     ) $engine $charset_collate;";
 
 
-error_log("leanwi_create_tables() 11");
     // Execute the SQL queries
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
@@ -192,7 +182,6 @@ error_log("leanwi_create_tables() 11");
         error_log($e->getMessage());
     }    
 
-    error_log("{$wpdb->prefix}leanwi_booking_category");
     // Check if the category_id = 1 already exists
     $category_exists = $wpdb->get_var(
         $wpdb->prepare(
@@ -214,11 +203,7 @@ error_log("leanwi_create_tables() 11");
             array('%d', '%s', '%d') // Data types
         );
     }
-    else{
-        error_log("category_id already exists");
-    }
 
-    error_log("{$wpdb->prefix}leanwi_booking_audience");
     // Check if the audience_id = 1 already exists
     $audience_exists = $wpdb->get_var(
         $wpdb->prepare(
@@ -240,9 +225,6 @@ error_log("leanwi_create_tables() 11");
             array('%d', '%s', '%d') // Data types
         );
     }
-    else {
-        error_log("audience_id already exists");
-    }
 
     // Define the table name
     $table_name = $wpdb->prefix . 'leanwi_booking_participant';
@@ -255,7 +237,6 @@ error_log("leanwi_create_tables() 11");
         )
     );
 
-    error_log("column_exists? " . print_r($column_exists, true)); // Log full array
     if (count($column_exists) === 0) {
         error_log("physical_address column does not exist");
         // Add the 'physical_address' column if it doesn't exist
@@ -267,9 +248,6 @@ error_log("leanwi_create_tables() 11");
             error_log("Failed to add physical_address column to $table_name: " . $wpdb->last_error);
         }
     }
-    else {
-        error_log("physical_address column already exists");
-    }
 
     //-----------------------------------------------------------------------------------------------------
     // Check if the 'feedback_request_sent' column exists in the leanwi_booking_participant table
@@ -280,7 +258,6 @@ error_log("leanwi_create_tables() 11");
         )
     );
 
-    error_log("column_exists? " . print_r($column_exists, true)); // Log full array
     if (count($column_exists) === 0) {
         error_log("feedback_request_sent column does not exist");
         // Add the 'feedback_request_sent' column if it doesn't exist
@@ -292,8 +269,29 @@ error_log("leanwi_create_tables() 11");
             error_log("Failed to add feedback_request_sent column to $table_name: " . $wpdb->last_error);
         }
     }
-    else {
-        error_log("feedback_request_sent column already exists");
+
+    //-----------------------------------------------------------------------------------------------------
+    // Define the table name
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+
+    // Check if the 'booking_notes_label' column exists in the leanwi_booking_venue table
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'booking_notes_label'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("booking_notes_label column does not exist");
+        // Add the 'booking_notes_label' column if it doesn't exist
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name ADD booking_notes_label VARCHAR(255) AFTER email_text"
+        );
+
+        if ($result === false) {
+            error_log("Failed to add booking_notes_label column to $table_name: " . $wpdb->last_error);
+        }
     }
 }
 
