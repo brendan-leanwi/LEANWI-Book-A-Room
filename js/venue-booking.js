@@ -956,7 +956,8 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('phone').value = booking.phone;
             document.getElementById('physical_address').value = booking.physical_address;
             document.getElementById('participants').value = booking.number_of_participants;
-            document.getElementById('notes').value = booking.booking_notes;
+            //document.getElementById('notes').value = booking.booking_notes;
+            document.getElementById('notes').value = document.createElement("textarea").innerHTML = booking.booking_notes;
             document.getElementById('category').value = booking.category_id;
             document.getElementById('audience').value = booking.audience_id;
             

@@ -35,7 +35,7 @@ if (isset($_GET['venue_id'])) {
             'booking_notes_label' => !empty($venue['booking_notes_label']) ? wp_kses_post($venue['booking_notes_label']) : '',
             'historic' => intval($venue['historic']),
             'days_before_booking' => intval($venue['days_before_booking']),
-            'venue_admin_email' => sanitize_email($venue['venue_admin_email']),
+            'venue_admin_email' => sanitize_email($venue['venue_admin_email'] ?? ''), // Handle NULL
             'use_business_days_only' => intval($venue['use_business_days_only'])
         ];
 

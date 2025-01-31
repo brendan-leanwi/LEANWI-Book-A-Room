@@ -53,7 +53,8 @@ $physical_address = wp_unslash($physical_address); // Remove unnecessary escapin
 
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
 
-$notes = sanitize_textarea_field($_POST['notes']);
+//$notes = sanitize_textarea_field($_POST['notes']);
+$notes = wp_kses_post($_POST['notes']);
 $notes = wp_unslash($notes); // Remove unnecessary escaping from the notes field
 
 $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
@@ -285,6 +286,15 @@ if ($sendEmail && $success) {
         }
     }
     
+    //Add extra details to bottom of message for admins
+    $message .= "<p> </p>" .
+                "<p><strong>The booker identified themselves as:</strong><br>" .
+                "<strong>Name:</strong> " . (!empty($name) ? esc_html($name) : 'None') . "<br>" .
+                "<strong>Organization:</strong> " . (!empty($organization) ? esc_html($organization) : 'None') . "<br>" .
+                "<strong>Phone:</strong> " . (!empty($phone) ? esc_html($phone) : 'None') . "<br>" .
+                "<strong>Email:</strong> " . (!empty($email) ? esc_html($email) : 'None') . "<br>" .
+                "<strong>Physical Address:</strong> " . (!empty($physical_address) ? esc_html($physical_address) : 'None') . "</p>";
+
     if ($send_admin_email === 'yes' && !empty($admin_email_address)){
         if (!is_email($admin_email_address)) {
             $success = false;
@@ -296,6 +306,7 @@ if ($sendEmail && $success) {
         if ($bookingAlreadyExisted) {
             $subject = 'A booking has been updated';
         }
+
         $admin_message = "<p>Hello administrator, the following booking has been made.<br></p> $message";
         $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
         if (!$admin_mail_sent) {
