@@ -336,24 +336,39 @@ function leanwi_create_tables() {
 
     //-----------------------------------------------------------------------------------------------------
     // Check if the 'use_business_days_only' column exists in the leanwi_booking_venue table
-    $column_exists = $wpdb->get_results(
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+
+    // Debug table name
+    error_log("Checking table: $table_name");
+
+    // Check if column exists using INFORMATION_SCHEMA
+    $column_exists = $wpdb->get_var(
         $wpdb->prepare(
-            "SHOW COLUMNS FROM $table_name LIKE %s",
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = %s AND COLUMN_NAME = %s",
+            $table_name,
             'use_business_days_only'
         )
     );
 
-    if (count($column_exists) === 0) {
-        error_log("use_business_days_only column does not exist");
-        // Add the 'use_business_days_only' column if it doesn't exist
-        $result =  $wpdb->query(
-            "ALTER TABLE $table_name ADD use_business_days_only TINYINT(1) DEFAULT 0 AFTER days_before_booking"
+    // Debug result
+    error_log("Column exists? " . $column_exists);
+
+    if ($column_exists == 0) {
+        error_log("Column 'use_business_days_only' does not exist, attempting to add it...");
+
+        // Attempt to add column
+        $result = $wpdb->query(
+            "ALTER TABLE `$table_name` ADD `use_business_days_only` TINYINT(1) DEFAULT 0 AFTER `days_before_booking`"
         );
 
+        // Log the result
         if ($result === false) {
-            error_log("Failed to add use_business_days_only column to $table_name: " . $wpdb->last_error);
+            error_log("Failed to add 'use_business_days_only' column: " . $wpdb->last_error);
+        } else {
+            error_log("Successfully added 'use_business_days_only' column.");
         }
     }
+
 }
 
 
