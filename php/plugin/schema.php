@@ -21,6 +21,7 @@ function leanwi_create_tables() {
         max_slots INT NOT NULL DEFAULT 100,
         slot_cost DECIMAL(10,2) DEFAULT 0.00,
         days_before_booking INT DEFAULT 0,
+        use_business_days_only TINYINT(1) DEFAULT 0,
         image_url VARCHAR(255),
         page_url VARCHAR(255),
         conditions_of_use_url VARCHAR(255),
@@ -313,7 +314,6 @@ function leanwi_create_tables() {
             error_log("Failed to add days_before_booking column to $table_name: " . $wpdb->last_error);
         }
     }
-    //-----------------------------------------------------------------------------------------------------
     // Check if the 'venue_admin_email' column exists in the leanwi_booking_venue table
     $column_exists = $wpdb->get_results(
         $wpdb->prepare(
@@ -331,6 +331,27 @@ function leanwi_create_tables() {
 
         if ($result === false) {
             error_log("Failed to add venue_admin_email column to $table_name: " . $wpdb->last_error);
+        }
+    }
+
+    //-----------------------------------------------------------------------------------------------------
+    // Check if the 'use_business_days_only' column exists in the leanwi_booking_venue table
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'use_business_days_only'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("use_business_days_only column does not exist");
+        // Add the 'use_business_days_only' column if it doesn't exist
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name ADD use_business_days_only TINYINT(1) DEFAULT 0 AFTER days_before_booking"
+        );
+
+        if ($result === false) {
+            error_log("Failed to add use_business_days_only column to $table_name: " . $wpdb->last_error);
         }
     }
 }

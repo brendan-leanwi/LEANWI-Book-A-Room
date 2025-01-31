@@ -33,7 +33,9 @@ if (isset($_GET['venue_id'])) {
             'extra_text' => wp_kses_post($venue['extra_text']),
             'email_text' => wp_kses_post($venue['email_text']),
             'booking_notes_label' => !empty($venue['booking_notes_label']) ? wp_kses_post($venue['booking_notes_label']) : '',
-            'historic' => intval($venue['historic'])
+            'historic' => intval($venue['historic']),
+            'days_before_booking' => intval($venue['days_before_booking']),
+            'venue_admin_email' => sanitize_email($venue['venue_admin_email'])
         ];
 
         echo json_encode($sanitized_venue, JSON_UNESCAPED_SLASHES); // Return sanitized venue details as JSON

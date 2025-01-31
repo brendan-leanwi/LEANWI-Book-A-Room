@@ -49,6 +49,10 @@ $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
 $audience = isset($_POST['audience']) ? intval($_POST['audience']) : 0;
 $venue_id = isset($_POST['venue_id']) ? intval($_POST['venue_id']) : 0;
 
+$use_business_days_only = false;
+$days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
+$venue_admin_email = sanitize_email($_POST['venue_admin_email']);
+
 // Get the start and end time directly from the POST data
 $start_time = sanitize_text_field($_POST['start_time']); // Passed from the form
 $end_time = sanitize_text_field($_POST['end_time']); // Passed from the form
@@ -92,6 +96,41 @@ if (empty($name) || empty($start_time) || empty($end_time)) {
 if (!$isBookingStaff && $startDateTime < $currentDateTime) {
     $success = false;
     $errorMessage = 'The start time for this booking is in the past. You may only add or make changes to a booking with a future start time.';
+}
+
+// Function to subtract business days
+function subtractBusinessDays(DateTime $date, int $days): DateTime {
+    while ($days > 0) {
+        $date->modify('-1 day'); // Move back one day
+        if (!in_array($date->format('N'), [6, 7])) { // Skip Saturdays (6) and Sundays (7)
+            $days--;
+        }
+    }
+    return $date;
+}
+
+// Check if booking is being made with enough advance notice
+if (!$isBookingStaff) {
+    if(!$use_business_days_only) {
+        $cutoffDateTime = clone $startDateTime;
+        $cutoffDateTime->modify("-$days_before_booking days");
+    }
+    else {
+        $cutoffDateTime = subtractBusinessDays(clone $startDateTime, $days_before_booking);
+    }
+
+    // Reset cutoff time to the start of the day for a fair comparison
+    $cutoffDateTime->setTime(0, 0, 0);
+
+    if ($currentDateTime->format('Y-m-d') > $cutoffDateTime->format('Y-m-d')) {
+        $success = false;
+        if($use_business_days_only) {
+            $errorMessage = "Bookings must be made at least $days_before_booking business day(s) in advance.";
+        }
+        else {
+            $errorMessage = "Bookings must be made at least $days_before_booking day(s) in advance.";
+        }
+    }
 }
 
 if ($success) {
@@ -250,6 +289,24 @@ if ($sendEmail && $success) {
         $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
         if (!$admin_mail_sent) {
             $errorMessage += 'Booking successful, but failed to send confirmation email to administrator.';
+        }
+    }
+
+    if (!empty($venue_admin_email)){
+        if (!is_email($venue_admin_email)) {
+            $success = false;
+            $errorMessage += 'Invalid venue admin email address. Failed to send confirmation email to venue administrator.';
+        }
+        
+        $to = $venue_admin_email;
+        $subject = 'A booking has been made!';
+        if ($bookingAlreadyExisted) {
+            $subject = 'A booking has been updated';
+        }
+        $admin_message = "<p>Hello venue administrator, the following booking has been made.<br></p> $message";
+        $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
+        if (!$admin_mail_sent) {
+            $errorMessage += 'Booking successful, but failed to send confirmation email to venue administrator.';
         }
     }
 }

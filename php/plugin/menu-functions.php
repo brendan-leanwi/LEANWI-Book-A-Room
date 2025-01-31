@@ -390,6 +390,8 @@ function leanwi_add_venue_page() {
             $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
             $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
             $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
+            $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
+            $venue_admin_email = isset($_POST['venue_admin_email']) ? sanitize_email($_POST['venue_admin_email']) : '';
 
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
@@ -411,6 +413,8 @@ function leanwi_add_venue_page() {
                     'conditions_of_use_url' => $conditions_of_use_url,
                     'display_affirmations' => $display_affirmations,
                     'booking_notes_label' => $booking_notes_label,
+                    'days_before_booking' => $days_before_booking,
+                    'venue_admin_email' => $venue_admin_email,
                 )
             );
 
@@ -462,7 +466,9 @@ function leanwi_add_venue_page() {
         'email_text' => 'Please consider this as confirmation of your booking unless we get in touch with you further.',
         'conditions_of_use_url' => '',
         'display_affirmations' => 1,
-        'booking_notes_label' => ''
+        'booking_notes_label' => '',
+        'days_before_booking' => 0,
+        'venue_admin_email' => ''
     ];
 
     // Initialize hours to default values
@@ -504,12 +510,23 @@ function leanwi_add_venue_page() {
                     <td><input type="number" id="max_slots" name="max_slots" value="<?php echo esc_attr($venue->max_slots); ?>" required /> </td>
                 </tr>
                 <tr>
+                    <th><label for="days_before_booking">Bookings Days in Advance</label></th>
+                    <td>
+                        <input type="number" id="days_before_booking" name="days_before_booking" value="<?php echo esc_attr($venue->days_before_booking); ?>" required />
+                        <label for="days_before_booking">0 indicates a booking can be made on the same day</label>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="image_url">Image URL</label></th>
                     <td><input type="text" id="image_url" name="image_url" style="width: 90%;" value="<?php echo esc_attr($venue->image_url); ?>" /></td>
                 </tr>
                 <tr>
                     <th><label for="conditions_of_use_url">Conditions of Use URL</label></th>
                     <td><input type="text" id="conditions_of_use_url" name="conditions_of_use_url" style="width: 90%;" value="<?php echo esc_attr($venue->conditions_of_use_url); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><label for="venue_admin_email">Venue Admin Email</label></th>
+                    <td><input type="email" id="venue_admin_email" name="venue_admin_email" style="width: 90%;" value="<?php echo esc_attr($venue->venue_admin_email); ?>" /></td>
                 </tr>
                 <tr>
                     <th><label for="display_affirmations">Display affirmations for this venue?</label></th>
@@ -619,6 +636,8 @@ function leanwi_edit_venue_page() {
                 $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
                 $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
                 $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
+                $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
+                $venue_admin_email = isset($_POST['venue_admin_email']) ? sanitize_email($_POST['venue_admin_email']) : '';
         
                 // Update the venue in the database
                 $updated = $wpdb->update(
@@ -638,6 +657,8 @@ function leanwi_edit_venue_page() {
                         'conditions_of_use_url' => $conditions_of_use_url,
                         'display_affirmations' => $display_affirmations,
                         'booking_notes_label' => $booking_notes_label,
+                        'days_before_booking' => $days_before_booking,
+                        'venue_admin_email' => $venue_admin_email,
                     ),
                     array('venue_id' => $venue_id)
                 );
@@ -742,12 +763,23 @@ function leanwi_edit_venue_page() {
                     <td><input type="number" id="max_slots" name="max_slots" value="<?php echo esc_attr($venue->max_slots); ?>" required /></td>
                 </tr>
                 <tr>
+                    <th><label for="days_before_booking">Bookings Days in Advance</label></th>
+                    <td>
+                        <input type="number" id="days_before_booking" name="days_before_booking" value="<?php echo esc_attr($venue->days_before_booking); ?>" required />
+                        <label for="days_before_booking">0 indicates a booking can be made on the same day</label>
+                    </td>
+                </tr>
+                <tr>
                     <th><label for="image_url">Image URL</label></th>
                     <td><input type="text" id="image_url" name="image_url" style="width: 90%;" value="<?php echo esc_attr((string)$venue->image_url); ?>" /></td>
                 </tr>
                 <tr>
                     <th><label for="conditions_of_use_url">Conditions of Use URL</label></th>
                     <td><input type="text" id="conditions_of_use_url" name="conditions_of_use_url" style="width: 90%;" value="<?php echo esc_attr($venue->conditions_of_use_url); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><label for="venue_admin_email">Venue Admin Email</label></th>
+                    <td><input type="email" id="venue_admin_email" name="venue_admin_email" style="width: 90%;" value="<?php echo esc_attr($venue->venue_admin_email); ?>" /></td>
                 </tr>
                 <tr>
                     <th><label for="display_affirmations">Display affirmations for this venue?</label></th>

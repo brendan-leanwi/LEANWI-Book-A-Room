@@ -69,6 +69,8 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('venue-slot-cost').textContent = parseFloat(venue.slot_cost).toFixed(2);
             document.getElementById('display-affirmations').value = venue.display_affirmations;
             document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
+            document.getElementById('days_before_booking').value = venue.days_before_booking;
+            document.getElementById('venue_admin_email').value = venue.venue_admin_email;
 
             let bookingNotesLabel = document.getElementById('booking_notes_label');
             bookingNotesLabel.textContent = venue.booking_notes_label && venue.booking_notes_label.trim() ? venue.booking_notes_label : "Booking Notes:";
@@ -807,6 +809,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append('total_cost', document.getElementById('total-cost').textContent);
                 formData.append('venue_name', document.getElementById('venue-name').textContent);
                 formData.append('page_url', window.location.href);
+                formData.append('days_before_booking', document.getElementById('days_before_booking').value);
+                formData.append('venue_admin_email', document.getElementById('venue_admin_email').value);
             
                 if (existingRecord) {
                     const uniqueId = document.getElementById('unique_id').value;
@@ -865,6 +869,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     } else {
                         console.error('Submit Error:', data.message);
                         alert(data.message);
+                        submitButton.disabled = false;
                     }
                 })
                 .catch(error => {
