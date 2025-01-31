@@ -351,7 +351,7 @@ function leanwi_create_tables() {
     );
 
     // Debug result
-    error_log("Column exists? " . $column_exists);
+    error_log("'use_business_days_only Column exists? " . $column_exists);
 
     if ($column_exists == 0) {
         error_log("Column 'use_business_days_only' does not exist, attempting to add it...");

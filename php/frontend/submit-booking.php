@@ -38,18 +38,29 @@ if(get_option('leanwi_enable_recaptcha') === 'yes')
 // Sanitize incoming POST data
 $isBookingStaff = isset($_POST['is_booking_staff']) && $_POST['is_booking_staff'] === 'true';
 $day = sanitize_text_field($_POST['day']);
+
 $name = sanitize_text_field($_POST['name']);
+$name = wp_unslash($name); // Remove unnecessary escaping
+
 $organization = sanitize_text_field($_POST['organization']);
+$organization = wp_unslash($organization); // Remove unnecessary escaping
+
 $email = sanitize_email($_POST['email']);
 $phone = sanitize_text_field($_POST['phone']);
+
 $physical_address = sanitize_text_field($_POST['physical_address']);
+$physical_address = wp_unslash($physical_address); // Remove unnecessary escaping
+
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
+
 $notes = sanitize_textarea_field($_POST['notes']);
+$notes = wp_unslash($notes); // Remove unnecessary escaping from the notes field
+
 $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
 $audience = isset($_POST['audience']) ? intval($_POST['audience']) : 0;
 $venue_id = isset($_POST['venue_id']) ? intval($_POST['venue_id']) : 0;
 
-$use_business_days_only = false;
+$use_business_days_only = isset($_POST['use_business_days_only']) && $_POST['use_business_days_only'] == 1;
 $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
 $venue_admin_email = sanitize_email($_POST['venue_admin_email']);
 

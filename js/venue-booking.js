@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('display-affirmations').value = venue.display_affirmations;
             document.getElementById('conditions-of-use-url').value = venue.conditions_of_use_url;
             document.getElementById('days_before_booking').value = venue.days_before_booking;
+            document.getElementById('use_business_days_only').value = venue.use_business_days_only;
             document.getElementById('venue_admin_email').value = venue.venue_admin_email;
 
             let bookingNotesLabel = document.getElementById('booking_notes_label');
@@ -810,6 +811,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append('venue_name', document.getElementById('venue-name').textContent);
                 formData.append('page_url', window.location.href);
                 formData.append('days_before_booking', document.getElementById('days_before_booking').value);
+                formData.append('use_business_days_only', document.getElementById('use_business_days_only').value);
                 formData.append('venue_admin_email', document.getElementById('venue_admin_email').value);
             
                 if (existingRecord) {

@@ -378,7 +378,6 @@ function leanwi_add_venue_page() {
             $name = sanitize_text_field($_POST['name']);
             $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
             $description = wp_kses_post($_POST['description']);
-            //$description = wp_kses_post($_POST['description']); // Sanitize input
             $description = wp_unslash($description); // Remove unnecessary escaping
             $location = sanitize_text_field($_POST['location']);
             $image_url = esc_url($_POST['image_url']);
@@ -392,6 +391,7 @@ function leanwi_add_venue_page() {
             $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
             $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
             $venue_admin_email = isset($_POST['venue_admin_email']) ? sanitize_email($_POST['venue_admin_email']) : '';
+            $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
 
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
@@ -415,6 +415,7 @@ function leanwi_add_venue_page() {
                     'booking_notes_label' => $booking_notes_label,
                     'days_before_booking' => $days_before_booking,
                     'venue_admin_email' => $venue_admin_email,
+                    'use_business_days_only' => $use_business_days_only
                 )
             );
 
@@ -468,7 +469,8 @@ function leanwi_add_venue_page() {
         'display_affirmations' => 1,
         'booking_notes_label' => '',
         'days_before_booking' => 0,
-        'venue_admin_email' => ''
+        'venue_admin_email' => '',
+        'use_business_days_only' => 0
     ];
 
     // Initialize hours to default values
@@ -513,7 +515,9 @@ function leanwi_add_venue_page() {
                     <th><label for="days_before_booking">Bookings Days in Advance</label></th>
                     <td>
                         <input type="number" id="days_before_booking" name="days_before_booking" value="<?php echo esc_attr($venue->days_before_booking); ?>" required />
-                        <label for="days_before_booking">0 indicates a booking can be made on the same day</label>
+                        <label for="days_before_booking">(0 indicates a booking can be made on the same day)</label>
+                        <input type="checkbox" id="use_business_days_only" name="use_business_days_only" <?php echo ($venue->use_business_days_only == 1) ? 'checked' : ''; ?>/>
+                        <label for="use_business_days_only"><strong>Calculate using business days only?</strong> (i.e exclude weekends)</label>
                     </td>
                 </tr>
                 <tr>
@@ -638,6 +642,7 @@ function leanwi_edit_venue_page() {
                 $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
                 $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
                 $venue_admin_email = isset($_POST['venue_admin_email']) ? sanitize_email($_POST['venue_admin_email']) : '';
+                $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
         
                 // Update the venue in the database
                 $updated = $wpdb->update(
@@ -659,6 +664,7 @@ function leanwi_edit_venue_page() {
                         'booking_notes_label' => $booking_notes_label,
                         'days_before_booking' => $days_before_booking,
                         'venue_admin_email' => $venue_admin_email,
+                        'use_business_days_only' => $use_business_days_only,
                     ),
                     array('venue_id' => $venue_id)
                 );
@@ -766,7 +772,9 @@ function leanwi_edit_venue_page() {
                     <th><label for="days_before_booking">Bookings Days in Advance</label></th>
                     <td>
                         <input type="number" id="days_before_booking" name="days_before_booking" value="<?php echo esc_attr($venue->days_before_booking); ?>" required />
-                        <label for="days_before_booking">0 indicates a booking can be made on the same day</label>
+                        <label for="days_before_booking">(0 indicates a booking can be made on the same day)</label>
+                        <input type="checkbox" id="use_business_days_only" name="use_business_days_only" <?php echo ($venue->use_business_days_only == 1) ? 'checked' : ''; ?>/>
+                        <label for="use_business_days_only"><strong>Calculate using business days only?</strong> (i.e exclude weekends)</label>
                     </td>
                 </tr>
                 <tr>

@@ -54,6 +54,7 @@ function display_venue_details($atts) {
             <input type="hidden" id="display-affirmations" value="1">
             <input type="hidden" id="conditions-of-use-url" value="">
             <input type="hidden" id="days_before_booking" value="0">
+            <input type="hidden" id="use_business_days_only" value="0">
             <input type="hidden" id="venue_admin_email" value="">
 
             <div class="booking-container">
