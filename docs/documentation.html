@@ -1,0 +1,134 @@
+<div style="max-width: 1000px; margin: auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="text-align: center;">
+        <img src="/wp-content/plugins/LEANWI-Book-A-Room/docs/images/meeting-room-icon-150x150.png" 
+             alt="LEANWI Book-A-Room Logo" style="max-width: 150px; margin-bottom: 20px;">
+    </div>
+
+    <h1 id="top" style="text-align: center; color: #0073aa;">LEANWI-Book-A-Room Documentation</h1>
+
+    <p style="text-align: center; font-size: 1.1em;">
+        Welcome to the <strong>LEANWI-Book-A-Room</strong> plugin documentation.<br>This guide will help you configure and use the plugin efficiently.
+    </p>
+
+    <hr style="margin: 30px 0; border: 1px solid #ddd;">
+
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="vertical-align: top; padding: 20px; width: 60%; border: 1px solid #ddd; background-color: #f9f9f9;">
+                <h2 style="color: #0073aa;">Features Include</h2>
+                <ul style="list-style-type: disc; padding-left: 30px; font-size: 14px;">
+                    <li>All functionality is directly put onto your website's pages, making it highly customizable and versatile.</li>
+                    <li>Community members book meeting rooms based on your library's use policies.</li>
+                    <li>Once a time slot is booked, the room is immediately blocked for all other users.</li>
+                    <li>Multiple ways for community members and staff to view room availability.</li>
+                    <li>Multiple ways for staff to search for and adjust bookings.</li>
+                    <li>Staff can add recurring bookings easily for events like Storytime and make adjustments when needed.</li>
+                    <li>Ability to book appointments with staff members for services like tech help or notary appointments.</li>
+                    <li>Staff can easily track and cancel erroneous bookings.</li>
+                    <li>An admin dashboard allows full control of all staff and user settings.</li>
+                    <li>Ability to send a feedback request after a booking.</li>
+                    <li>Fully configurable audiences and categories for reporting with flexible filters and CSV file export.</li>
+                    <li>The ability to add pricing to any room or staff appointment and track payments.</li>
+                    <li>Supports reCAPTCHA for security.</li>
+                </ul>
+            </td>
+            <td style="vertical-align: top; padding: 20px; width: 40%; border: 1px solid #ddd; background-color: #ffffff;">
+                <h2 style="color: #0073aa;">How-To Guides</h2>
+                <ol style="padding-left: 20px; font-size: 14px;">
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Initial setup (Affirmations, Settings, and Staff)</a></li>
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Reporting, Categories, and Audiences Setup</a></li>
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Setting up your first Venue</a></li>
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Setting up your first Staff Role</a></li>
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Shortcodes List and Use</a></li>
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">How to use the Recurring Bookings page</a></li>
+                    <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Adding a mail client</a></li>
+                </ol>
+            </td>
+        </tr>
+    </table>
+
+    <hr style="margin: 30px 0; border: 1px solid #ddd;">
+
+    <h2 style="color: #0073aa;">Quick Product Overview</h2>
+    <p style="font-size: 14px;">
+        The LEANWI-Book-A-Room plugin is set up in two parts:
+        <ol>
+            <li>The admin settings and venue details are configured under the LEANWI-Book-A-Room menu.</li>
+            <li>Shortcodes are added to your pages.</li>
+        </ol>
+    </p>
+
+    <h3 style="margin-top: 25px; color: #555;">Typical Pages:</h3>
+
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 20px; border: 1px solid #ddd; background-color: #f9f9f9;">
+                <h4 style="color: #aa0000; font-size: 16px;">
+                    Rooms Landing Page 
+                    <a href="javascript:void(0)" style="font-size: 14px; color: #0073aa; text-decoration: none; margin-left: 10px;">(Rooms Example Page)</a>
+                </h4>                
+                <p>This is the main page for users to browse venues, learn how to book, and view policies.</p>
+                <ul style="list-style-type: disc; padding-left: 30px;">
+                    <li>Users can view availability for specific rooms.</li>
+                    <li>Users can search for available rooms based on a desired date and time.</li>
+                    <li>Users can search for an existing booking using their Booking ID. (Shortcode: <code>[booking_search]</code>)</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; border: 1px solid #ddd; background-color: #ffffff;">
+                <h4 style="color: #aa0000; font-size: 16px;">
+                    Venue Pages 
+                    <a href="javascript:void(0)" style="font-size: 14px; color: #0073aa; text-decoration: none; margin-left: 10px;">(Venue Example Page)</a>
+                </h4>
+                <p>Venues are configured in the plugin settings, but each venue needs a page with the corresponding shortcode:</p>
+                <p>Example: <code>[venue_details venue_id="1"]</code> (for venue ID 1).</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; border: 1px solid #ddd; background-color: #f9f9f9;">
+                <h4 style="color: #aa0000; font-size: 16px;">
+                    Recurring Bookings Page 
+                    <a href="javascript:void(0)" style="font-size: 14px; color: #0073aa; text-decoration: none; margin-left: 10px;">(Recurring Bookings Example Page)</a>
+                </h4>
+                <p>Staff can create recurring bookings by adding the shortcode <code>[staff_recurring_bookings]</code> to a page.</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; border: 1px solid #ddd; background-color: #ffffff;">
+                <h4 style="color: #aa0000; font-size: 16px;">
+                    Payments and Feedback Monitoring Page (Optional) 
+                    <a href="javascript:void(0)" style="font-size: 14px; color: #0073aa; text-decoration: none; margin-left: 10px;">(Payments and Feedback Example Page)</a>
+                </h4>
+                <p>To track payments and request feedback, add the shortcode <code>[staff_payment_search]</code> to a page.</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; border: 1px solid #ddd; background-color: #f9f9f9;">
+                <h4 style="color: #aa0000; font-size: 16px;">
+                    Check Availability Page 
+                    <a href="javascript:void(0)" style="font-size: 14px; color: #0073aa; text-decoration: none; margin-left: 10px;">(Room Availability Example Page)</a>
+                </h4>
+                <p>This page allows users and staff to check venue availability for a selected day using the <code>[venue_grid]</code> shortcode.</p>
+                <p>Staff can also search for bookings by name or organization using <code>[staff_name_search]</code>.</p>
+            </td>
+        </tr>
+    </table>
+
+    <hr style="margin: 30px 0; border: 1px solid #ddd;">
+
+    <h2 style="color: #0073aa;">How-To Guides</h2>
+    <ol style="padding-left: 20px; font-size: 14px;">
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Initial setup (Affirmations, Settings, and Staff)</a></li>
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Reporting, Categories, and Audiences Setup</a></li>
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Setting up your first Venue</a></li>
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Setting up your first Staff Role</a></li>
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Shortcodes List and Use</a></li>
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">How to use the Recurring Bookings page</a></li>
+        <li><a href="javascript:void(0)" style="color: #0073aa; text-decoration: none; font-weight: bold;">Adding a mail client</a></li>
+    </ol>
+
+    <p style="margin-top: 20px; text-align: center;">
+        <a href="#top" style="color: #0073aa; text-decoration: none; font-weight: bold;">Back to top</a>
+    </p>
+</div>

@@ -16,7 +16,6 @@ function leanwi_add_admin_menu() {
         6                         // Position
     );
 
-    // Sub-menu: "Documentation"
     add_submenu_page(
         'leanwi-book-a-room-main',    // Parent slug
         'Documentation and Support',  // Page title (for the actual documentation page)
@@ -238,15 +237,96 @@ function leanwi_hide_add_edit_submenus_css() {
 }
 add_action('admin_head', __NAMESPACE__ . '\\leanwi_hide_add_edit_submenus_css');
 
-// Function to display the main page
+
+// Function to display the main page which is our documentation page
 function leanwi_main_page() {
+    $doc_file = plugin_dir_path(dirname(dirname(__FILE__))) . 'docs/documentation.html';
+
+    if (!file_exists($doc_file)) {
+        $content = "<h2>Documentation Not Found</h2><p>Please ensure `documentation.html` exists in the `docs/` directory.</p>";
+    } else {
+        $content = file_get_contents($doc_file);
+    }
     ?>
+
     <div class="wrap">
-        <h1>Documentation and Support</h1>
-        <p>Welcome to the LEANWI Book-A-Room plugin!</p>
+        <h1>LEANWI Book-A-Room Documentation</h1>
+        <div id="documentation-content" style="border: 1px solid #ddd; padding: 15px; background: #fff;"></div>
     </div>
+
+    <script>
+        // Function to load the HTML file dynamically
+        function loadHtmlPage(page) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', "<?php echo plugin_dir_url(dirname(dirname(__FILE__))); ?>" + "docs/" + page, true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var content = xhr.responseText;
+                    document.getElementById("documentation-content").innerHTML = content;
+                    attachLinkEvents();  // Reattach link events after new content is loaded
+                }
+            };
+            xhr.send();
+        }
+
+        // Load the default content (documentation.html)
+        var content = <?php echo json_encode($content); ?>;
+        document.getElementById("documentation-content").innerHTML = content;
+
+        // Attach event listeners to the dynamically rendered links
+        function attachLinkEvents() {
+            document.getElementById('documentation-content').addEventListener('click', function(e) {
+                // Match the link text to the page and go to that page on click
+                if (e.target.tagName === 'A' && e.target.textContent === 'Back to Main Documentation Page') {
+                    loadHtmlPage('documentation.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'Initial setup (Affirmations, Settings, and Staff)') {
+                    loadHtmlPage('initial-setup.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'Reporting, Categories, and Audiences Setup') {
+                    loadHtmlPage('reporting-setup.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'Setting up your first Venue') {
+                    loadHtmlPage('first-venue-setup.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'Setting up your first Staff Role') {
+                    loadHtmlPage('first-role-setup.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'Shortcodes List and Use') {
+                    loadHtmlPage('shortcodes-use.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'How to use the Recurring Bookings page') {
+                    loadHtmlPage('recurring-bookings-use.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === 'Adding a mail client') {
+                    loadHtmlPage('mail-client-setup.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === '(Rooms Example Page)') {
+                    loadHtmlPage('example_pages/rooms-landing-page-example.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === '(Venue Example Page)') {
+                    loadHtmlPage('example_pages/venue-page-example.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === '(Recurring Bookings Example Page)') {
+                    loadHtmlPage('example_pages/recurring-bookings-page-example.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === '(Payments and Feedback Example Page)') {
+                    loadHtmlPage('example_pages/payments-feedback-page-example.html');
+                }
+                if (e.target.tagName === 'A' && e.target.textContent === '(Room Availability Example Page)') {
+                    loadHtmlPage('example_pages/check-availability-page-example.html');
+                }
+            });
+        }
+
+        // Attach events after the initial content is loaded
+        attachLinkEvents();
+
+    </script>
+
     <?php
 }
+
 
 /**************************************************************************************************
  * Venues
