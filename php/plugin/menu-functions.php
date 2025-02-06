@@ -276,45 +276,30 @@ function leanwi_main_page() {
         // Attach event listeners to the dynamically rendered links
         function attachLinkEvents() {
             document.getElementById('documentation-content').addEventListener('click', function(e) {
-                // Match the link text to the page and go to that page on click
-                if (e.target.tagName === 'A' && e.target.textContent === 'Back to Main Documentation Page') {
-                    loadHtmlPage('documentation.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'Initial setup (Affirmations, Settings, and Staff)') {
-                    loadHtmlPage('initial-setup.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'Reporting, Categories, and Audiences Setup') {
-                    loadHtmlPage('reporting-setup.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'Setting up your first Venue') {
-                    loadHtmlPage('first-venue-setup.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'Setting up your first Staff Role') {
-                    loadHtmlPage('first-role-setup.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'Shortcodes List and Use') {
-                    loadHtmlPage('shortcodes-use.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'How to use the Recurring Bookings page') {
-                    loadHtmlPage('recurring-bookings-use.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === 'Adding a mail client') {
-                    loadHtmlPage('mail-client-setup.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === '(Rooms Example Page)') {
-                    loadHtmlPage('example_pages/rooms-landing-page-example.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === '(Venue Example Page)') {
-                    loadHtmlPage('example_pages/venue-page-example.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === '(Recurring Bookings Example Page)') {
-                    loadHtmlPage('example_pages/recurring-bookings-page-example.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === '(Payments and Feedback Example Page)') {
-                    loadHtmlPage('example_pages/payments-feedback-page-example.html');
-                }
-                if (e.target.tagName === 'A' && e.target.textContent === '(Room Availability Example Page)') {
-                    loadHtmlPage('example_pages/check-availability-page-example.html');
+                if (e.target.tagName === 'A') {
+                    
+                    let pageMap = {
+                        'Back to Main Documentation Page': 'documentation.html',
+                        'Initial setup (Settings)': 'initial-setup-settings.html',
+                        'Initial setup (Staff)': 'initial-setup-staff.html',
+                        'Initial setup (Affirmations)': 'initial-setup-affirmations.html',
+                        'Initial setup (Categories and Audiences)': 'initial-setup-categories-audiences.html',
+                        'Setting up your first Venue': 'first-venue-setup.html',
+                        'Setting up your first Staff Role': 'first-role-setup.html',
+                        'Shortcodes List and Use': 'shortcodes-use.html',
+                        'How to use the Recurring Bookings page': 'recurring-bookings-use.html',
+                        'Adding a mail client': 'mail-client-setup.html',
+                        '(Rooms Example Page)': 'example_pages/rooms-landing-page-example.html',
+                        '(Venue Example Page)': 'example_pages/venue-page-example.html',
+                        '(Recurring Bookings Example Page)': 'example_pages/recurring-bookings-page-example.html',
+                        '(Payments and Feedback Example Page)': 'example_pages/payments-feedback-page-example.html',
+                        '(Room Availability Example Page)': 'example_pages/check-availability-page-example.html'
+                    };
+
+                    let page = pageMap[e.target.textContent];
+                    if (page) {
+                        loadHtmlPage(page);
+                    }
                 }
             });
         }
