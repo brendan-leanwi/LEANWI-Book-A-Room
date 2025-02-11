@@ -32,5 +32,6 @@ if (!$recurrence) {
     exit;
 }
 
-$recurrence = array_map('esc_html', $recurrence);
-echo json_encode($recurrence);
+//$recurrence = array_map('esc_html', $recurrence);
+echo json_encode($recurrence, JSON_UNESCAPED_SLASHES);
+//echo json_encode($recurrence);

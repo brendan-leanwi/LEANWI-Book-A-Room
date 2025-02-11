@@ -20,10 +20,10 @@ if (isset($_GET['venue_id'])) {
         // Sanitize data before outputting
         $sanitized_venue = [
             'venue_id' => intval($venue['venue_id']),
-            'name' => esc_html($venue['name']),
+            'name' => wp_kses_post($venue['name']),
             'capacity' => intval($venue['capacity']),
-            'description' => $venue['description'], // Allows safe HTML tags
-            'location' => esc_html($venue['location']),
+            'description' => wp_kses_post($venue['description']), // Allows safe HTML tags
+            'location' => wp_kses_post($venue['location']),
             'max_slots' => intval($venue['max_slots']),
             'slot_cost' => floatval($venue['slot_cost']),
             'image_url' => esc_url($venue['image_url']),

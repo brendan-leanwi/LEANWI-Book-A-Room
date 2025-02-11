@@ -28,11 +28,14 @@ $recurrence_week_of_month = isset($_POST['recurrence_week_of_month']) ? intval($
 $start_time = isset($_POST['start_time']) ? sanitize_text_field($_POST['start_time']) : '';
 $end_time = isset($_POST['end_time']) ? sanitize_text_field($_POST['end_time']) : '';
 $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
+$name = wp_unslash($name);
 $organization = isset($_POST['organization']) ? sanitize_text_field($_POST['organization']) : null;
+$organization = wp_unslash($organization);
 $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : null;
 $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : null;
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
 $notes = isset($_POST['notes']) ? sanitize_textarea_field($_POST['notes']) : null;
+$notes = wp_unslash($notes);
 $category_id = isset($_POST['category']) ? intval($_POST['category']) : null;
 $audience_id = isset($_POST['audience']) ? intval($_POST['audience']) : null;
 

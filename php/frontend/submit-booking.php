@@ -84,12 +84,15 @@ $endDateTime->modify("+$minutes_interval minutes");
 $adjusted_end_time = $endDateTime->format('Y-m-d H:i:s'); // Format the adjusted end time as 'YYYY-MM-DD HH:MM:SS'
 
 $email_from_name = get_option('leanwi_email_from_name', 'Library Booking Team');
+$email_from_name = wp_unslash($email_from_name);
 $admin_email_address = isset($_POST['admin_email_address']) ? sanitize_email($_POST['admin_email_address']) : '';
 $send_admin_email = isset($_POST['send_admin_email']) ? sanitize_text_field($_POST['send_admin_email']) : 'no';
 $email_text = isset($_POST['email_text']) ? sanitize_text_field($_POST['email_text']) : '';
+$email_text = wp_unslash($email_text);
 $total_cost = isset($_POST['total_cost']) && !empty($_POST['total_cost']) ? floatval(number_format((float) sanitize_text_field($_POST['total_cost']), 2, '.', '')) : 0.00;
 $page_url = isset($_POST['page_url']) ? esc_url($_POST['page_url']) : '';
 $venue_name = sanitize_text_field($_POST['venue_name']);
+$venue_name = wp_unslash($venue_name);
 $unique_id = isset($_POST['unique_id']) ? sanitize_text_field($_POST['unique_id']) : '';
 
 $bookingAlreadyExisted = false;
