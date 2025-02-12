@@ -275,30 +275,32 @@ function leanwi_main_page() {
 
         // Attach event listeners to the dynamically rendered links
         function attachLinkEvents() {
-            document.getElementById('documentation-content').addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
-                    
-                    let pageMap = {
-                        'Back to Main Documentation Page': 'documentation.html',
-                        'Initial setup (Settings)': 'initial-setup-settings.html',
-                        'Initial setup (Staff)': 'initial-setup-staff.html',
-                        'Initial setup (Affirmations)': 'initial-setup-affirmations.html',
-                        'Initial setup (Categories and Audiences)': 'initial-setup-categories-audiences.html',
-                        'Setting up your first Venue': 'first-venue-setup.html',
-                        'Shortcodes List and Page Setup': 'shortcodes-use.html',
-                        'How to use the Recurring Bookings page': 'recurring-bookings-use.html',
-                        'Adding a mail client': 'mail-client-setup.html',
-                        '(Rooms Example Page)': 'example_pages/rooms-landing-page-example.html',
-                        '(Venue Example Page)': 'example_pages/venue-page-example.html',
-                        '(Recurring Bookings Example Page)': 'example_pages/recurring-bookings-page-example.html',
-                        '(Payments and Feedback Example Page)': 'example_pages/payments-feedback-page-example.html',
-                        '(Room Availability Example Page)': 'example_pages/check-availability-page-example.html'
-                    };
+            document.getElementById('documentation-content').addEventListener('click', function (e) {
+                let target = e.target.closest('a'); 
+                
+                let pageMap = {
+                    'Back to Main Documentation Page': 'documentation.html',
+                    'Initial setup (Settings)': 'initial-setup-settings.html',
+                    'Initial setup (Staff)': 'initial-setup-staff.html',
+                    'Initial setup (Affirmations)': 'initial-setup-affirmations.html',
+                    'Initial setup (Categories and Audiences)': 'initial-setup-categories-audiences.html',
+                    'Setting up your first Venue': 'first-venue-setup.html',
+                    'Setting up Pages Using Shortcodes': 'shortcodes-use.html',
+                    'How to use the Recurring Bookings page': 'recurring-bookings-use.html',
+                    'Adding a mail client': 'mail-client-setup.html',
+                    '(Rooms Example Page)': 'example_pages/rooms-landing-page-example.html',
+                    '(Venue Example Page)': 'example_pages/venue-page-example.html',
+                    '(Recurring Bookings Example Page)': 'example_pages/recurring-bookings-page-example.html',
+                    '(Payments and Feedback Example Page)': 'example_pages/payments-feedback-page-example.html',
+                    '(Room Availability Example Page)': 'example_pages/check-availability-page-example.html',
+                    'venue': 'first-venue-setup.html',
+                    'Recurring Bookings page': 'shortcodes-use.html'
+                };
 
-                    let page = pageMap[e.target.textContent];
-                    if (page) {
-                        loadHtmlPage(page);
-                    }
+                let page = pageMap[target.innerText.trim()]; // Use innerText and trim for better matching
+                if (page) {
+                    loadHtmlPage(page); // Load new content
+                    setTimeout(() => window.scrollTo(0, 0), 50); // Scroll to top AFTER content loads
                 }
             });
         }
