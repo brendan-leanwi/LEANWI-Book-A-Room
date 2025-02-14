@@ -47,6 +47,7 @@ function leanwi_create_tables() {
     $sql3 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_category (
         category_id INT AUTO_INCREMENT PRIMARY KEY,
         category_name VARCHAR(255) NOT NULL,
+        display_order INT NOT NULL,
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
@@ -54,6 +55,7 @@ function leanwi_create_tables() {
     $sql4 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_audience (
         audience_id INT AUTO_INCREMENT PRIMARY KEY,
         audience_name VARCHAR(255) NOT NULL,
+        display_order INT NOT NULL,
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
@@ -201,6 +203,7 @@ function leanwi_create_tables() {
             array(
                 'category_id' => 1,
                 'category_name' => 'Uncategorized',
+                'display_order' => 0,
                 'historic' => 0
             ),
             array('%d', '%s', '%d') // Data types
@@ -223,10 +226,59 @@ function leanwi_create_tables() {
             array(
                 'audience_id' => 1,
                 'audience_name' => 'Uncategorized',
+                'display_order' => 0,
                 'historic' => 0
             ),
             array('%d', '%s', '%d') // Data types
         );
+    }
+
+    /******************************************************************************************************************* */
+    // Update the leanwi_booking_category and leanwi_booking_audience display_order fields if they do not already exist
+    /******************************************************************************************************************* */
+    
+    $tables = [
+        'leanwi_booking_category' => 'category_name',
+        'leanwi_booking_audience' => 'audience_name'
+    ];
+
+    foreach ($tables as $table_name_key => $after_column) {
+        $table_name = $wpdb->prefix . $table_name_key;
+
+        // Check if the 'display_order' column exists
+        $column_exists = $wpdb->get_var(
+            $wpdb->prepare("SHOW COLUMNS FROM $table_name LIKE %s", 'display_order')
+        );
+
+        if (!$column_exists) {
+            error_log("display_order column in $table_name does not exist");
+
+            // Add the 'display_order' column safely
+            $result = $wpdb->query(
+                "ALTER TABLE $table_name ADD COLUMN display_order INT NOT NULL AFTER $after_column"
+            );
+
+            if ($result === false) {
+                error_log("Failed to add display_order column to $table_name: " . $wpdb->last_error);
+            } else {
+                error_log("Successfully added display_order column to $table_name");
+
+                // Assign unique display_order values to existing records
+                $rows = $wpdb->get_results("SELECT * FROM $table_name ORDER BY $after_column ASC");
+
+                $order = 0;
+                foreach ($rows as $row) {
+                    $wpdb->update(
+                        $table_name,
+                        ['display_order' => $order],
+                        [$table_name_key . '_id' => $row->{$table_name_key . '_id'}],
+                        ['%d'],
+                        ['%d']
+                    );
+                    $order++;
+                }
+            }
+        }
     }
 
 }

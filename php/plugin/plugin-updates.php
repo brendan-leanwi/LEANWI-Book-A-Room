@@ -92,7 +92,7 @@ function leanwi_plugin_update_info($res, $action, $args) {
                         (object) array(
                             'slug' => 'leanwi-book-a-room',
                             'name' => 'LEANWI Book A Room',
-                            'version' => '1.4.7', // Your current plugin version
+                            'version' => '1.4.8', // A previous plugin version
                             'new_version' => $latest_version, // The latest version from GitHub
                             'description' => 'Room Booking functionality compatible with LEANWI Divi WordPress websites.',
                             'homepage' => 'https://github.com/brendan-leanwi/LEANWI-Book-A-Room',
