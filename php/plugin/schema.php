@@ -237,13 +237,16 @@ function leanwi_create_tables() {
     // Update the leanwi_booking_category and leanwi_booking_audience display_order fields if they do not already exist
     /******************************************************************************************************************* */
     
+    // Define tables with their primary key column names
     $tables = [
-        'leanwi_booking_category' => 'category_name',
-        'leanwi_booking_audience' => 'audience_name'
+        'leanwi_booking_category' => ['name_column' => 'category_name', 'id_column' => 'category_id'],
+        'leanwi_booking_audience' => ['name_column' => 'audience_name', 'id_column' => 'audience_id']
     ];
 
-    foreach ($tables as $table_name_key => $after_column) {
+    foreach ($tables as $table_name_key => $columns) {
         $table_name = $wpdb->prefix . $table_name_key;
+        $name_column = $columns['name_column'];
+        $id_column = $columns['id_column'];
 
         // Check if the 'display_order' column exists
         $column_exists = $wpdb->get_var(
@@ -255,7 +258,7 @@ function leanwi_create_tables() {
 
             // Add the 'display_order' column safely
             $result = $wpdb->query(
-                "ALTER TABLE $table_name ADD COLUMN display_order INT NOT NULL AFTER $after_column"
+                "ALTER TABLE $table_name ADD COLUMN display_order INT NOT NULL AFTER $name_column"
             );
 
             if ($result === false) {
@@ -264,14 +267,14 @@ function leanwi_create_tables() {
                 error_log("Successfully added display_order column to $table_name");
 
                 // Assign unique display_order values to existing records
-                $rows = $wpdb->get_results("SELECT * FROM $table_name ORDER BY $after_column ASC");
+                $rows = $wpdb->get_results("SELECT $id_column FROM $table_name ORDER BY $name_column ASC");
 
                 $order = 0;
                 foreach ($rows as $row) {
                     $wpdb->update(
                         $table_name,
                         ['display_order' => $order],
-                        [$table_name_key . '_id' => $row->{$table_name_key . '_id'}],
+                        [$id_column => $row->$id_column],  // Use correct primary key column
                         ['%d'],
                         ['%d']
                     );
