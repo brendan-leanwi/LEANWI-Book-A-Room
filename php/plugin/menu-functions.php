@@ -979,59 +979,39 @@ function leanwi_categories_page() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'leanwi_booking_category';
 
-    /****************************************************************************************************
-     * Functions are not currently used
-    // Handle delete action with nonce verification
-    if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['category_id']) && check_admin_referer('delete_category_action')) {
-        $category_id = intval($_GET['category_id']);
-        $wpdb->delete($table_name, ['category_id' => $category_id]);
-        echo '<div class="updated"><p>Category deleted successfully.</p></div>';
-    }
+    // Process display order update if the form is submitted
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_display_order'])) {
+        if (isset($_POST['display_order']) && is_array($_POST['display_order'])) {
+            foreach ($_POST['display_order'] as $category_id => $display_order) {
+                $category_id = intval($category_id);
+                $display_order = intval($display_order);
 
-    // Handle category update
-    if (isset($_POST['update_category']) && check_admin_referer('edit_category_action')) {
-        $wpdb->update(
-            $table_name,
-            ['category_name' => sanitize_text_field($_POST['category_name']), 'historic' => isset($_POST['historic']) ? 1 : 0],
-            ['category_id' => intval($_POST['category_id'])],
-            ['%s', '%d'],
-            ['%d']
-        );
-        echo '<div class="updated"><p>Category updated successfully.</p></div>';
-    }
-    ************************************************************************************************************/
-
-    // Display category list and edit form if needed
-    if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['category_id'])) {
-        $category_id = intval($_GET['category_id']);
-        $category = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE category_id = %d", $category_id));
-
-        if ($category) {
-            // Display form to edit category
-            echo '<div class="wrap">';
-            echo '<h1>Edit Category</h1>';
-            echo '<form method="POST">';
-            wp_nonce_field('edit_category_action');
-            echo '<input type="hidden" name="category_id" value="' . esc_attr($category->category_id) . '">';
-            echo '<p>Category Name: <input type="text" name="category_name" value="' . esc_attr($category->category_name) . '"></p>';
-            echo '<p>Historic: <input type="checkbox" name="historic" ' . checked(1, $category->historic, false) . '></p>';
-            echo '<p><input type="submit" name="update_category" value="Save Changes" class="button button-primary"></p>';
-            echo '</form>';
-            echo '</div>';
+                $wpdb->update(
+                    $table_name,
+                    ['display_order' => $display_order],
+                    ['category_id' => $category_id],
+                    ['%d'],
+                    ['%d']
+                );
+            }
+            echo '<div class="updated notice"><p>Display order updated successfully.</p></div>';
         }
     }
 
     // Display category list
     echo '<div class="wrap">';
     echo '<h1>Categories</h1>';
-    echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-add-category')) . '" class="button button-primary">Add Category</a>';
+
+    echo '<a href="' . admin_url('admin.php?page=leanwi-add-category') . '" class="button button-primary">Add Category</a>';
     echo '<p> </p>'; // Space below the button before the category table
 
+    echo '<form method="POST">';
     echo '<table class="wp-list-table widefat striped">';
     echo '<thead>';
     echo '<tr>';
     echo '<th scope="col">Category ID</th>';
     echo '<th scope="col">Category Name</th>';
+    echo '<th scope="col">Display Order</th>';
     echo '<th scope="col">Historic</th>';
     echo '<th scope="col">Actions</th>';
     echo '</tr>';
@@ -1041,18 +1021,17 @@ function leanwi_categories_page() {
     // Fetch categories
     $categories = fetch_categories();
     if (isset($categories['error'])) {
-        echo '<tr><td colspan="4">' . esc_html($categories['error']) . '</td></tr>';
+        echo '<tr><td colspan="5">' . esc_html($categories['error']) . '</td></tr>';
     } else {
         // Display each category in a row
         foreach ($categories['categories'] as $category) {
             echo '<tr>';
             echo '<td>' . esc_html($category['category_id']) . '</td>';
             echo '<td>' . esc_html($category['category_name']) . '</td>';
+            echo '<td><input type="number" name="display_order[' . esc_attr($category['category_id']) . ']" value="' . esc_attr($category['display_order']) . '" style="width: 60px;"></td>';
             echo '<td>' . ($category['historic'] ? 'Yes' : 'No') . '</td>';
             echo '<td>';
-            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-category&category_id=' . $category['category_id'])) . '" class="button">Edit</a> ';
-            // Uncomment to add delete functionality
-            //echo '<a href="' . esc_url(wp_nonce_url(admin_url('admin.php?page=leanwi-book-a-room-categories&action=delete&category_id=' . $category['category_id']), 'delete_category_action')) . '" class="button button-danger" onclick="return confirm(\'Are you sure you want to delete this category?\');">Delete</a>';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-category&category_id=' . esc_attr($category['category_id']))) . '" class="button">Edit</a> ';
             echo '</td>';
             echo '</tr>';
         }
@@ -1060,6 +1039,9 @@ function leanwi_categories_page() {
 
     echo '</tbody>';
     echo '</table>';
+
+    echo '<p><input type="submit" name="save_display_order" value="Save Display Order" class="button button-primary"></p>';
+    echo '</form>';
     echo '</div>';
 }
 
@@ -1069,7 +1051,7 @@ function fetch_categories() {
     $table_name = $wpdb->prefix . 'leanwi_booking_category';
 
     // Fetch categories
-    $categories = $wpdb->get_results("SELECT category_id, category_name, historic FROM $table_name", ARRAY_A);
+    $categories = $wpdb->get_results("SELECT category_id, category_name, display_order, historic FROM $table_name", ARRAY_A);
 
     if (empty($categories)) {
         return ['error' => 'No categories found.'];
@@ -1084,10 +1066,16 @@ function leanwi_add_category_page() {
 
     // Handle form submission
     if (isset($_POST['add_category'])) {
+        // Find the max display_order and increment
+        $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $table_name");
+        $new_order = ($max_order !== null) ? $max_order + 1 : 1;
+
         $wpdb->insert(
             $table_name,
-            ['category_name' => sanitize_text_field($_POST['category_name']), 'historic' => isset($_POST['historic']) ? 1 : 0],
-            ['%s', '%d']
+            ['category_name' => sanitize_text_field($_POST['category_name']), 
+             'display_order' => $new_order,
+             'historic' => isset($_POST['historic']) ? 1 : 0],
+            ['%s', '%d', '%d']
         );
         echo '<div class="updated"><p>Category added successfully.</p></div>';
     }
@@ -1172,45 +1160,22 @@ function leanwi_audiences_page() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'leanwi_booking_audience';
 
-    /**********************************************************************************************
-     *  These functions re nocrrently being used
-     **********************************************************************************************
-    // Handle delete action
-    if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['audience_id'])) {
-        $audience_id = intval($_GET['audience_id']);
-        $wpdb->delete($table_name, ['audience_id' => $audience_id]);
-        echo '<div class="updated"><p>Audience deleted successfully.</p></div>';
-    }
+    // Process display order update if the form is submitted
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_display_order'])) {
+        if (isset($_POST['display_order']) && is_array($_POST['display_order'])) {
+            foreach ($_POST['display_order'] as $audience_id => $display_order) {
+                $audience_id = intval($audience_id);
+                $display_order = intval($display_order);
 
-    // Handle audience update
-    if (isset($_POST['update_audience'])) {
-        $wpdb->update(
-            $table_name,
-            ['audience_name' => sanitize_text_field($_POST['audience_name']), 'historic' => isset($_POST['historic']) ? 1 : 0],
-            ['audience_id' => intval($_POST['audience_id'])],
-            ['%s', '%d'],
-            ['%d']
-        );
-        echo '<div class="updated"><p>Audience updated successfully.</p></div>';
-    }
-    ************************************************************************************************/
-
-    // Display audience list and edit form if needed
-    if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['audience_id'])) {
-        $audience_id = intval($_GET['audience_id']);
-        $audience = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE audience_id = %d", $audience_id));
-
-        if ($audience) {
-            // Display form to edit audience
-            echo '<div class="wrap">';
-            echo '<h1>Edit Audience</h1>';
-            echo '<form method="POST">';
-            echo '<input type="hidden" name="audience_id" value="' . esc_attr($audience->audience_id) . '">';
-            echo '<p>Audience Name: <input type="text" name="audience_name" value="' . esc_attr($audience->audience_name) . '"></p>';
-            echo '<p>Historic: <input type="checkbox" name="historic" ' . checked(1, $audience->historic, false) . '></p>';
-            echo '<p><input type="submit" name="update_audience" value="Save Changes" class="button button-primary"></p>';
-            echo '</form>';
-            echo '</div>';
+                $wpdb->update(
+                    $table_name,
+                    ['display_order' => $display_order],
+                    ['audience_id' => $audience_id],
+                    ['%d'],
+                    ['%d']
+                );
+            }
+            echo '<div class="updated notice"><p>Display order updated successfully.</p></div>';
         }
     }
 
@@ -1221,11 +1186,13 @@ function leanwi_audiences_page() {
     echo '<a href="' . admin_url('admin.php?page=leanwi-add-audience') . '" class="button button-primary">Add Audience</a>';
     echo '<p> </p>'; // Space below the button before the audience table
 
+    echo '<form method="POST">';
     echo '<table class="wp-list-table widefat striped">';
     echo '<thead>';
     echo '<tr>';
     echo '<th scope="col">Audience ID</th>';
     echo '<th scope="col">Audience Name</th>';
+    echo '<th scope="col">Display Order</th>';
     echo '<th scope="col">Historic</th>';
     echo '<th scope="col">Actions</th>';
     echo '</tr>';
@@ -1235,18 +1202,17 @@ function leanwi_audiences_page() {
     // Fetch audiences
     $audiences = fetch_audiences();
     if (isset($audiences['error'])) {
-        echo '<tr><td colspan="4">' . esc_html($audiences['error']) . '</td></tr>';
+        echo '<tr><td colspan="5">' . esc_html($audiences['error']) . '</td></tr>';
     } else {
         // Display each audience in a row
         foreach ($audiences['audiences'] as $audience) {
             echo '<tr>';
             echo '<td>' . esc_html($audience['audience_id']) . '</td>';
             echo '<td>' . esc_html($audience['audience_name']) . '</td>';
+            echo '<td><input type="number" name="display_order[' . esc_attr($audience['audience_id']) . ']" value="' . esc_attr($audience['display_order']) . '" style="width: 60px;"></td>';
             echo '<td>' . ($audience['historic'] ? 'Yes' : 'No') . '</td>';
             echo '<td>';
             echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-audience&audience_id=' . esc_attr($audience['audience_id']))) . '" class="button">Edit</a> ';
-            // Uncomment if you want delete functionality
-            // echo '<a href="?page=leanwi-book-a-room-audiences&action=delete&audience_id=' . esc_attr($audience['audience_id']) . '" class="button button-danger" onclick="return confirm(\'Are you sure you want to delete this audience?\');">Delete</a>';
             echo '</td>';
             echo '</tr>';
         }
@@ -1254,8 +1220,12 @@ function leanwi_audiences_page() {
 
     echo '</tbody>';
     echo '</table>';
+
+    echo '<p><input type="submit" name="save_display_order" value="Save Display Order" class="button button-primary"></p>';
+    echo '</form>';
     echo '</div>';
 }
+
 
 // Function to get audiences
 function fetch_audiences() {
@@ -1263,7 +1233,7 @@ function fetch_audiences() {
     $table_name = $wpdb->prefix . 'leanwi_booking_audience';
 
     // Fetch audiences
-    $audiences = $wpdb->get_results("SELECT audience_id, audience_name, historic FROM $table_name", ARRAY_A);
+    $audiences = $wpdb->get_results("SELECT audience_id, audience_name, display_order, historic FROM $table_name", ARRAY_A);
 
     if (empty($audiences)) {
         return ['error' => 'No audiences found.'];
@@ -1278,10 +1248,16 @@ function leanwi_add_audience_page() {
 
     // Handle form submission
     if (isset($_POST['add_audience'])) {
+        // Find the max display_order and increment
+        $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $table_name");
+        $new_order = ($max_order !== null) ? $max_order + 1 : 1;
+
         $wpdb->insert(
             $table_name,
-            ['audience_name' => sanitize_text_field($_POST['audience_name']), 'historic' => isset($_POST['historic']) ? 1 : 0],
-            ['%s', '%d']
+            ['audience_name' => sanitize_text_field($_POST['audience_name']),
+             'display_order' => $new_order,
+             'historic' => isset($_POST['historic']) ? 1 : 0],
+            ['%s', '%d', '%d']
         );
         echo '<div class="updated"><p>Audience added successfully.</p></div>';
     }

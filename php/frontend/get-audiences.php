@@ -8,7 +8,7 @@ $audiences = [];
 $audience_table = $wpdb->prefix . 'leanwi_booking_audience';
 
 // Fetch audiences using $wpdb->get_results()
-$audience_sql = "SELECT audience_id, audience_name FROM $audience_table WHERE historic != 1";
+$audience_sql = "SELECT audience_id, audience_name FROM $audience_table WHERE historic != 1 ORDER BY display_order ASC";
 $audience_result = $wpdb->get_results($audience_sql, ARRAY_A);
 
 // Check if audiences were found and sanitize output
