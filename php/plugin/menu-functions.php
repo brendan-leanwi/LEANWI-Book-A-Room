@@ -1070,9 +1070,12 @@ function leanwi_add_category_page() {
         $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $table_name");
         $new_order = ($max_order !== null) ? $max_order + 1 : 1;
 
+        $category_name = wp_kses_post($_POST['category_name']);
+        $category_name = wp_unslash($category_name);
+
         $wpdb->insert(
             $table_name,
-            ['category_name' => sanitize_text_field($_POST['category_name']), 
+            ['category_name' => $category_name, 
              'display_order' => $new_order,
              'historic' => isset($_POST['historic']) ? 1 : 0],
             ['%s', '%d', '%d']
@@ -1099,7 +1102,8 @@ function leanwi_edit_category_page() {
     // Handle the form submission to update the category
     if (isset($_POST['update_category'])) {
         $category_id = intval($_POST['category_id']);
-        $category_name = sanitize_text_field($_POST['category_name']);
+        $category_name = wp_kses_post($_POST['category_name']);
+        $category_name = wp_unslash($category_name);
         $historic = isset($_POST['historic']) ? 1 : 0; // Check if the "Historic" checkbox is checked
 
         // Update the category in the database
@@ -1251,10 +1255,12 @@ function leanwi_add_audience_page() {
         // Find the max display_order and increment
         $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $table_name");
         $new_order = ($max_order !== null) ? $max_order + 1 : 1;
+        $audience_name = wp_kses_post($_POST['audience_name']);
+        $audience_name = wp_unslash($audience_name);
 
         $wpdb->insert(
             $table_name,
-            ['audience_name' => sanitize_text_field($_POST['audience_name']),
+            ['audience_name' => $audience_name,
              'display_order' => $new_order,
              'historic' => isset($_POST['historic']) ? 1 : 0],
             ['%s', '%d', '%d']
@@ -1281,7 +1287,8 @@ function leanwi_edit_audience_page() {
     // Handle the form submission to update the audience
     if (isset($_POST['update_audience'])) {
         $audience_id = intval($_POST['audience_id']);
-        $audience_name = sanitize_text_field($_POST['audience_name']);
+        $audience_name = wp_kses_post($_POST['audience_name']);
+        $audience_name = wp_unslash($audience_name);
         $historic = isset($_POST['historic']) ? 1 : 0; // Check if the "Historic" checkbox is checked
 
         // Update the audience in the database

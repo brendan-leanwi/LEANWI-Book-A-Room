@@ -16,7 +16,7 @@ if (!empty($audience_result)) {
     foreach ($audience_result as $audience) {
         $sanitized_audience = [
             'audience_id' => intval($audience['audience_id']),
-            'audience_name' => esc_html($audience['audience_name'])
+            'audience_name' => isset($audience['audience_name']) && $audience['audience_name'] !== null ? html_entity_decode($audience['audience_name'], ENT_QUOTES) : ''
         ];
         $audiences[] = $sanitized_audience;
     }

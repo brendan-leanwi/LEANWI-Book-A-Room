@@ -14,9 +14,11 @@ $category_result = $wpdb->get_results($category_sql, ARRAY_A);
 // Sanitize data before assigning it to the $categories array
 if (!empty($category_result)) {
     foreach ($category_result as $category) {
+
+
         $categories[] = [
             'category_id' => intval($category['category_id']), // Ensure integer for ID
-            'category_name' => esc_html($category['category_name']) 
+            'category_name' => isset($category['category_name']) && $category['category_name'] !== null ? html_entity_decode($category['category_name'], ENT_QUOTES) : ''
         ];
     }
 }
