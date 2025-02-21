@@ -325,8 +325,9 @@
 }
 
 #booking-date-selector input[type="date"],
+#booking-date-selector button[type="button"],
 #booking-date-selector input[type="submit"] {
-    padding: 5px;
+    padding: 5px 10px !important;
     font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -338,10 +339,21 @@
     background-color: #007bff;
     cursor: pointer;
 }
-
 #booking-date-selector input[type="submit"]:hover {
     background-color: #0056b3;
 }
+
+#booking-date-selector button[type="button"]{
+    font-weight: bold;
+    color: #fff;
+    background-color: #12be4c;
+    cursor: pointer;
+}
+
+#booking-date-selector button[type="button"]:hover{
+    background-color: #09941b;
+}
+
 
 /* Style the table */
 .booking-grid-table {

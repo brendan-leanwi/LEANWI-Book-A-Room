@@ -85,6 +85,7 @@ function display_venue_grid() {
             #booking-date-selector label,
             #booking-date-selector input[type="date"],
             #booking-date-selector select,
+            #booking-date-selector button[type="button"],
             #booking-date-selector input[type="submit"] {
                 margin: 5px 0; /* Add top and bottom margin to each element */
                 padding: 8px; /* Add padding for better touch targets */
@@ -106,6 +107,8 @@ function display_venue_grid() {
     $output .= '</select>';
 
     $output .= '<input type="submit" value="Update Page" style="margin-left: 10px;">';
+
+    $output .= '<button type="button" id="next-day-button" style="margin-left: 10px;">Go to Next Day</button>';
     $output .= '</form>';
 
     // Display the date and grid header

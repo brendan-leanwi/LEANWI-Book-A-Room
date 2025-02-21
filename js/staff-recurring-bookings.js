@@ -68,6 +68,15 @@ document.getElementById('recurring-choices').addEventListener('submit', function
     const detailsContainer = document.getElementById('recurrence-details-container');
     if (detailsContainer) {
         detailsContainer.style.display = 'block';
+        // Scroll to it smoothly
+        setTimeout(() => {
+            const offset = 200; // Adjust this value based on your layout (increase if scrolling too far)
+            const elementPosition = detailsContainer.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({
+                top: elementPosition - offset,
+                behavior: 'smooth'
+            });
+        }, 100); // Delay to let the UI update before scrolling
     }
 
 });

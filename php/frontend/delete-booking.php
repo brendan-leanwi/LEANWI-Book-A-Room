@@ -19,6 +19,8 @@ $send_admin_email = isset($data['send_admin_email']) ? sanitize_text_field($data
 $cancellation_reason = isset($data['cancellation_reason']) ? sanitize_text_field($data['cancellation_reason']) : '';
 $email_from_name = get_option('leanwi_email_from_name', 'Library Booking Team');
 
+$venue_admin_email = isset($data['venue_admin_email']) ? sanitize_email($data['venue_admin_email']) : '';
+
 if (!empty($unique_id)) {
     $table_name = esc_sql($wpdb->prefix . 'leanwi_booking_participant');
     $sql = $wpdb->prepare("SELECT * FROM $table_name WHERE unique_id = %s", $unique_id);
@@ -73,6 +75,16 @@ if (!empty($unique_id)) {
                 $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
                 if ($mail_sent && !$admin_mail_sent) { //Don't overwrite errorMessage if it's already been populated
                     $errorMessage = 'Cancellation successful, but failed to send email to administrator.';
+                }
+            }
+
+            if (!empty($venue_admin_email) && is_email($venue_admin_email)){
+                $to = sanitize_email($venue_admin_email);
+                $subject = 'A booking has been cancelled!';
+                $admin_message = "<p>Hello venue administrator, the following booking has been cancelled:<br></p> $message";
+                $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
+                if ($mail_sent && !$admin_mail_sent) {
+                    $errorMessage += 'Cancellation successful, but failed to send email to venue administrator.';
                 }
             }
 

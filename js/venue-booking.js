@@ -1071,6 +1071,8 @@ document.addEventListener("DOMContentLoaded", function () {
         function handleDeleteBooking() {
             const uniqueId = uniqueIdInput.value;
             const { adminEmailAddress, sendAdminEmail } = bookingSettings;
+            const venueAdminEmail = document.getElementById('venue_admin_email')?.value || '';
+
             contactFormContainer = document.getElementById('contact-form-container');
             const deleteNonce = document.querySelector('#delete_booking_nonce').value; // Retrieve delete nonce
 
@@ -1090,6 +1092,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         unique_id: uniqueId, 
                         admin_email_address: adminEmailAddress,
                         send_admin_email: sendAdminEmail,
+                        venue_admin_email: venueAdminEmail,
                         delete_booking_nonce: deleteNonce, // Include the nonce
                         cancellation_reason: cancellationReason || '', // Pass the reason or an empty string if none provided
                         is_booking_staff: Boolean(isBookingStaff)
@@ -1136,3 +1139,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 });
+
+//  dynamically add a red asterisk * next to all required field labels in the booking-form
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("#booking-form input[required], #booking-form select[required], #booking-form textarea[required]").forEach((field) => {
+        let label = document.querySelector(`#booking-form label[for="${field.id}"]`);
+        if (label) {
+            label.innerHTML += ' <span style="color: red;">*</span>';
+        }
+    });
+});
+
+
