@@ -1517,7 +1517,7 @@ function leanwi_reports_page() {
 
     // Define the directory path for reports
     $upload_dir = wp_upload_dir();
-    $reports_dir = $upload_dir['basedir'] . '/leanwi_reports/';
+    $reports_dir = $upload_dir['basedir'] . '/leanwi_booking_reports/';
     
     // Get report files
     $report_files = glob($reports_dir . '*.csv');
@@ -1710,7 +1710,7 @@ function leanwi_purge_reports() {
         }
         // Define the directory path for reports
         $upload_dir = wp_upload_dir();
-        $reports_dir = $upload_dir['basedir'] . '/leanwi_reports/';
+        $reports_dir = $upload_dir['basedir'] . '/leanwi_booking_reports/';
         
         // Get all report files in the directory
         $report_files = glob($reports_dir . '*.csv');
@@ -1722,8 +1722,8 @@ function leanwi_purge_reports() {
             }
         }
         
-        // Redirect back to the reports page to refresh the count
-        wp_redirect(admin_url('admin.php?page=leanwi-book-a-room-reports'));
+        // Redirect back to the reports page
+        wp_safe_redirect(admin_url('admin.php?page=leanwi-book-a-room-reports'));
         exit;
     }   
 }
@@ -1738,7 +1738,7 @@ function leanwi_get_report_count() {
 
     // Get the directory path for reports
     $upload_dir = wp_upload_dir();
-    $reports_dir = $upload_dir['basedir'] . '/leanwi_reports/';
+    $reports_dir = $upload_dir['basedir'] . '/leanwi_booking_reports/';
     
     // Count the reports
     $report_files = glob($reports_dir . '*.csv');
