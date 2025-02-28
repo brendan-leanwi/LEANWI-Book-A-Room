@@ -1609,27 +1609,25 @@ function leanwi_reports_page() {
         <!-- Handle form submission so we can update the number of reports we have on the server after the report has been created -->
         <script type="text/javascript">
             function handleFormSubmit(event) {
+                
                 const form = this;
-                const originalAction = form.action; // Save the original action
-                
-                // Prevent the default form submission
-                event.preventDefault(); 
-                
-                // Create a FormData object from the form
                 const formData = new FormData(form);
                 formData.append('_ajax_nonce', '<?php echo wp_create_nonce('leanwi_generate_report_nonce'); ?>');
 
+                // Disable the submit button to prevent double submission
+                const submitButton = form.querySelector("input[type='submit']");
+                submitButton.disabled = true;
+
                 // Perform AJAX request to generate the report
-                fetch(originalAction, {
+                fetch(form.action, {
                     method: "POST",
                     body: formData,
                 })
                 .then(response => {
                     if (!response.ok) throw new Error("Failed to generate report.");
-                    return response.text(); // Process as plain text to handle redirection
+                    return response.text();
                 })
-                .then(data => {
-                    // Now update the report count via AJAX
+                .then(() => {
                     return fetch("<?php echo admin_url('admin-ajax.php'); ?>?action=leanwi_get_report_count", {
                         method: "GET",
                         credentials: "same-origin",
@@ -1642,10 +1640,10 @@ function leanwi_reports_page() {
                             `You currently have ${data.data.report_count} reports sitting on the server.`;
                     }
                 })
-                .catch(error => alert(error.message));
-                
-                // Submit the form to trigger the download
-                form.submit();
+                .catch(error => alert(error.message))
+                .finally(() => {
+                    submitButton.disabled = false; // Re-enable the button after completion
+                });
             };
             // Attach the event listener to both forms
             document.getElementById("leanwi-usage-report-form").onsubmit = handleFormSubmit;
