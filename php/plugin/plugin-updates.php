@@ -101,7 +101,7 @@ function leanwi_plugin_update_info($res, $action, $args) {
                             ),
                             'rating' => 4.5,
                             'active_installs' => 1,
-                            'last_updated' => '2025-01-05',
+                            'last_updated' => '2025-02-05',
                             'tags' => array('booking', 'room', 'LEANWI'),
                             'author' => 'Brendan Tuckey',
                             'author_profile' => 'https://github.com/brendan-leanwi',

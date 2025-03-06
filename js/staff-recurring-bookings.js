@@ -237,8 +237,20 @@ function handleViewAction(recurrenceId) {
             }
 
             // Show the form container
-            const container = document.getElementById('recurrence-details-container');
-            container.style.display = 'block';
+            const detailsContainer = document.getElementById('recurrence-details-container');
+            if (detailsContainer) {
+                detailsContainer.style.display = 'block';
+                
+                // Scroll to the container smoothly
+                setTimeout(() => {
+                    const offset = 200; // Adjust based on your layout
+                    const elementPosition = detailsContainer.getBoundingClientRect().top + window.scrollY;
+                    window.scrollTo({
+                        top: elementPosition - offset,
+                        behavior: 'smooth'
+                    });
+                }, 100); // Delay for UI updates before scrolling
+            }
         })
         .catch(error => {
             console.error('Error loading recurrence details:', error);
