@@ -21,6 +21,7 @@ function display_staff_name_search() {
 
     // Check if a search query is submitted
     $search_query = isset($_GET['staff_search']) ? sanitize_text_field($_GET['staff_search']) : '';
+    $search_query = wp_unslash($search_query);
     $start_date = isset($_GET['start_date']) ? sanitize_text_field($_GET['start_date']) : date('Y-m-d');
     $end_date = isset($_GET['end_date']) ? sanitize_text_field($_GET['end_date']) : date('Y-m-d', strtotime('+1 month'));
     $results_html = '';

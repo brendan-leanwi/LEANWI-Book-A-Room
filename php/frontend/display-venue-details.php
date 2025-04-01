@@ -133,7 +133,7 @@ function display_venue_details($atts) {
             <input type="text" id="physical_address" name="physical_address" <?php echo ($show_physical_address === 'yes') ? 'required' : ''; ?> style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_physical_address === 'yes') ? 'block' : 'none'; ?>;">
 
             <label for="participants">Number of Participants:</label>
-            <input type="number" id="participants" name="participants" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <input type="number" id="participants" name="participants" style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
             <label for="notes" id="booking_notes_label">Booking Notes:</label>
             <textarea id="notes" name="notes" style="width: 100%; height: 100px; padding: 8px; margin-bottom: 10px;"></textarea>

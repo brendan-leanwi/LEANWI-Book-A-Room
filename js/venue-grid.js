@@ -1,6 +1,24 @@
 document.addEventListener("DOMContentLoaded", function () {
     const dateInput = document.getElementById("selected_date");
 
+    //Only allow users to see/add for dates maxMonths into th future as specified in our settings
+    if (dateInput) {
+        const today = new Date();
+        const maxMonths = bookingSettings.maxMonths || 1;
+
+        // Calculate the max selectable date
+        const futureMonthNumber = today.getMonth() + parseInt(maxMonths);
+        const futureYear = today.getFullYear() + Math.floor(futureMonthNumber / 12);
+        const adjustedFutureMonthNumber = futureMonthNumber % 12;
+        const maxDate = new Date(futureYear, adjustedFutureMonthNumber + 1, 0); // Last day of the allowed month
+
+        // Format maxDate as YYYY-MM-DD
+        const maxDateFormatted = maxDate.toISOString().split("T")[0];
+
+        // Set the max attribute on the date input
+        dateInput.setAttribute("max", maxDateFormatted);
+    }
+
     dateInput.addEventListener("change", function () {
         // Submit the form when the date changes
         document.body.style.cursor = "wait"; // Change cursor to wait

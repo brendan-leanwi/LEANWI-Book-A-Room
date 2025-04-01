@@ -773,6 +773,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.querySelector('#booking-form').addEventListener('submit', function (event) {
             event.preventDefault();
+
+            // Get email and phone field values
+            const email = document.querySelector('#email').value.trim();
+            const phone = document.querySelector('#phone').value.trim();
+
+            // Ensure at least one of the fields is filled
+            if (!email && !phone) {
+                alert('Please provide at least an email address or phone number.');
+                return;
+            }
+
             const formData = new FormData(this);
         
             // Get the submit button and disable it
