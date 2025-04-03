@@ -31,14 +31,14 @@ $recurrences = $wpdb->get_results($sql, ARRAY_A);
 $sanitized_recurrences = array_map(function($recurrence) {
     return [
         'recurrence_id' => intval($recurrence['recurrence_id']),
-        'venue_name' => wp_kses_post($recurrence['venue_name']),
+        'venue_name' => sanitize_text_field($recurrence['venue_name']),
         'recurrence_type' => esc_html($recurrence['recurrence_type']),
         'recurrence_interval' => intval($recurrence['recurrence_interval']),
         'recurrence_end_date' => esc_html($recurrence['recurrence_end_date']),
         'start_time' => esc_html($recurrence['start_time']),
         'end_time' => esc_html($recurrence['end_time']),
-        'organization' => wp_kses_post($recurrence['organization'] ?? 'N/A'),
-        'recurrence_name' => wp_kses_post($recurrence['recurrence_name']),
+        'organization' => sanitize_text_field($recurrence['organization'] ?? 'N/A'),
+        'recurrence_name' => sanitize_text_field($recurrence['recurrence_name']),
     ];
 }, $recurrences);
 

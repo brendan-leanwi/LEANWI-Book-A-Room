@@ -30,6 +30,7 @@ function leanwi_create_tables() {
         extra_text TEXT,
         email_text TEXT,
         booking_notes_label VARCHAR(255),
+        bookable_by_staff_only TINYINT(1) DEFAULT 0,
         historic TINYINT(1) DEFAULT 0
     ) $engine $charset_collate;";
 
@@ -231,6 +232,29 @@ function leanwi_create_tables() {
             ),
             array('%d', '%s', '%d') // Data types
         );
+    }
+
+    // Define the table name
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+
+    // Check if the 'physical_address' column exists
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'bookable_by_staff_only'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("bookable_by_staff_only column does not exist");
+        // Add the 'physical_address' column if it doesn't exist
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name ADD bookable_by_staff_only TINYINT(1) DEFAULT 0 AFTER booking_notes_label"
+        );
+
+        if ($result === false) {
+            error_log("Failed to add bookable_by_staff_only column to $table_name: " . $wpdb->last_error);
+        }
     }
 
 }

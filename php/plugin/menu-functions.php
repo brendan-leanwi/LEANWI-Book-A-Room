@@ -441,33 +441,33 @@ function leanwi_add_venue_page() {
         // Verify nonce before processing the form
         if (isset($_POST['venue_nonce']) && wp_verify_nonce($_POST['venue_nonce'], 'add_venue_action')) {
             // The nonce is valid; proceed with form processing.
-            $name = wp_kses_post($_POST['name']);
+            $name = sanitize_text_field($_POST['name']);
             $name = wp_unslash($name);
 
             $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
 
-            $description = wp_kses_post($_POST['description']);
+            $description = sanitize_text_field($_POST['description']);
             $description = wp_unslash($description);
 
-            $location = wp_kses_post($_POST['location']);
+            $location = sanitize_text_field($_POST['location']);
             $location = wp_unslash($location);
 
             $image_url = esc_url($_POST['image_url']);
 
-            $extra_text = wp_kses_post($_POST['extra_text']);
+            $extra_text = sanitize_text_field($_POST['extra_text']);
             $extra_text = wp_unslash($extra_text);
 
             $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
             $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
 
-            $email_text = wp_kses_post($_POST['email_text']);
+            $email_text = sanitize_text_field($_POST['email_text']);
             $email_text = wp_unslash($email_text);
 
             $page_url = esc_url($_POST['page_url']);
             $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
             $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
 
-            $booking_notes_label = wp_kses_post($_POST['booking_notes_label']);
+            $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
             $booking_notes_label = wp_unslash($booking_notes_label);
 
             $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
@@ -706,26 +706,26 @@ function leanwi_edit_venue_page() {
             // Verify nonce before processing the form
             if (isset($_POST['venue_nonce']) && wp_verify_nonce($_POST['venue_nonce'], 'update_venue_action')) {
                 // The nonce is valid; proceed with form processing.
-                $name = wp_kses_post($_POST['name']);
+                $name = sanitize_text_field($_POST['name']);
                 $name = wp_unslash($name);
 
                 $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
 
-                $description = wp_kses_post($_POST['description']);
+                $description = sanitize_text_field($_POST['description']);
                 $description = wp_unslash($description);
 
-                $location = wp_kses_post($_POST['location']);
+                $location = sanitize_text_field($_POST['location']);
                 $location = wp_unslash($location);
 
                 $image_url = esc_url($_POST['image_url']);
 
-                $extra_text = wp_kses_post($_POST['extra_text']);
+                $extra_text = sanitize_text_field($_POST['extra_text']);
                 $extra_text = wp_unslash($extra_text);
 
                 $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
                 $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
 
-                $email_text = wp_kses_post($_POST['email_text']);
+                $email_text = sanitize_text_field($_POST['email_text']);
                 $email_text = wp_unslash($email_text);
 
                 $historic = isset($_POST['historic']) ? 1 : 0; // Set to 1 if checked, otherwise 0
@@ -733,7 +733,7 @@ function leanwi_edit_venue_page() {
                 $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
                 $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
 
-                $booking_notes_label = wp_kses_post($_POST['booking_notes_label']);
+                $booking_notes_label = sanitize_text_field($_POST['booking_notes_label']);
                 $booking_notes_label = wp_unslash($booking_notes_label);
                 
                 $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
@@ -1070,7 +1070,7 @@ function leanwi_add_category_page() {
         $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $table_name");
         $new_order = ($max_order !== null) ? $max_order + 1 : 1;
 
-        $category_name = wp_kses_post($_POST['category_name']);
+        $category_name = sanitize_text_field($_POST['category_name']);
         $category_name = wp_unslash($category_name);
 
         $wpdb->insert(
@@ -1102,7 +1102,7 @@ function leanwi_edit_category_page() {
     // Handle the form submission to update the category
     if (isset($_POST['update_category'])) {
         $category_id = intval($_POST['category_id']);
-        $category_name = wp_kses_post($_POST['category_name']);
+        $category_name = sanitize_text_field($_POST['category_name']);
         $category_name = wp_unslash($category_name);
         $historic = isset($_POST['historic']) ? 1 : 0; // Check if the "Historic" checkbox is checked
 
@@ -1255,7 +1255,7 @@ function leanwi_add_audience_page() {
         // Find the max display_order and increment
         $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $table_name");
         $new_order = ($max_order !== null) ? $max_order + 1 : 1;
-        $audience_name = wp_kses_post($_POST['audience_name']);
+        $audience_name = sanitize_text_field($_POST['audience_name']);
         $audience_name = wp_unslash($audience_name);
 
         $wpdb->insert(
@@ -1287,7 +1287,7 @@ function leanwi_edit_audience_page() {
     // Handle the form submission to update the audience
     if (isset($_POST['update_audience'])) {
         $audience_id = intval($_POST['audience_id']);
-        $audience_name = wp_kses_post($_POST['audience_name']);
+        $audience_name = sanitize_text_field($_POST['audience_name']);
         $audience_name = wp_unslash($audience_name);
         $historic = isset($_POST['historic']) ? 1 : 0; // Check if the "Historic" checkbox is checked
 

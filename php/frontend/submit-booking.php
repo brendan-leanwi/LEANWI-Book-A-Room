@@ -54,7 +54,7 @@ $physical_address = wp_unslash($physical_address); // Remove unnecessary escapin
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
 
 //$notes = sanitize_textarea_field($_POST['notes']);
-$notes = wp_kses_post($_POST['notes']);
+$notes = sanitize_text_field($_POST['notes']);
 $notes = wp_unslash($notes); // Remove unnecessary escaping from the notes field
 
 $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
@@ -243,7 +243,7 @@ if ($sendEmail && $success) {
     if ($bookingAlreadyExisted) {
         $subject = 'Your Booking has been updated';
     }
-    $message = "<p>Hi <strong>" . esc_html($name) . "</strong>,</p>";
+    $message = "<p>Hello <strong>" . esc_html($name) . "</strong>,</p>";
     if ($bookingAlreadyExisted) {
         $message .= "<p>Here are the most recent details for your updated booking. Your booking ID is: <strong>" . esc_html($unique_id) . "</strong>.</p>";
     }

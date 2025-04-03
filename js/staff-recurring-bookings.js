@@ -228,7 +228,7 @@ function handleViewAction(recurrenceId) {
             form.audience.value = recurrence.audience_id || 1;
 
             //Display appropriate name on the Save button
-            form.book_button.textContent = 'Resave Recurrence and change Bookings';
+            form.book_button.textContent = 'Resave Recurrence and change Future Bookings';
         
             // Display the delete button
             const deleteButton = document.getElementById('delete_booking');

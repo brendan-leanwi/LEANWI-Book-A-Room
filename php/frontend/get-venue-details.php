@@ -20,19 +20,19 @@ if (isset($_GET['venue_id'])) {
         // Sanitize data before outputting
         $sanitized_venue = [
             'venue_id' => intval($venue['venue_id']),
-            'name' => wp_kses_post($venue['name']),
+            'name' => sanitize_text_field($venue['name']),
             'capacity' => intval($venue['capacity']),
-            'description' => wp_kses_post($venue['description']), // Allows safe HTML tags
-            'location' => wp_kses_post($venue['location']),
+            'description' => sanitize_text_field($venue['description']), // Allows safe HTML tags
+            'location' => sanitize_text_field($venue['location']),
             'max_slots' => intval($venue['max_slots']),
             'slot_cost' => floatval($venue['slot_cost']),
             'image_url' => esc_url($venue['image_url']),
             'page_url' => esc_url($venue['page_url']),
             'conditions_of_use_url' => esc_url($venue['conditions_of_use_url']),
             'display_affirmations' => intval($venue['display_affirmations']),
-            'extra_text' => wp_kses_post($venue['extra_text']),
-            'email_text' => wp_kses_post($venue['email_text']),
-            'booking_notes_label' => !empty($venue['booking_notes_label']) ? wp_kses_post($venue['booking_notes_label']) : '',
+            'extra_text' => sanitize_text_field($venue['extra_text']),
+            'email_text' => sanitize_text_field($venue['email_text']),
+            'booking_notes_label' => !empty($venue['booking_notes_label']) ? sanitize_text_field($venue['booking_notes_label']) : '',
             'historic' => intval($venue['historic']),
             'days_before_booking' => intval($venue['days_before_booking']),
             'venue_admin_email' => sanitize_email($venue['venue_admin_email'] ?? ''), // Handle NULL
