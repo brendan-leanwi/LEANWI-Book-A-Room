@@ -12,6 +12,10 @@ function display_venue_grid() {
     $minutes_interval = intval(get_option('leanwi_minutes_interval', 15));
     global $wpdb;
 
+    // Check if the user has staff privileges to display grid accordingly
+    $current_user = wp_get_current_user();
+    $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
+
     $today_date = isset($_GET['selected_date']) ? sanitize_text_field($_GET['selected_date']) : date('Y-m-d');
     $selected_venue_id = isset($_GET['venue_id']) ? intval($_GET['venue_id']) : 0; // Get the selected venue ID
     $day_of_week = date('l', strtotime($today_date));
@@ -26,16 +30,25 @@ function display_venue_grid() {
         JOIN {$wpdb->prefix}leanwi_booking_venue v ON vh.venue_id = v.venue_id
         WHERE vh.day_of_week = %s
     ";
+    if(!$is_booking_staff) {
+        $venue_hours_query .= " AND v.bookable_by_staff_only = 0";
+    }
+
     $venue_hours_query .= $selected_venue_id ? $wpdb->prepare(" AND vh.venue_id = %d", $selected_venue_id) : "";
     $venue_hours = $wpdb->get_results($wpdb->prepare($venue_hours_query, $day_of_week));
 
     // Query bookings for the selected date and venue (if applicable)
     $bookings_query = "
-        SELECT venue_id, start_time, end_time, unique_id, organization, name
-        FROM {$wpdb->prefix}leanwi_booking_participant
-        WHERE DATE(start_time) = %s
+        SELECT p.venue_id, p.start_time, p.end_time, p.unique_id, p.organization, p.name
+        FROM {$wpdb->prefix}leanwi_booking_participant p
+        JOIN {$wpdb->prefix}leanwi_booking_venue v ON v.venue_id = p.venue_id
+        WHERE DATE(p.start_time) = %s
     ";
+    if(!$is_booking_staff) {
+        $bookings_query .= " AND v.bookable_by_staff_only = 0";
+    }
     $bookings_query .= $selected_venue_id ? $wpdb->prepare(" AND venue_id = %d", $selected_venue_id) : "";
+    
     $bookings = $wpdb->get_results($wpdb->prepare($bookings_query, $today_date));
 
     // Calculate time slots for the selected date
@@ -59,10 +72,6 @@ function display_venue_grid() {
     // Build grid
     $grid = [];
     date_default_timezone_set('America/Chicago');
-
-    // Check if the user has staff privileges to display grid accordingly
-    $current_user = wp_get_current_user();
-    $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
 
     foreach ($venue_hours as $vh) {
         foreach ($time_slots as $slot) {

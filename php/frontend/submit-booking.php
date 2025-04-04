@@ -54,7 +54,7 @@ $physical_address = wp_unslash($physical_address); // Remove unnecessary escapin
 $participants = isset($_POST['participants']) ? intval($_POST['participants']) : 0;
 
 //$notes = sanitize_textarea_field($_POST['notes']);
-$notes = sanitize_text_field($_POST['notes']);
+$notes = sanitize_textarea_field($_POST['notes']);
 $notes = wp_unslash($notes); // Remove unnecessary escaping from the notes field
 
 $category = isset($_POST['category']) ? intval($_POST['category']) : 0;

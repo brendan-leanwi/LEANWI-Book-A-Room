@@ -263,7 +263,7 @@ function leanwi_main_page() {
                 if (xhr.status === 200) {
                     var content = xhr.responseText;
                     document.getElementById("documentation-content").innerHTML = content;
-                    attachLinkEvents();  // Reattach link events after new content is loaded
+                    //attachLinkEvents();  // Reattach link events after new content is loaded
                 }
             };
             xhr.send();
@@ -274,27 +274,28 @@ function leanwi_main_page() {
         document.getElementById("documentation-content").innerHTML = content;
 
         // Attach event listeners to the dynamically rendered links
+        /*
         function attachLinkEvents() {
             document.getElementById('documentation-content').addEventListener('click', function (e) {
                 let target = e.target.closest('a'); 
                 
                 let pageMap = {
-                    'Back to Main Documentation Page': 'documentation.html',
-                    'Initial setup (Settings)': 'initial-setup-settings.html',
-                    'Initial setup (Staff)': 'initial-setup-staff.html',
-                    'Initial setup (Affirmations)': 'initial-setup-affirmations.html',
-                    'Initial setup (Categories and Audiences)': 'initial-setup-categories-audiences.html',
-                    'Setting up your first Venue': 'first-venue-setup.html',
-                    'Setting up Pages Using Shortcodes': 'shortcodes-use.html',
-                    'How to use the Recurring Bookings page': 'recurring-bookings-use.html',
-                    'Adding a mail client': 'mail-client-setup.html',
-                    '(Rooms Example Page)': 'example_pages/rooms-landing-page-example.html',
-                    '(Venue Example Page)': 'example_pages/venue-page-example.html',
-                    '(Recurring Bookings Example Page)': 'example_pages/recurring-bookings-page-example.html',
-                    '(Payments and Feedback Example Page)': 'example_pages/payments-feedback-page-example.html',
-                    '(Room Availability Example Page)': 'example_pages/check-availability-page-example.html',
-                    'venue': 'first-venue-setup.html',
-                    'Recurring Bookings page': 'shortcodes-use.html'
+                  //  'Back to Main Documentation Page': 'documentation.html',
+                  //  'Initial setup (Settings)': 'initial-setup-settings.html',
+                  //  'Initial setup (Staff)': 'initial-setup-staff.html',
+                  //  'Initial setup (Affirmations)': 'initial-setup-affirmations.html',
+                  //  'Initial setup (Categories and Audiences)': 'initial-setup-categories-audiences.html',
+                  //  'Setting up your first Venue': 'first-venue-setup.html',
+                  //  'Setting up Pages Using Shortcodes': 'shortcodes-use.html',
+                  //  'How to use the Recurring Bookings page': 'recurring-bookings-use.html',
+                  //  'Adding a mail client': 'mail-client-setup.html',
+                   // '(Rooms Example Page)': 'example_pages/rooms-landing-page-example.html',
+                   // '(Venue Example Page)': 'example_pages/venue-page-example.html',
+                   // '(Recurring Bookings Example Page)': 'example_pages/recurring-bookings-page-example.html',
+                   // '(Payments and Feedback Example Page)': 'example_pages/payments-feedback-page-example.html',
+                   // '(Room Availability Example Page)': 'example_pages/check-availability-page-example.html',
+                   // 'venue': 'first-venue-setup.html',
+                   // 'Recurring Bookings page': 'shortcodes-use.html'
                 };
 
                 let page = pageMap[target.innerText.trim()]; // Use innerText and trim for better matching
@@ -307,7 +308,7 @@ function leanwi_main_page() {
 
         // Attach events after the initial content is loaded
         attachLinkEvents();
-
+        */
     </script>
 
     <?php
@@ -446,7 +447,7 @@ function leanwi_add_venue_page() {
 
             $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
 
-            $description = sanitize_text_field($_POST['description']);
+            $description = sanitize_textarea_field($_POST['description']);
             $description = wp_unslash($description);
 
             $location = sanitize_text_field($_POST['location']);
@@ -454,13 +455,13 @@ function leanwi_add_venue_page() {
 
             $image_url = esc_url($_POST['image_url']);
 
-            $extra_text = sanitize_text_field($_POST['extra_text']);
+            $extra_text = sanitize_textarea_field($_POST['extra_text']);
             $extra_text = wp_unslash($extra_text);
 
             $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
             $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
 
-            $email_text = sanitize_text_field($_POST['email_text']);
+            $email_text = sanitize_textarea_field($_POST['email_text']);
             $email_text = wp_unslash($email_text);
 
             $page_url = esc_url($_POST['page_url']);
@@ -474,6 +475,7 @@ function leanwi_add_venue_page() {
             $venue_admin_email = isset($_POST['venue_admin_email']) ? sanitize_email($_POST['venue_admin_email']) : '';
             $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
 
+            $bookable_by_staff_only = isset($_POST['bookable_by_staff_only']) ? 1 : 0;
 
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
@@ -497,7 +499,8 @@ function leanwi_add_venue_page() {
                     'booking_notes_label' => $booking_notes_label,
                     'days_before_booking' => $days_before_booking,
                     'venue_admin_email' => $venue_admin_email,
-                    'use_business_days_only' => $use_business_days_only
+                    'use_business_days_only' => $use_business_days_only,
+                    'bookable_by_staff_only' => $bookable_by_staff_only
                 )
             );
 
@@ -552,7 +555,8 @@ function leanwi_add_venue_page() {
         'booking_notes_label' => 'Booking Notes:',
         'days_before_booking' => 0,
         'venue_admin_email' => '',
-        'use_business_days_only' => 0
+        'use_business_days_only' => 0,
+        'bookable_by_staff_only' => 0
     ];
 
     // Initialize hours to default values
@@ -572,6 +576,10 @@ function leanwi_add_venue_page() {
                 <tr>
                     <th><label for="name">Name</label></th>
                     <td><input type="text" id="name" name="name" value="<?php echo esc_attr($venue->name); ?>" required style="width: 90%;" /></td>
+                </tr>
+                <tr>
+                    <th><label for="bookable_by_staff_only">This venue will only be bookable by staff</label></th>
+                    <td><input type="checkbox" id="bookable_by_staff_only" name="bookable_by_staff_only" <?php echo ($venue->bookable_by_staff_only == 1) ? 'checked' : ''; ?>/></td>
                 </tr>
                 <tr>
                     <th><label for="capacity">Capacity</label></th>
@@ -711,7 +719,7 @@ function leanwi_edit_venue_page() {
 
                 $capacity = isset($_POST['capacity']) ? intval($_POST['capacity']) : 0;
 
-                $description = sanitize_text_field($_POST['description']);
+                $description = sanitize_textarea_field($_POST['description']);
                 $description = wp_unslash($description);
 
                 $location = sanitize_text_field($_POST['location']);
@@ -719,13 +727,13 @@ function leanwi_edit_venue_page() {
 
                 $image_url = esc_url($_POST['image_url']);
 
-                $extra_text = sanitize_text_field($_POST['extra_text']);
+                $extra_text = sanitize_textarea_field($_POST['extra_text']);
                 $extra_text = wp_unslash($extra_text);
 
                 $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
                 $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
 
-                $email_text = sanitize_text_field($_POST['email_text']);
+                $email_text = sanitize_textarea_field($_POST['email_text']);
                 $email_text = wp_unslash($email_text);
 
                 $historic = isset($_POST['historic']) ? 1 : 0; // Set to 1 if checked, otherwise 0
@@ -739,6 +747,8 @@ function leanwi_edit_venue_page() {
                 $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
                 $venue_admin_email = isset($_POST['venue_admin_email']) ? sanitize_email($_POST['venue_admin_email']) : '';
                 $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
+
+                $bookable_by_staff_only = isset($_POST['bookable_by_staff_only']) ? 1 : 0;
         
                 // Update the venue in the database
                 $updated = $wpdb->update(
@@ -761,6 +771,7 @@ function leanwi_edit_venue_page() {
                         'days_before_booking' => $days_before_booking,
                         'venue_admin_email' => $venue_admin_email,
                         'use_business_days_only' => $use_business_days_only,
+                        'bookable_by_staff_only' => $bookable_by_staff_only,
                     ),
                     array('venue_id' => $venue_id)
                 );
@@ -845,6 +856,10 @@ function leanwi_edit_venue_page() {
                     <td><input type="text" id="name" name="name" value="<?php echo esc_attr($venue->name); ?>" required style="width: 90%;" /></td>
                 </tr>
                 <tr>
+                    <th><label for="bookable_by_staff_only">This venue will only be bookable by staff</label></th>
+                    <td><input type="checkbox" id="bookable_by_staff_only" name="bookable_by_staff_only" <?php echo ($venue->bookable_by_staff_only == 1) ? 'checked' : ''; ?>/></td>
+                </tr>
+                <tr>
                     <th><label for="capacity">Capacity</label></th>
                     <td><input type="number" id="capacity" name="capacity" value="<?php echo esc_attr($venue->capacity); ?>" required /></td>
                 </tr>
@@ -891,7 +906,7 @@ function leanwi_edit_venue_page() {
                 </tr>
                 <tr>
                     <th><label for="booking_notes_label">Booking Notes Label Text</label></th>
-                    <td><input type="text" id="booking_notes_label" name="booking_notes_label" value="<?php echo esc_attr($venue->booking_notes_label); ?>" required style="width: 90%;" /></td>
+                    <td><input type="text" id="booking_notes_label" name="booking_notes_label" value="<?php echo esc_attr($venue->booking_notes_label); ?>" style="width: 90%;" /></td>
                 </tr>
                 <tr>
                     <th><label for="slot_cost">Cost per slot</label></th>

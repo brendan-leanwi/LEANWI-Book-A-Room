@@ -58,11 +58,23 @@ document.addEventListener("DOMContentLoaded", function () {
             return response.json();
         })
         .then(venue => {
-            document.getElementById('venue-name').textContent = escapeHtml(venue.name);
-            document.getElementById('venue-capacity').textContent = escapeHtml(venue.capacity);
-            document.getElementById('venue-description').innerHTML = venue.description.replace(/\\'/g, "'").replace(/\n/g, '<br>');
-            document.getElementById('venue-extra-text').innerHTML = escapeHtml(venue.extra_text).replace(/\n/g, '<br>');
-            document.getElementById('venue-location').textContent = escapeHtml(venue.location);
+
+            // Check if the venue is restricted to staff-only booking.
+            // Should only need this if someone is misdirected somehow.
+            if (!isBookingStaff && venue.bookable_by_staff_only == 1) {
+                alert("This venue is only bookable by staff members.");
+                
+                // Redirect back to the previous page
+                window.history.back();
+                return; // Stop further execution
+            }
+
+            document.getElementById('venue-name').textContent = venue.name;
+            document.getElementById('venue-capacity').textContent = venue.capacity;
+            document.getElementById('venue-description').innerHTML = venue.description.replace(/\\'/g, "'").replace(/\r?\n/g, '<br>');
+
+            document.getElementById('venue-extra-text').innerHTML = escapeHtml(venue.extra_text).replace(/\r?\n/g, '<br>');
+            document.getElementById('venue-location').textContent = venue.location;
             document.getElementById('venue-image').src = venue.image_url;
             document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
             document.getElementById('venue-max-slots').value = venue.max_slots;
@@ -72,6 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('days_before_booking').value = venue.days_before_booking;
             document.getElementById('use_business_days_only').value = venue.use_business_days_only;
             document.getElementById('venue_admin_email').value = venue.venue_admin_email;
+            document.getElementById('bookable_by_staff_only').value = venue.bookable_by_staff_only;
 
             let bookingNotesLabel = document.getElementById('booking_notes_label');
             bookingNotesLabel.textContent = venue.booking_notes_label && venue.booking_notes_label.trim() ? venue.booking_notes_label : "Booking Notes:";

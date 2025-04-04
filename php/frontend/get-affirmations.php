@@ -16,7 +16,7 @@ if (!empty($result)) {
     foreach ($result as $affirmation) {
         $sanitized_affirmation = [
             'id' => intval($affirmation['id']),
-            'affirmation' => esc_html($affirmation['affirmation'])
+            'affirmation' => sanitize_textarea_field($affirmation['affirmation'])
         ];
         $affirmations[] = $sanitized_affirmation;
     }

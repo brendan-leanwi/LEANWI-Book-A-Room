@@ -56,6 +56,7 @@ function display_venue_details($atts) {
             <input type="hidden" id="days_before_booking" value="0">
             <input type="hidden" id="use_business_days_only" value="0">
             <input type="hidden" id="venue_admin_email" value="">
+            <input type="hidden" id="bookable_by_staff_only" value="">
 
             <div class="booking-container">
                 <p><h2 id="previous_booking_h2">Looking for a previously placed booking?</h2></p>
