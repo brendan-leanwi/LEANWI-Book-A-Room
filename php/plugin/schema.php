@@ -31,7 +31,13 @@ function leanwi_create_tables() {
         email_text TEXT,
         booking_notes_label VARCHAR(255),
         bookable_by_staff_only TINYINT(1) DEFAULT 0,
-        historic TINYINT(1) DEFAULT 0
+        historic TINYINT(1) DEFAULT 0,
+        email_greeting VARCHAR(255) NOT NULL,
+        email_opening_text VARCHAR(1000),
+        email_update_opening_text VARCHAR(1000),
+        email_need_assistance_text VARCHAR(1000),
+        email_modify_booking_text VARCHAR(1000),
+        email_sign_off_text VARCHAR(1000)
     ) $engine $charset_collate;";
 
     // SQL for creating leanwi_booking_venue_hours table
@@ -254,6 +260,35 @@ function leanwi_create_tables() {
 
         if ($result === false) {
             error_log("Failed to add bookable_by_staff_only column to $table_name: " . $wpdb->last_error);
+        }
+    }
+
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+    // Check if the 'physical_address' column exists
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'email_greeting'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("email columns do not exist. Adding 6 columns to $table_name table");
+
+        $alter_query = "ALTER TABLE $table_name
+                ADD email_greeting VARCHAR(255) NOT NULL DEFAULT 'Hello',
+                ADD email_opening_text VARCHAR(1000) DEFAULT 'Thank you for choosing our library for your upcoming event!\\r\\n\\r\\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.',
+                ADD email_update_opening_text VARCHAR(1000) DEFAULT 'Here are the most recent details of your updated booking.\\r\\n\\r\\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.',
+                ADD email_need_assistance_text VARCHAR(1000) DEFAULT 'If you have any questions or need further assistance reach out to our team by phone or replying to this email.',
+                ADD email_modify_booking_text VARCHAR(1000) DEFAULT 'To Cancel or Modify a Booking: Enter your Booking ID and make changes to your booking at this link:',
+                ADD email_sign_off_text VARCHAR(1000) DEFAULT 'Sincerely,\\r\\nLibrary Booking Staff'
+            ";
+        error_log("Running ALTER TABLE query: " . $alter_query);
+
+        $result =  $wpdb->query($alter_query);
+
+        if ($result === false) {
+            error_log("Failed to add email columns to $table_name: " . $wpdb->last_error);
         }
     }
 
