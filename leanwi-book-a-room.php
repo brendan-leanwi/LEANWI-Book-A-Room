@@ -11,6 +11,7 @@ License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain:  leanwi-tutorial
 Domain Path:  /languages
+Tested up to: 6.7.2
 */
 
 // Require additional PHP files

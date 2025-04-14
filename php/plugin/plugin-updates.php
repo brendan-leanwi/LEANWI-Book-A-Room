@@ -127,8 +127,6 @@ function leanwi_plugin_update_info($res, $action, $args) {
 add_filter('plugins_api', __NAMESPACE__ . '\\leanwi_plugin_update_info', 10, 3);
 
 
-
-
 function leanwi_override_post_install($true, $hook_extra, $result) {
     global $wp_filesystem;
 
@@ -146,3 +144,10 @@ function leanwi_override_post_install($true, $hook_extra, $result) {
     return $result;
 }
 add_filter('upgrader_post_install', __NAMESPACE__ . '\\leanwi_override_post_install', 10, 3);
+
+add_filter('auto_update_plugin', function($update, $item) {
+    if (isset($item->slug) && $item->slug === 'leanwi-book-a-room') {
+        return true; // Enable auto-update for this plugin
+    }
+    return $update;
+}, 10, 2);
