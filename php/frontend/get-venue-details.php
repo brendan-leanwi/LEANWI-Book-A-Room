@@ -31,7 +31,6 @@ if (isset($_GET['venue_id'])) {
             'conditions_of_use_url' => esc_url($venue['conditions_of_use_url']),
             'display_affirmations' => intval($venue['display_affirmations']),
             'extra_text' => sanitize_textarea_field($venue['extra_text']),
-            'email_text' => sanitize_textarea_field($venue['email_text']),
             'booking_notes_label' => !empty($venue['booking_notes_label']) ? sanitize_text_field($venue['booking_notes_label']) : '',
             'historic' => intval($venue['historic']),
             'days_before_booking' => intval($venue['days_before_booking']),

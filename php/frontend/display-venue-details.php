@@ -50,7 +50,6 @@ function display_venue_details($atts) {
             <p><span id="venue-extra-text"></span></p>
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
             <input type="hidden" id="venue-max-slots" value="100">
-            <input type="hidden" id="venue-email-text" value="">
             <input type="hidden" id="display-affirmations" value="1">
             <input type="hidden" id="conditions-of-use-url" value="">
             <input type="hidden" id="days_before_booking" value="0">

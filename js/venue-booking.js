@@ -76,7 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('venue-extra-text').innerHTML = escapeHtml(venue.extra_text).replace(/\r?\n/g, '<br>');
             document.getElementById('venue-location').textContent = venue.location;
             document.getElementById('venue-image').src = venue.image_url;
-            document.getElementById('venue-email-text').value = escapeHtml(venue.email_text);
             document.getElementById('venue-max-slots').value = venue.max_slots;
             document.getElementById('venue-slot-cost').textContent = parseFloat(venue.slot_cost).toFixed(2);
             document.getElementById('display-affirmations').value = venue.display_affirmations;
@@ -830,7 +829,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
                 // Append required data to formData
                 formData.append('venue_id', document.getElementById('venue_id').value);
-                formData.append('email_text', document.getElementById('venue-email-text').value);
                 formData.append('total_cost', document.getElementById('total-cost').textContent);
                 formData.append('venue_name', document.getElementById('venue-name').textContent);
                 formData.append('page_url', window.location.href);
@@ -1113,6 +1111,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ 
+                        venue_id: document.getElementById('venue_id').value,
                         unique_id: uniqueId, 
                         admin_email_address: adminEmailAddress,
                         send_admin_email: sendAdminEmail,

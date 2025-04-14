@@ -83,12 +83,8 @@ $endDateTime = new DateTime($end_time);
 $endDateTime->modify("+$minutes_interval minutes");
 $adjusted_end_time = $endDateTime->format('Y-m-d H:i:s'); // Format the adjusted end time as 'YYYY-MM-DD HH:MM:SS'
 
-$email_from_name = get_option('leanwi_email_from_name', 'Library Booking Team');
-$email_from_name = wp_unslash($email_from_name);
 $admin_email_address = isset($_POST['admin_email_address']) ? sanitize_email($_POST['admin_email_address']) : '';
 $send_admin_email = isset($_POST['send_admin_email']) ? sanitize_text_field($_POST['send_admin_email']) : 'no';
-$email_text = isset($_POST['email_text']) ? sanitize_text_field($_POST['email_text']) : '';
-$email_text = wp_unslash($email_text);
 $total_cost = isset($_POST['total_cost']) && !empty($_POST['total_cost']) ? floatval(number_format((float) sanitize_text_field($_POST['total_cost']), 2, '.', '')) : 0.00;
 $page_url = isset($_POST['page_url']) ? esc_url($_POST['page_url']) : '';
 $venue_name = sanitize_text_field($_POST['venue_name']);
@@ -229,6 +225,15 @@ if ($success && !empty($email) && !is_email($email)) {
 
 // Send email if booking is successful
 if ($sendEmail && $success) {
+    //Get the email text for the venue
+    $email_data_table = $wpdb->prefix . 'leanwi_booking_venue';
+    $email_data = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT email_greeting, email_opening_text, email_update_opening_text, email_need_assistance_text, email_modify_booking_text, email_sign_off_text 
+             FROM $email_data_table WHERE venue_id = %d",
+            $venue_id
+        )
+    );
     // Ensure $page_url has no query parameters
     $parsed_url = parse_url($page_url);
     $page_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
@@ -243,21 +248,14 @@ if ($sendEmail && $success) {
     if ($bookingAlreadyExisted) {
         $subject = 'Your Booking has been updated';
     }
-    $message = "<p>Hello <strong>" . esc_html($name) . "</strong>,</p>";
+    $message = "<p>" . $email_data->email_greeting . " <strong>" . esc_html($name) . "</strong>,</p>";
     if ($bookingAlreadyExisted) {
-        $message .= "<p>Here are the most recent details for your updated booking. Your booking ID is: <strong>" . esc_html($unique_id) . "</strong>.</p>";
+        $message .= "<p>" . nl2br(esc_html($email_data->email_update_opening_text)) . "</p>";
     }
     else{
-        $message .= "<p>Thank you for your booking. Your booking ID is: <strong>" . esc_html($unique_id) . "</strong>.</p>";
+        $message .= "<p>" . nl2br(esc_html($email_data->email_opening_text)) . "</p>";
     }
-    $message .= "<p>You can use this ID to find and modify your booking by going to this page: " .
-           "<a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "</a> " .
-           "and entering the above ID.</p>";
-
-    // Conditionally display $email_text if it has content
-    if (!empty($email_text)) {
-        $message .= "<p>" . esc_html($email_text) . "</p>";
-    }
+    $message .= "<p>" . nl2br(esc_html($email_data->email_need_assistance_text)) . "</p>";
 
     $message .= "<p><strong>Here are the details of your booking:</strong></p>" .
             "<p><strong>Venue:</strong> " . esc_html($venue_name) . "<br>" .
@@ -265,15 +263,19 @@ if ($sendEmail && $success) {
             "<strong>Start Time:</strong> " . date('g:i A', strtotime($start_time)) . "<br>" .
             "<strong>End Time:</strong> " . date('g:i A', strtotime($adjusted_end_time)) . "<br>" .
             "<strong>Number of Participants:</strong> $participants<br>" .
-            "<strong>Booking Notes:</strong> " . (!empty($notes) ? esc_html($notes) : 'None') . "</p>";
+            "<strong>Booking Notes:</strong> " . (!empty($notes) ? nl2br(esc_html($notes)) : 'None') . "<br>" . 
+            "<strong>Booking ID:</strong> " . $unique_id . "</p>";
 
     // Conditionally display total cost if greater than 0.00
     if ($total_cost > 0.00) {
         $message .= "<p><strong>Total Cost:</strong> $" . number_format($total_cost, 2) . "</p>";
     }
 
-    $message .= "<p>Regards,</p>" .
-                "<p>" . $email_from_name . "</p>";
+    $message .= "<p>" . nl2br(esc_html($email_data->email_modify_booking_text)) .
+           " <a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "</a></p>";
+
+
+    $message .= "<p>" . nl2br(esc_html($email_data->email_sign_off_text)) . "</p>";
 
     // Set headers to send HTML email
     $headers = "MIME-Version: 1.0" . "\r\n";

@@ -461,9 +461,6 @@ function leanwi_add_venue_page() {
             $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
             $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
 
-            $email_text = sanitize_textarea_field($_POST['email_text']);
-            $email_text = wp_unslash($email_text);
-
             $page_url = esc_url($_POST['page_url']);
             $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
             $display_affirmations = isset($_POST['display_affirmations']) ? 1 : 0;
@@ -476,6 +473,24 @@ function leanwi_add_venue_page() {
             $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
 
             $bookable_by_staff_only = isset($_POST['bookable_by_staff_only']) ? 1 : 0;
+
+            $email_greeting = sanitize_text_field($_POST['email_greeting']);
+            $email_greeting = wp_unslash($email_greeting);
+
+            $email_opening_text = sanitize_textarea_field($_POST['email_opening_text']);
+            $email_opening_text = wp_unslash($email_opening_text);
+
+            $email_update_opening_text = sanitize_textarea_field($_POST['email_update_opening_text']);
+            $email_update_opening_text = wp_unslash($email_update_opening_text);
+
+            $email_need_assistance_text = sanitize_textarea_field($_POST['email_need_assistance_text']);
+            $email_need_assistance_text = wp_unslash($email_need_assistance_text);
+
+            $email_modify_booking_text = sanitize_textarea_field($_POST['email_modify_booking_text']);
+            $email_modify_booking_text = wp_unslash($email_modify_booking_text);
+
+            $email_sign_off_text = sanitize_textarea_field($_POST['email_sign_off_text']);
+            $email_sign_off_text = wp_unslash($email_sign_off_text);
 
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
@@ -492,7 +507,6 @@ function leanwi_add_venue_page() {
                     'extra_text' => $extra_text,
                     'max_slots' => $max_slots,
                     'slot_cost' => $slot_cost,
-                    'email_text' => $email_text,
                     'page_url' => $page_url,
                     'conditions_of_use_url' => $conditions_of_use_url,
                     'display_affirmations' => $display_affirmations,
@@ -500,7 +514,13 @@ function leanwi_add_venue_page() {
                     'days_before_booking' => $days_before_booking,
                     'venue_admin_email' => $venue_admin_email,
                     'use_business_days_only' => $use_business_days_only,
-                    'bookable_by_staff_only' => $bookable_by_staff_only
+                    'bookable_by_staff_only' => $bookable_by_staff_only,
+                    'email_greeting' => $email_greeting,
+                    'email_opening_text' => $email_opening_text,
+                    'email_update_opening_text' => $email_update_opening_text,
+                    'email_need_assistance_text' => $email_need_assistance_text,
+                    'email_modify_booking_text' => $email_modify_booking_text,
+                    'email_sign_off_text' => $email_sign_off_text
                 )
             );
 
@@ -549,14 +569,19 @@ function leanwi_add_venue_page() {
         'page_url' => '',
         'extra_text' => '',
         'slot_cost' => '0.00',
-        'email_text' => 'Please consider this as confirmation of your booking unless we get in touch with you further.',
         'conditions_of_use_url' => '',
         'display_affirmations' => 1,
         'booking_notes_label' => 'Booking Notes:',
         'days_before_booking' => 0,
         'venue_admin_email' => '',
         'use_business_days_only' => 0,
-        'bookable_by_staff_only' => 0
+        'bookable_by_staff_only' => 0,
+        'email_greeting' => "Hello",
+        'email_opening_text' => "Thank you for choosing our library for your upcoming event!\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.",
+        'email_update_opening_text' => "Here are the most recent details of your updated booking.\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.",
+        'email_need_assistance_text' => "If you have any questions or need further assistance reach out to our team by phone or replying to this email.",
+        'email_modify_booking_text' => "To Cancel or Modify a Booking: Enter your Booking ID and make changes to your booking at this link:",
+        'email_sign_off_text' => "Sincerely,\nLibrary Booking Staff"
     ];
 
     // Initialize hours to default values
@@ -640,8 +665,28 @@ function leanwi_add_venue_page() {
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="email_text">Email Text</label></th>
-                    <td><textarea id="email_text" name="email_text" style="width: 90%;"><?php echo esc_html($venue->email_text); ?></textarea></td>
+                    <th><label for="email_greeting">Email greeting</label></th>
+                    <td><input type="text" id="email_greeting" name="email_greeting" value="<?php echo esc_attr($venue->email_greeting); ?>" required style="width: 90%;" /></td>
+                </tr>
+                <tr>
+                    <th><label for="email_opening_text">Email opening text for confirmation emails</label></th>
+                    <td><textarea id="email_opening_text" name="email_opening_text" style="width: 90%;"><?php echo esc_html($venue->email_opening_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_update_opening_text">Email update text for confirmation emails</label></th>
+                    <td><textarea id="email_update_opening_text" name="email_update_opening_text" style="width: 90%;"><?php echo esc_html($venue->email_update_opening_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_need_assistance_text">Email need assistance text for confirmation emails</label></th>
+                    <td><textarea id="email_need_assistance_text" name="email_need_assistance_text" style="width: 90%;"><?php echo esc_html($venue->email_need_assistance_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_modify_booking_text">Email "how to modify" text for confirmation emails"</label></th>
+                    <td><textarea id="email_modify_booking_text" name="email_modify_booking_text" style="width: 90%;"><?php echo esc_html($venue->email_modify_booking_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_sign_off_text">Email sign off text</label></th>
+                    <td><textarea id="email_sign_off_text" name="email_sign_off_text" style="width: 90%;"><?php echo esc_html($venue->email_sign_off_text); ?></textarea></td>
                 </tr>
                 <tr>
                     <th><label for="page_url">Page URL</label></th>
@@ -733,9 +778,6 @@ function leanwi_edit_venue_page() {
                 $max_slots = isset($_POST['max_slots']) ? intval($_POST['max_slots']) : 0;
                 $slot_cost = isset($_POST['slot_cost']) ? floatval($_POST['slot_cost']) : 0.00;
 
-                $email_text = sanitize_textarea_field($_POST['email_text']);
-                $email_text = wp_unslash($email_text);
-
                 $historic = isset($_POST['historic']) ? 1 : 0; // Set to 1 if checked, otherwise 0
                 $page_url = esc_url($_POST['page_url']);
                 $conditions_of_use_url = esc_url($_POST['conditions_of_use_url']);
@@ -749,6 +791,24 @@ function leanwi_edit_venue_page() {
                 $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
 
                 $bookable_by_staff_only = isset($_POST['bookable_by_staff_only']) ? 1 : 0;
+
+                $email_greeting = sanitize_text_field($_POST['email_greeting']);
+                $email_greeting = wp_unslash($email_greeting);
+
+                $email_opening_text = sanitize_textarea_field($_POST['email_opening_text']);
+                $email_opening_text = wp_unslash($email_opening_text);
+
+                $email_update_opening_text = sanitize_textarea_field($_POST['email_update_opening_text']);
+                $email_update_opening_text = wp_unslash($email_update_opening_text);
+
+                $email_need_assistance_text = sanitize_textarea_field($_POST['email_need_assistance_text']);
+                $email_need_assistance_text = wp_unslash($email_need_assistance_text);
+
+                $email_modify_booking_text = sanitize_textarea_field($_POST['email_modify_booking_text']);
+                $email_modify_booking_text = wp_unslash($email_modify_booking_text);
+
+                $email_sign_off_text = sanitize_textarea_field($_POST['email_sign_off_text']);
+                $email_sign_off_text = wp_unslash($email_sign_off_text);
         
                 // Update the venue in the database
                 $updated = $wpdb->update(
@@ -762,7 +822,6 @@ function leanwi_edit_venue_page() {
                         'extra_text' => $extra_text,
                         'max_slots' => $max_slots,
                         'slot_cost' => $slot_cost,
-                        'email_text' => $email_text,
                         'historic' => $historic,
                         'page_url' => $page_url,
                         'conditions_of_use_url' => $conditions_of_use_url,
@@ -772,6 +831,12 @@ function leanwi_edit_venue_page() {
                         'venue_admin_email' => $venue_admin_email,
                         'use_business_days_only' => $use_business_days_only,
                         'bookable_by_staff_only' => $bookable_by_staff_only,
+                        'email_greeting' => $email_greeting,
+                        'email_opening_text' => $email_opening_text,
+                        'email_update_opening_text' => $email_update_opening_text,
+                        'email_need_assistance_text' => $email_need_assistance_text,
+                        'email_modify_booking_text' => $email_modify_booking_text,
+                        'email_sign_off_text' => $email_sign_off_text
                     ),
                     array('venue_id' => $venue_id)
                 );
@@ -917,10 +982,32 @@ function leanwi_edit_venue_page() {
                         </div>
                     </td>
                 </tr>
+
                 <tr>
-                    <th><label for="email_text">Email Text</label></th>
-                    <td><textarea id="email_text" name="email_text" style="width: 90%;"><?php echo esc_html((string)$venue->email_text); ?></textarea></td>
+                    <th><label for="email_greeting">Email greeting</label></th>
+                    <td><input type="text" id="email_greeting" name="email_greeting" value="<?php echo esc_attr($venue->email_greeting); ?>" required style="width: 90%;" /></td>
                 </tr>
+                <tr>
+                    <th><label for="email_opening_text">Email opening text for confirmation emails</label></th>
+                    <td><textarea id="email_opening_text" name="email_opening_text" style="width: 90%;"><?php echo esc_html($venue->email_opening_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_update_opening_text">Email update text for confirmation emails</label></th>
+                    <td><textarea id="email_update_opening_text" name="email_update_opening_text" style="width: 90%;"><?php echo esc_html($venue->email_update_opening_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_need_assistance_text">Email need assistance text for confirmation emails</label></th>
+                    <td><textarea id="email_need_assistance_text" name="email_need_assistance_text" style="width: 90%;"><?php echo esc_html($venue->email_need_assistance_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_modify_booking_text">Email "how to modify" text for confirmation emails"</label></th>
+                    <td><textarea id="email_modify_booking_text" name="email_modify_booking_text" style="width: 90%;"><?php echo esc_html($venue->email_modify_booking_text); ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="email_sign_off_text">Email sign off text</label></th>
+                    <td><textarea id="email_sign_off_text" name="email_sign_off_text" style="width: 90%;"><?php echo esc_html($venue->email_sign_off_text); ?></textarea></td>
+                </tr>
+
                 <tr>
                     <th><label for="page_url">Page URL</label></th>
                     <td><input type="text" id="page_url" name="page_url" style="width: 90%;" value="<?php echo esc_attr((string)$venue->page_url); ?>" /></td>
@@ -1799,7 +1886,6 @@ function leanwi_register_settings() {
     register_setting('leanwi_plugin_settings_group', 'leanwi_show_audiences');
     register_setting('leanwi_plugin_settings_group', 'leanwi_send_admin_booking_email');
     register_setting('leanwi_plugin_settings_group', 'leanwi_admin_email_address');
-    register_setting('leanwi_plugin_settings_group', 'leanwi_email_from_name');
     register_setting('leanwi_plugin_settings_group', 'leanwi_feedback_form_link');
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_border_color');
     register_setting('leanwi_plugin_settings_group', 'leanwi_highlighted_button_bg_color');
@@ -1886,15 +1972,6 @@ function leanwi_register_settings() {
         'leanwi_admin_email_address',  // Field ID
         'Booking Admin Email Address',         // Label for the field
         __NAMESPACE__ . '\\leanwi_admin_email_address_field', // Function to display the input
-        'leanwi-book-a-room-settings',  // Page slug
-        'leanwi_main_section'           // Section ID
-    );
-
-    // Add email from name field
-    add_settings_field(
-        'leanwi_email_from_name',  // Field ID
-        'Email From Name',         // Label for the field
-        __NAMESPACE__ . '\\leanwi_email_from_name_field', // Function to display the input
         'leanwi-book-a-room-settings',  // Page slug
         'leanwi_main_section'           // Section ID
     );
@@ -2043,12 +2120,6 @@ function leanwi_send_admin_booking_email_field() {
 function leanwi_admin_email_address_field() {
     $value = get_option('leanwi_admin_email_address', ''); // Get saved value or default to an empty string
     echo '<input type="email" id="leanwi_admin_email_address" name="leanwi_admin_email_address" value="' . esc_attr($value) . '"  style="width: 75%;"/>';
-}
-
-// Function to display the email from name input
-function leanwi_email_from_name_field() {
-    $value = get_option('leanwi_email_from_name', 'Library Booking Team'); // Get saved value or default to an empty string
-    echo '<input type="text" id="leanwi_email_from_name" name="leanwi_email_from_name" value="' . esc_attr($value) . '"  style="width: 75%;"/>';
 }
 
 // Function to display the admin email address input

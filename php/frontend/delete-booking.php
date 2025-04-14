@@ -11,13 +11,12 @@ if (!isset($data['delete_booking_nonce']) || !wp_verify_nonce($data['delete_book
     exit;
 }
 
-//$isBookingStaff = isset($data['is_booking_staff']) && $data['is_booking_staff'] === 'true';
+$venue_id = isset($data['venue_id']) ? intval($data['venue_id']) : 0;
 $isBookingStaff = isset($data['is_booking_staff']) && filter_var($data['is_booking_staff'], FILTER_VALIDATE_BOOLEAN);
 $unique_id = isset($data['unique_id']) ? sanitize_text_field($data['unique_id']) : '';
 $admin_email_address = isset($data['admin_email_address']) ? sanitize_email($data['admin_email_address']) : '';
 $send_admin_email = isset($data['send_admin_email']) ? sanitize_text_field($data['send_admin_email']) : 'no';
 $cancellation_reason = isset($data['cancellation_reason']) ? sanitize_text_field($data['cancellation_reason']) : '';
-$email_from_name = get_option('leanwi_email_from_name', 'Library Booking Team');
 
 $venue_admin_email = isset($data['venue_admin_email']) ? sanitize_email($data['venue_admin_email']) : '';
 
@@ -48,9 +47,17 @@ if (!empty($unique_id)) {
 
             $wpdb->query('COMMIT');
 
+            $email_data_table = $wpdb->prefix . 'leanwi_booking_venue';
+            $email_data = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT email_greeting, email_sign_off_text FROM $email_data_table WHERE venue_id = %d",
+                    $venue_id
+                )
+            );
+
             $to = sanitize_email($email);
             $subject = 'Your Booking has been cancelled' .  ($isBookingStaff ? ' by library staff' : '.');
-            $message = "<p>Hi <strong>" . esc_html($name) . "</strong>,</p>" .
+            $message = "<p>" . $email_data->email_greeting . " <strong>" . esc_html($name) . "</strong>,</p>" .
                 "<p>Your booking for booking ID <strong>" . esc_html($unique_id) . "</strong> scheduled to start on " . 
                 esc_html($formatted_start_time) . ($isBookingStaff ? " has been cancelled by a member of our staff.</p>" : " has been cancelled.</p>");
             if(!empty($cancellation_reason)) {
@@ -58,8 +65,8 @@ if (!empty($unique_id)) {
             }
             $message .= "<p>If this was done in error, please rebook.</p>" .
                 "<p>If you are unsure as to the reason please contact library staff before making another booking.</p>" .
-                "<p>Regards,</p>" .
-                "<p>" . $email_from_name . "</p>";
+                "<p>" . nl2br(esc_html($email_data->email_sign_off_text)) . "</p>";
+
             $headers = "MIME-Version: 1.0" . "\r\n";
             $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
             $mail_sent = wp_mail($to, $subject, $message, $headers);
