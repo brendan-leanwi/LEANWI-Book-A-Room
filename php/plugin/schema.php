@@ -28,7 +28,6 @@ function leanwi_create_tables() {
         venue_admin_email VARCHAR(255),
         display_affirmations TINYINT(1) DEFAULT 1,
         extra_text TEXT,
-        email_text TEXT,
         booking_notes_label VARCHAR(255),
         bookable_by_staff_only TINYINT(1) DEFAULT 0,
         historic TINYINT(1) DEFAULT 0,
@@ -277,11 +276,12 @@ function leanwi_create_tables() {
 
         $alter_query = "ALTER TABLE $table_name
                 ADD email_greeting VARCHAR(255) NOT NULL DEFAULT 'Hello',
-                ADD email_opening_text VARCHAR(1000) DEFAULT 'Thank you for choosing our library for your upcoming event!\\r\\n\\r\\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.',
-                ADD email_update_opening_text VARCHAR(1000) DEFAULT 'Here are the most recent details of your updated booking.\\r\\n\\r\\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.',
+                ADD email_opening_text VARCHAR(1000) DEFAULT 'Thank you for choosing our library for your upcoming event!\\r\\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.',
+                ADD email_update_opening_text VARCHAR(1000) DEFAULT 'Here are the most recent details of your updated booking.\\r\\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.',
                 ADD email_need_assistance_text VARCHAR(1000) DEFAULT 'If you have any questions or need further assistance reach out to our team by phone or replying to this email.',
                 ADD email_modify_booking_text VARCHAR(1000) DEFAULT 'To Cancel or Modify a Booking: Enter your Booking ID and make changes to your booking at this link:',
-                ADD email_sign_off_text VARCHAR(1000) DEFAULT 'Sincerely,\\r\\nLibrary Booking Staff'
+                ADD email_sign_off_text VARCHAR(1000) DEFAULT 'Sincerely,\\r\\nLibrary Booking Staff',
+                DROP COLUMN email_text
             ";
         error_log("Running ALTER TABLE query: " . $alter_query);
 
