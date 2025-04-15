@@ -69,6 +69,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 return; // Stop further execution
             }
 
+            // Check if the delete button should be hidden
+            if (!isBookingStaff && venue.updated_by_staff_only == 1) {
+                const deleteButton = document.getElementById('delete-booking');
+                if (deleteButton) {
+                    deleteButton.style.display = 'none';
+                }
+            }
+
             document.getElementById('venue-name').textContent = venue.name;
             document.getElementById('venue-capacity').textContent = venue.capacity;
             document.getElementById('venue-description').innerHTML = venue.description.replace(/\\'/g, "'").replace(/\r?\n/g, '<br>');
@@ -84,6 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('use_business_days_only').value = venue.use_business_days_only;
             document.getElementById('venue_admin_email').value = venue.venue_admin_email;
             document.getElementById('bookable_by_staff_only').value = venue.bookable_by_staff_only;
+            document.getElementById('updated_by_staff_only').value = venue.updated_by_staff_only;
 
             let bookingNotesLabel = document.getElementById('booking_notes_label');
             bookingNotesLabel.textContent = venue.booking_notes_label && venue.booking_notes_label.trim() ? venue.booking_notes_label : "Booking Notes:";
@@ -529,6 +538,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 updateTotalCost();
             }
 
+            // Hide the "Submit Booking" button if not staff, venue is staff-only updatable, and it's an existing booking
+            const updatedByStaffOnly = document.getElementById('updated_by_staff_only')?.value;
+            const submitBookingButton = document.querySelector('.book-button');
+
+            if (submitBookingButton && !isBookingStaff && updatedByStaffOnly == 1 && showingExistingRecord) {
+                submitBookingButton.style.display = 'none';
+            }
+
+
             //Show affirmations if is selected to do so for this venue
             const showAffirmations = parseInt(document.getElementById('display-affirmations').value, 10);
 
@@ -835,6 +853,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append('days_before_booking', document.getElementById('days_before_booking').value);
                 formData.append('use_business_days_only', document.getElementById('use_business_days_only').value);
                 formData.append('venue_admin_email', document.getElementById('venue_admin_email').value);
+                formData.append('updated_by_staff_only', document.getElementById('updated_by_staff_only').value);
             
                 if (existingRecord) {
                     const uniqueId = document.getElementById('unique_id').value;

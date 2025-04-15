@@ -36,7 +36,8 @@ if (isset($_GET['venue_id'])) {
             'days_before_booking' => intval($venue['days_before_booking']),
             'venue_admin_email' => sanitize_email($venue['venue_admin_email'] ?? ''),
             'use_business_days_only' => intval($venue['use_business_days_only']),
-            'bookable_by_staff_only' => intval($venue['bookable_by_staff_only'])
+            'bookable_by_staff_only' => intval($venue['bookable_by_staff_only']),
+            'updated_by_staff_only' => intval($venue['updated_by_staff_only'])
         ];
 
         echo json_encode($sanitized_venue, JSON_UNESCAPED_SLASHES); // Return sanitized venue details as JSON

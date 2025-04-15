@@ -61,6 +61,8 @@ $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
 $audience = isset($_POST['audience']) ? intval($_POST['audience']) : 0;
 $venue_id = isset($_POST['venue_id']) ? intval($_POST['venue_id']) : 0;
 
+$updated_by_staff_only = isset($_POST['updated_by_staff_only']) ? intval($_POST['updated_by_staff_only']) : 0;
+
 $use_business_days_only = isset($_POST['use_business_days_only']) && $_POST['use_business_days_only'] == 1;
 $days_before_booking = isset($_POST['days_before_booking']) ? intval($_POST['days_before_booking']) : 0;
 $venue_admin_email = sanitize_email($_POST['venue_admin_email']);
@@ -271,9 +273,15 @@ if ($sendEmail && $success) {
         $message .= "<p><strong>Total Cost:</strong> $" . number_format($total_cost, 2) . "</p>";
     }
 
-    $message .= "<p>" . nl2br(esc_html($email_data->email_modify_booking_text)) .
-           " <a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "</a></p>";
+    $message .= "<p>" . nl2br(esc_html($email_data->email_modify_booking_text));
 
+    //If the user can't update the booking don't display a link back to the booking page
+    if($updated_by_staff_only == 1) {
+        $message .= "</p>";
+    }
+    else {
+        $message .= " <a href='" . esc_url($page_url) . "?booking_id=" . esc_html($unique_id) . "'>" . esc_url($page_url) . "</a></p>";
+    }
 
     $message .= "<p>" . nl2br(esc_html($email_data->email_sign_off_text)) . "</p>";
 

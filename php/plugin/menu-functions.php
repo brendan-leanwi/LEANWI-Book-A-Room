@@ -473,6 +473,7 @@ function leanwi_add_venue_page() {
             $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
 
             $bookable_by_staff_only = isset($_POST['bookable_by_staff_only']) ? 1 : 0;
+            $updated_by_staff_only = isset($_POST['updated_by_staff_only']) ? 1 : 0;
 
             $email_greeting = sanitize_text_field($_POST['email_greeting']);
             $email_greeting = wp_unslash($email_greeting);
@@ -515,6 +516,7 @@ function leanwi_add_venue_page() {
                     'venue_admin_email' => $venue_admin_email,
                     'use_business_days_only' => $use_business_days_only,
                     'bookable_by_staff_only' => $bookable_by_staff_only,
+                    'updated_by_staff_only' => $updated_by_staff_only,
                     'email_greeting' => $email_greeting,
                     'email_opening_text' => $email_opening_text,
                     'email_update_opening_text' => $email_update_opening_text,
@@ -576,6 +578,7 @@ function leanwi_add_venue_page() {
         'venue_admin_email' => '',
         'use_business_days_only' => 0,
         'bookable_by_staff_only' => 0,
+        'updated_by_staff_only' => 0,
         'email_greeting' => "Hello",
         'email_opening_text' => "Thank you for choosing our library for your upcoming event!\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.",
         'email_update_opening_text' => "Here are the most recent details of your updated booking.\nYour booking is automatically confirmed but our library staff will review the details of your event to ensure eligibility.",
@@ -605,6 +608,13 @@ function leanwi_add_venue_page() {
                 <tr>
                     <th><label for="bookable_by_staff_only">This venue will only be bookable by staff</label></th>
                     <td><input type="checkbox" id="bookable_by_staff_only" name="bookable_by_staff_only" <?php echo ($venue->bookable_by_staff_only == 1) ? 'checked' : ''; ?>/></td>
+                </tr>
+                <tr>
+                    <th><label for="updated_by_staff_only">This venue will only be updatable by staff</label></th>
+                    <td>
+                        <input type="checkbox" id="updated_by_staff_only" name="updated_by_staff_only" <?php echo ($venue->updated_by_staff_only == 1) ? 'checked' : ''; ?>/>
+                        If checked, users will contact staff to make booking changes rather than be able to make the changes themselves.
+                    </td>
                 </tr>
                 <tr>
                     <th><label for="capacity">Capacity</label></th>
@@ -681,7 +691,7 @@ function leanwi_add_venue_page() {
                     <td><textarea id="email_need_assistance_text" name="email_need_assistance_text" style="width: 90%;"><?php echo esc_html($venue->email_need_assistance_text); ?></textarea></td>
                 </tr>
                 <tr>
-                    <th><label for="email_modify_booking_text">Email "how to modify" text for confirmation emails"</label></th>
+                    <th><label for="email_modify_booking_text">Email "how to modify" text for confirmation emails</label></th>
                     <td><textarea id="email_modify_booking_text" name="email_modify_booking_text" style="width: 90%;"><?php echo esc_html($venue->email_modify_booking_text); ?></textarea></td>
                 </tr>
                 <tr>
@@ -791,6 +801,7 @@ function leanwi_edit_venue_page() {
                 $use_business_days_only = isset($_POST['use_business_days_only']) ? 1 : 0;
 
                 $bookable_by_staff_only = isset($_POST['bookable_by_staff_only']) ? 1 : 0;
+                $updated_by_staff_only = isset($_POST['updated_by_staff_only']) ? 1 : 0;
 
                 $email_greeting = sanitize_text_field($_POST['email_greeting']);
                 $email_greeting = wp_unslash($email_greeting);
@@ -831,6 +842,7 @@ function leanwi_edit_venue_page() {
                         'venue_admin_email' => $venue_admin_email,
                         'use_business_days_only' => $use_business_days_only,
                         'bookable_by_staff_only' => $bookable_by_staff_only,
+                        'updated_by_staff_only' => $updated_by_staff_only,
                         'email_greeting' => $email_greeting,
                         'email_opening_text' => $email_opening_text,
                         'email_update_opening_text' => $email_update_opening_text,
@@ -923,6 +935,13 @@ function leanwi_edit_venue_page() {
                 <tr>
                     <th><label for="bookable_by_staff_only">This venue will only be bookable by staff</label></th>
                     <td><input type="checkbox" id="bookable_by_staff_only" name="bookable_by_staff_only" <?php echo ($venue->bookable_by_staff_only == 1) ? 'checked' : ''; ?>/></td>
+                </tr>
+                <tr>
+                    <th><label for="updated_by_staff_only">This venue will only be updatable by staff</label></th>
+                    <td>
+                        <input type="checkbox" id="updated_by_staff_only" name="updated_by_staff_only" <?php echo ($venue->updated_by_staff_only == 1) ? 'checked' : ''; ?>/>
+                        If checked, users will contact staff to make booking changes rather than be able to make the changes themselves.
+                    </td>
                 </tr>
                 <tr>
                     <th><label for="capacity">Capacity</label></th>
@@ -1708,6 +1727,38 @@ function leanwi_reports_page() {
         </form>
         <hr>
 
+        <form id="leanwi-organization-report-form" method="post" action="<?php echo plugins_url('LEANWI-Book-A-Room/php/plugin/generate-organization-report.php'); ?>">
+            <h2>Organization Reporting</h2>
+            <?php wp_nonce_field('leanwi_generate_report', 'leanwi_generate_report_nonce'); ?>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" id="start_date" name="start_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date:</label>
+                    <input type="date" id="end_date" name="end_date" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                <label for="venue_info">Select Venue:</label>
+                    <select id="venue_info" name="venue_info">
+                        <option value="">-- All Venues --</option>
+                        <?php foreach ($venues as $venue): ?>
+                            <option value="<?php echo esc_attr($venue['venue_id']) . '|' . esc_attr($venue['name']); ?>">
+                                <?php echo esc_html($venue['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <input type="submit" value="Generate Organization Report" class="button button-primary">
+            </div>
+        </form>
+        <hr>
+
         <!-- Handle form submission so we can update the number of reports we have on the server after the report has been created -->
         <script type="text/javascript">
             function handleFormSubmit(event) {
@@ -1750,6 +1801,7 @@ function leanwi_reports_page() {
             // Attach the event listener to both forms
             document.getElementById("leanwi-usage-report-form").onsubmit = handleFormSubmit;
             document.getElementById("leanwi-payment-report-form").onsubmit = handleFormSubmit;
+            document.getElementById("leanwi-organization-report-form").onsubmit = handleFormSubmit;
         </script>
 
         <div class="purge-reports-section">
