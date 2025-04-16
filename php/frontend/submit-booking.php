@@ -311,7 +311,7 @@ if ($sendEmail && $success) {
     if ($send_admin_email === 'yes' && !empty($admin_email_address)){
         if (!is_email($admin_email_address)) {
             $success = false;
-            $errorMessage += 'Invalid admin email address. Failed to send confirmation email to administrator.';
+            $errorMessage .= 'Invalid admin email address. Failed to send confirmation email to administrator.';
         }
         
         $to = $admin_email_address;
@@ -323,14 +323,14 @@ if ($sendEmail && $success) {
         $admin_message = "<p>Hello administrator, the following booking has been made.<br></p> $message";
         $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
         if (!$admin_mail_sent) {
-            $errorMessage += 'Booking successful, but failed to send confirmation email to administrator.';
+            $errorMessage .= 'Booking successful, but failed to send confirmation email to administrator.';
         }
     }
 
     if (!empty($venue_admin_email)){
         if (!is_email($venue_admin_email)) {
             $success = false;
-            $errorMessage += 'Invalid venue admin email address. Failed to send confirmation email to venue administrator.';
+            $errorMessage .= 'Invalid venue admin email address. Failed to send confirmation email to venue administrator.';
         }
         
         $to = $venue_admin_email;
@@ -341,7 +341,7 @@ if ($sendEmail && $success) {
         $admin_message = "<p>Hello venue administrator, the following booking has been made.<br></p> $message";
         $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
         if (!$admin_mail_sent) {
-            $errorMessage += 'Booking successful, but failed to send confirmation email to venue administrator.';
+            $errorMessage .= 'Booking successful, but failed to send confirmation email to venue administrator.';
         }
     }
 }

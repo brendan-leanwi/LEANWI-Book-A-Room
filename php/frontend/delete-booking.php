@@ -91,7 +91,7 @@ if (!empty($unique_id)) {
                 $admin_message = "<p>Hello venue administrator, the following booking has been cancelled:<br></p> $message";
                 $admin_mail_sent = wp_mail($to, $subject, $admin_message, $headers);
                 if ($mail_sent && !$admin_mail_sent) {
-                    $errorMessage += 'Cancellation successful, but failed to send email to venue administrator.';
+                    $errorMessage .= 'Cancellation successful, but failed to send email to venue administrator.';
                 }
             }
 
