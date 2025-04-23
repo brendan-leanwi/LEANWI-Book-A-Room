@@ -47,7 +47,7 @@ function display_venue_grid() {
     if(!$is_booking_staff) {
         $bookings_query .= " AND v.bookable_by_staff_only = 0";
     }
-    $bookings_query .= $selected_venue_id ? $wpdb->prepare(" AND venue_id = %d", $selected_venue_id) : "";
+    $bookings_query .= $selected_venue_id ? $wpdb->prepare(" AND v.venue_id = %d", $selected_venue_id) : "";
     
     $bookings = $wpdb->get_results($wpdb->prepare($bookings_query, $today_date));
 

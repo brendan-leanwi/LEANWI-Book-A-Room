@@ -43,6 +43,7 @@ if (!empty($unique_id)) {
                     'id' => intval($result['id']),
                     'unique_id' => esc_html($result['unique_id']),
                     'venue_id' => intval($result['venue_id']),
+                    'recurrence_id' => intval($result['recurrence_id']),
                     'name' => isset($result['name']) && $result['name'] !== null ? html_entity_decode($result['name'], ENT_QUOTES) : '',
                     'organization' => isset($result['organization']) && $result['organization'] !== null ? html_entity_decode($result['organization'], ENT_QUOTES) : '',
                     'email' => sanitize_email($result['email']),

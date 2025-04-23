@@ -42,7 +42,7 @@ $audience_id = isset($_POST['audience']) ? intval($_POST['audience']) : null;
 $cost = 0.00; //Do I need to add anything for this? Like add a cost field on my form the staff can just enter a cost amount into?
 
 // Validate required fields
-if (!$venue_id || !$recurrence_type || !$recurrence_start_date || !$recurrence_end_date || !$start_time || !$end_time || !$name || $participants <= 0) {
+if (!$venue_id || !$recurrence_type || !$recurrence_start_date || !$recurrence_end_date || !$start_time || !$end_time || !$name) {
     $response['message'] = 'Please fill out all required fields.';
     echo json_encode($response);
     exit;

@@ -114,6 +114,7 @@ function display_venue_details($atts) {
             <p><br></p>
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
             <input type="hidden" id="day" name="day">
+            <input type="hidden" id="recurrence_id" name="recurrence_id">
 
             <label for="time">Select Time(s):</label>
             <div id="time-select" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>

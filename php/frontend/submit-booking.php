@@ -60,6 +60,7 @@ $notes = wp_unslash($notes); // Remove unnecessary escaping from the notes field
 $category = isset($_POST['category']) ? intval($_POST['category']) : 0;
 $audience = isset($_POST['audience']) ? intval($_POST['audience']) : 0;
 $venue_id = isset($_POST['venue_id']) ? intval($_POST['venue_id']) : 0;
+$recurrence_id = isset($_POST['recurrence_id']) ? intval($_POST['recurrence_id']) : 0;
 
 $updated_by_staff_only = isset($_POST['updated_by_staff_only']) ? intval($_POST['updated_by_staff_only']) : 0;
 
@@ -197,6 +198,7 @@ if ($success) {
         [
             'unique_id'            => $unique_id,
             'venue_id'             => $venue_id,
+            'recurrence_id'        => $recurrence_id, 
             'name'                 => $name,
             'organization'         => $organization,
             'email'                => $email,
@@ -210,7 +212,7 @@ if ($success) {
             'audience_id'          => $audience,
             'total_cost'            => $total_cost
         ],
-        ['%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%f']
+        ['%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%f']
     );
 
     if ($insert_result === false) {

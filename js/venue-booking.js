@@ -807,9 +807,10 @@ document.addEventListener("DOMContentLoaded", function () {
             // Get email and phone field values
             const email = document.querySelector('#email').value.trim();
             const phone = document.querySelector('#phone').value.trim();
+            const recurrence_id = document.querySelector('#recurrence_id').value.trim();
 
-            // Ensure at least one of the fields is filled
-            if (!email && !phone) {
+            // Ensure at least one of the fields is filled if wasn't created from a recurrence
+            if (!email && !phone && recurrence_id <= 0) {
                 alert('Please provide at least an email address or phone number.');
                 return;
             }
@@ -1001,6 +1002,15 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('notes').value = document.createElement("textarea").innerHTML = booking.booking_notes;
             document.getElementById('category').value = booking.category_id;
             document.getElementById('audience').value = booking.audience_id;
+            document.getElementById('recurrence_id').value = booking.recurrence_id;
+
+            // If it's a recurring booking, remove 'required' from physical_address
+            const physicalAddressField = document.getElementById('physical_address');
+            if (booking.recurrence_id > 0) {
+                physicalAddressField.removeAttribute('required');
+            } else {
+                physicalAddressField.setAttribute('required', 'required');
+            }
             
             // Display the booking form container
             contactFormContainer.style.display = 'block';
