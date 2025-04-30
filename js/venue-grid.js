@@ -1,10 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
     const dateInput = document.getElementById("selected_date");
 
+    // Let's show in the cosole log whether the user is staff or not
+    console.log("Is Booking Staff:", isBookingStaff);
+
     //Only allow users to see/add for dates maxMonths into th future as specified in our settings
     if (dateInput) {
         const today = new Date();
-        const maxMonths = bookingSettings.maxMonths || 1;
+        const maxMonths = !isBookingStaff ? bookingSettings.maxMonths : 15;
 
         // Calculate the max selectable date
         const futureMonthNumber = today.getMonth() + parseInt(maxMonths);

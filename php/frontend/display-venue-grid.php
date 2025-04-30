@@ -16,6 +16,11 @@ function display_venue_grid() {
     $current_user = wp_get_current_user();
     $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
 
+    // Pass the result to JavaScript.
+    echo '<script>';
+    echo 'const isBookingStaff = ' . json_encode($is_booking_staff) . ';';
+    echo '</script>';
+
     $today_date = isset($_GET['selected_date']) ? sanitize_text_field($_GET['selected_date']) : date('Y-m-d');
     $selected_venue_id = isset($_GET['venue_id']) ? intval($_GET['venue_id']) : 0; // Get the selected venue ID
     $day_of_week = date('l', strtotime($today_date));
@@ -25,7 +30,7 @@ function display_venue_grid() {
 
     // Query venue hours using the day of the week and selected venue (if any)
     $venue_hours_query = "
-        SELECT vh.venue_id, vh.open_time, vh.close_time, v.name, v.page_url, v.capacity, v.description, v.location
+        SELECT vh.venue_id, vh.open_time, vh.close_time, v.name, v.use_business_days_only, v.days_before_booking, v.page_url, v.capacity, v.description, v.location
         FROM {$wpdb->prefix}leanwi_booking_venue_hours vh
         JOIN {$wpdb->prefix}leanwi_booking_venue v ON vh.venue_id = v.venue_id
         WHERE vh.day_of_week = %s
@@ -157,11 +162,21 @@ function display_venue_grid() {
     return $output;
 }
 
+// Function to subtract business days
+function subtractBusinessDays(DateTime $date, int $days): DateTime {
+    while ($days > 0) {
+        $date->modify('-1 day'); // Move back one day
+        if (!in_array($date->format('N'), [6, 7])) { // Skip Saturdays (6) and Sundays (7)
+            $days--;
+        }
+    }
+    return $date;
+}
 
 function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings) {
     // Check if the slot time is within the venue's open and close times
     if ($slot_time < strtotime($today_date . ' ' . $vh->open_time) || $slot_time >= strtotime($today_date . ' ' . $vh->close_time)) {
-        return '<td class="na-cell">N/A</td>';
+        return '<td class="na-cell" title="The room is not bookable at this time of day.">N/A</td>';
     }
 
     $is_booked = false;
@@ -189,11 +204,33 @@ function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $booki
         }
     }
 
-    // If not booked and the time slot is in the past, mark it as N/A for non-staff
-    if (!$is_booking_staff && !$is_booked && $slot_time < time()) {
-        return '<td class="na-cell">N/A</td>';
-    }
-
+    if (!$is_booking_staff && !$is_booked) {
+        $now = new DateTime();
+        $slotDateTime = DateTime::createFromFormat('U', $slot_time);
+    
+        // CASE 1: Slot has already passed
+        if ($slotDateTime < $now) {
+            return '<td class="na-cell na-past" title="This time slot is in the past.">N/A</td>';
+        }
+    
+        // CASE 2: Not enough advance notice
+        if ($vh->days_before_booking > 0) {
+            $slotDate = clone $slotDateTime;
+            $slotDate->setTime(0, 0, 0);
+    
+            if ($vh->use_business_days_only == 0) {
+                $cutoffDateTime = clone $slotDate;
+                $cutoffDateTime->modify('-' . max(0, $vh->days_before_booking - 1) . ' days'); // Reduce cutoff by 1 day so that days_before_booking = 1 means "can't book today", but tomorrow is OK.
+            } else {
+                $cutoffDateTime = subtractBusinessDays(clone $slotDate, max(0, $vh->days_before_booking - 1)); // Reduce cutoff by 1 day so that days_before_booking = 1 means "can't book today", but tomorrow is OK.
+            }
+    
+            if ($now > $cutoffDateTime) {
+                return '<td class="na-cell na-cutoff" title="Bookings must be made at least ' . $vh->days_before_booking . ($vh->use_business_days_only ? ' business' : '') . ' day(s) in advance.">N/A</td>';
+            }
+        }
+    }       
+    
     // Return the appropriate cell based on booking status
     return $is_booked
         ? '<td class="booked-cell">' . ($is_booking_staff ? $booking_cell_content : 'Booked') . '</td>'

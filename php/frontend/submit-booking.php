@@ -112,8 +112,8 @@ if (!$isBookingStaff && $startDateTime < $currentDateTime) {
     $errorMessage = 'The start time for this booking is in the past. You may only add or make changes to a booking with a future start time.';
 }
 
-// Function to subtract business days
-function subtractBusinessDays(DateTime $date, int $days): DateTime {
+// Function to skip weekends
+function skipWeekends(DateTime $date, int $days): DateTime {
     while ($days > 0) {
         $date->modify('-1 day'); // Move back one day
         if (!in_array($date->format('N'), [6, 7])) { // Skip Saturdays (6) and Sundays (7)
@@ -130,7 +130,7 @@ if (!$isBookingStaff) {
         $cutoffDateTime->modify("-$days_before_booking days");
     }
     else {
-        $cutoffDateTime = subtractBusinessDays(clone $startDateTime, $days_before_booking);
+        $cutoffDateTime = skipWeekends(clone $startDateTime, $days_before_booking);
     }
 
     // Reset cutoff time to the start of the day for a fair comparison

@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.documentElement.style.setProperty('--highlighted-button-text', highlightedButtonTextColor);
 
     let currentMonth = new Date(); // The month that is currently being displayed
-    let maxMonths = bookingSettings.maxMonths || 1; // Use the localized data
+    let maxMonths = !isBookingStaff ? bookingSettings.maxMonths : 15;
     let currentDetailsDate = new Date();
 
     document.body.style.cursor = 'wait'; // Set cursor before fetch starts
@@ -218,6 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const calendar = document.getElementById('calendar');
                     const currentMonthDisplay = document.getElementById('current-month');
                     const today = new Date(); // Get today's date
+                    
         
                     // Clear existing content
                     calendar.innerHTML = '';
@@ -236,7 +237,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     const calendarGrid = createCalendarGrid();
                     addWeekdayHeaders(calendarGrid);
                     addEmptyStartCells(calendarGrid, firstDay);
-        
+
+                    const daysBeforeBooking = parseInt(document.getElementById('days_before_booking').value, 10) || 0;
+                    const useBusinessDaysOnly = document.getElementById('use_business_days_only').value === '1';
+
+                    const cutoffDate = calculateCutoffDate(today, daysBeforeBooking, useBusinessDaysOnly);
+
+
                     // Loop through all the days of the current month
                     for (let day = 1; day <= lastDay.getDate(); day++) {
                         const currentDate = new Date(year, month, day);
@@ -261,8 +268,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         const dayData = availableDays.find(day => day.day_of_week === dayName);
 
                         // If the day is in the past, grey it out (compare only dates)
-                        if (!isBookingStaff && currentDateMidnight < todayMidnight && year === today.getFullYear() && month === today.getMonth()) {
-                            // Grey out past days in the current month
+                        //if (!isBookingStaff && currentDateMidnight < todayMidnight && year === today.getFullYear() && month === today.getMonth()) {
+                        if (!isBookingStaff && currentDateMidnight < cutoffDate) {
+                        // Grey out past days in the current month
                             dayElement.style.backgroundColor = '#f0f0f0';
                             dayElement.style.color = '#ccc';
                             dayElement.classList.add('unavailable');
@@ -318,6 +326,27 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.body.style.cursor = 'default'; // Reset cursor after fetch completes
                 });
         }            
+        
+        function calculateCutoffDate(today, days, businessOnly) {
+            const cutoff = new Date(today.getTime());
+        
+            let addedDays = 0;
+            while (addedDays < days) {
+                cutoff.setDate(cutoff.getDate() + 1);
+        
+                if (businessOnly) {
+                    const day = cutoff.getDay();
+                    if (day !== 0 && day !== 6) { // Skip Sunday (0) and Saturday (6)
+                        addedDays++;
+                    }
+                } else {
+                    addedDays++;
+                }
+            }
+        
+            cutoff.setHours(0, 0, 0, 0);
+            return cutoff;
+        }
         
         function createCalendarGrid() {
             const grid = document.createElement('div');
@@ -868,12 +897,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
             
-                // Check against maximum allowed booking slots
-                const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
-                if (selectedTimes.length > maxSlots) {
-                    alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
-                    submitButton.disabled = false; // Re-enable the button
-                    return;
+                // Check against maximum allowed booking slots if not a staff member
+                if(!isBookingStaff) {
+                    const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
+                    if (selectedTimes.length > maxSlots) {
+                        alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
+                        submitButton.disabled = false; // Re-enable the button
+                        return;
+                    }
                 }
             
                 // Assuming selectedTimes contains time strings in 'h:mm a' format (e.g., '9:00 am')

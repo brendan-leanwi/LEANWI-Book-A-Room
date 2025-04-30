@@ -385,7 +385,7 @@
 .booking-grid-table tbody td:first-child {
     background-color: #e9ecef; /* Light grey color */
     font-weight: bold;
-    color: #495057; /* Darker text for contrast */
+    color: #272829; /* Darker text for contrast */
 }
 
 /* Style N/A cells */
@@ -393,6 +393,37 @@
     background-color: #d6d8db; /* Light grey color */
     color: #6c757d; /* Darker grey text */
     font-weight: bold;
+}
+
+/* Base tooltip style */
+.booking-grid-table td[data-tooltip] {
+    position: relative;
+    cursor: help;
+}
+
+/* Tooltip bubble */
+.booking-grid-table td[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%; /* above the cell */
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background-color: #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+    z-index: 10;
+    margin-bottom: 5px;
+}
+
+/* Show tooltip on hover */
+.booking-grid-table td[data-tooltip]:hover::after {
+    opacity: 1;
 }
 
 /* Style Booked cells */
