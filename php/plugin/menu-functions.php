@@ -527,30 +527,91 @@ function leanwi_add_venue_page() {
             );
 
             if ($inserted) {
-                // Get the newly inserted venue_id
                 $venue_id = $wpdb->insert_id;
-
-                // Insert open and close hours for each day
-                foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
-                    $open_hour = intval($_POST[$day . '_open_hour']);
-                    $open_minute = intval($_POST[$day . '_open_minute']);
-                    $close_hour = intval($_POST[$day . '_close_hour']);
-                    $close_minute = intval($_POST[$day . '_close_minute']);
-
-                    // Insert the hours into the database
-                    $wpdb->insert(
-                        $hours_table,
-                        array(
-                            'venue_id' => $venue_id,
-                            'day_of_week' => ucfirst($day),
-                            'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
-                            'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
-                        )
-                    );
+                $hours_table = $wpdb->prefix . 'leanwi_booking_venue_hours';
+            
+                // Normalize function (convert date to 2000-mm-dd)
+                function normalize_date($date_str) {
+                    $parts = explode('-', $date_str);
+                    return '2000-' . $parts[1] . '-' . $parts[2];
                 }
-
+            
+                // Build and normalize the ranges
+                $set_count = count($_POST['hours_label']);
+                $ranges = [];
+            
+                for ($i = 0; $i < $set_count; $i++) {
+                    $label = sanitize_text_field($_POST['hours_label'][$i]);
+                    $raw_start = sanitize_text_field($_POST['hours_start_date'][$i]);
+                    $raw_end = sanitize_text_field($_POST['hours_end_date'][$i]);
+                    $start = normalize_date($raw_start);
+                    $end = normalize_date($raw_end);
+            
+                    // If wrapping range (e.g., Sept -> May), split into two parts
+                    if ($end < $start) {
+                        $ranges[] = [ 'start' => $start, 'end' => '2000-12-31', 'index' => $i ];
+                        $ranges[] = [ 'start' => '2000-01-01', 'end' => $end, 'index' => $i ];
+                    } else {
+                        $ranges[] = [ 'start' => $start, 'end' => $end, 'index' => $i ];
+                    }
+                }
+            
+                // Sort ranges by start date
+                usort($ranges, function ($a, $b) {
+                    return strcmp($a['start'], $b['start']);
+                });
+            
+                // Check for overlaps and gaps
+                $last_end = '2000-01-01';
+                foreach ($ranges as $range) {
+                    if ($range['start'] > $last_end) {
+                        echo '<div class="error"><p>Error: Gap detected between ' . $last_end . ' and ' . $range['start'] . '.</p></div>';
+                        return;
+                    }
+                    if ($range['start'] < $last_end) {
+                        echo '<div class="error"><p>Error: Overlapping ranges around ' . $range['start'] . '.</p></div>';
+                        return;
+                    }
+                    $last_end = date('Y-m-d', strtotime($range['end'] . ' +1 day'));
+                }
+            
+                // Ensure full year coverage
+                if ($last_end !== '2001-01-01') {
+                    echo '<div class="error"><p>Error: Date ranges do not cover the full year. Last range ends on ' . $last_end . '.</p></div>';
+                    return;
+                }
+            
+                // Proceed with inserts since validation passed
+                $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                for ($i = 0; $i < $set_count; $i++) {
+                    $label = sanitize_text_field($_POST['hours_label'][$i]);
+                    $start_date = sanitize_text_field($_POST['hours_start_date'][$i]);
+                    $end_date = sanitize_text_field($_POST['hours_end_date'][$i]);
+            
+                    foreach ($days as $day) {
+                        $open_hour = intval($_POST[$day . '_open_hour'][$i]);
+                        $open_minute = intval($_POST[$day . '_open_minute'][$i]);
+                        $close_hour = intval($_POST[$day . '_close_hour'][$i]);
+                        $close_minute = intval($_POST[$day . '_close_minute'][$i]);
+            
+                        $wpdb->insert(
+                            $hours_table,
+                            array(
+                                'venue_id' => $venue_id,
+                                'label' => $label,
+                                'start_date' => $start_date,
+                                'end_date' => $end_date,
+                                'day_of_week' => ucfirst($day),
+                                'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
+                                'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                            )
+                        );
+                    }
+                }
+            
                 echo '<div class="updated"><p>Venue added successfully.</p></div>';
-            } else {
+            }
+             else {
                 echo '<div class="error"><p>Error adding venue. Please try again.</p></div>';
             }
         } else {
@@ -704,47 +765,117 @@ function leanwi_add_venue_page() {
                 </tr>
             </table>
 
-            <h2>Open Hours</h2>
-            <table class="form-table">
-                <?php foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day): ?>
-                    <tr>
-                        <th><label><?php echo ucfirst($day); ?></label></th>
-                        <td>
-                            <select name="<?php echo $day; ?>_open_hour">
-                                <?php for ($hour = 0; $hour < 24; $hour++): ?>
-                                    <option value="<?php echo $hour; ?>">
-                                        <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endfor; ?>
-                            </select>
-                            :
-                            <select name="<?php echo $day; ?>_open_minute">
-                                <?php foreach ([0, 15, 30, 45] as $minute): ?>
-                                    <option value="<?php echo $minute; ?>">
-                                        <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            to
-                            <select name="<?php echo $day; ?>_close_hour">
-                                <?php for ($hour = 0; $hour < 24; $hour++): ?>
-                                    <option value="<?php echo $hour; ?>">
-                                        <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endfor; ?>
-                            </select>
-                            :
-                            <select name="<?php echo $day; ?>_close_minute">
-                                <?php foreach ([0, 15, 30, 45] as $minute): ?>
-                                    <option value="<?php echo $minute; ?>">
-                                        <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
+            <div id="hours-sets-container">
+                <div class="hours-set">
+                    <h2>Open Hours</h2>
+                    <button type="button" class="remove-hours-set button" style="float: right;">Remove This Set of Hours</button>
+                    <table class="form-table">
+                        <?php
+                        $start_of_year = '2000-01-01';
+                        $end_of_year = '2000-12-31';
+                        ?>
+                        <tr>
+                            <th><label>Hours Label</label></th>
+                            <td><input type="text" name="hours_label[]" style="width: 50%;" value="Entire Year" required /></td>
+                        </tr>
+                        <tr>
+                            <th><label>Start Date:</label></th>
+                            <td>
+                                <input type="date" name="hours_start_date[]" value="<?php echo esc_attr($start_of_year); ?>" required>
+                                Please select a start month and day and choose any year (which is ignored)
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>End Date:</label></th>
+                            <td>
+                                <input type="date" name="hours_end_date[]" value="<?php echo esc_attr($end_of_year); ?>" required>
+                                Please select an ending month and day and choose any year (which is ignored)
+                            </td>
+                        </tr>
+                        <?php foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day): ?>
+                            <tr>
+                                <th><label><?php echo ucfirst($day); ?></label></th>
+                                <td>
+                                    <select name="<?php echo $day; ?>_open_hour[]">
+                                        <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                            <option value="<?php echo $hour; ?>">
+                                                <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endfor; ?>
+                                    </select>
+                                    :
+                                    <select name="<?php echo $day; ?>_open_minute[]">
+                                        <?php foreach ([0, 15, 30, 45] as $minute): ?>
+                                            <option value="<?php echo $minute; ?>">
+                                                <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    to
+                                    <select name="<?php echo $day; ?>_close_hour[]">
+                                        <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                            <option value="<?php echo $hour; ?>">
+                                                <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endfor; ?>
+                                    </select>
+                                    :
+                                    <select name="<?php echo $day; ?>_close_minute[]">
+                                        <?php foreach ([0, 15, 30, 45] as $minute): ?>
+                                            <option value="<?php echo $minute; ?>">
+                                                <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                    <hr>
+                </div>
+            </div>
+
+            <!-- Add Hours Set Button -->
+            <p><button type="button" id="add-hours-set" class="button">Add Another Set of Hours</button></p>
+            
+            <!-- Script to clone the hours code below -->
+            <script>
+            document.getElementById('add-hours-set').addEventListener('click', function () {
+                const container = document.getElementById('hours-sets-container');
+                const sets = container.getElementsByClassName('hours-set');
+                const lastSet = sets[sets.length - 1];
+                const newSet = lastSet.cloneNode(true);
+
+                // Clear all input values
+                newSet.querySelectorAll('input, select').forEach(field => {
+                    if (field.type === 'text' || field.type === 'date') {
+                        field.value = field.name === 'hours_label[]' ? 'Modify This' : '';
+                    } else {
+                        field.selectedIndex = 0;
+                    }
+                });
+
+                container.appendChild(newSet);
+                attachRemoveListeners();
+            });
+
+            function attachRemoveListeners() {
+                document.querySelectorAll('.remove-hours-set').forEach(button => {
+                    button.onclick = function () {
+                        const sets = document.querySelectorAll('.hours-set');
+                        if (sets.length > 1) {
+                            this.parentElement.remove();
+                        } else {
+                            alert('You must have at least one set of hours.');
+                        }
+                    };
+                });
+            }
+
+            // Initial setup on page load
+            attachRemoveListeners();
+            </script>
+
             <?php wp_nonce_field('add_venue_action', 'venue_nonce'); ?>
             <p class="submit">
                 <input type="submit" class="button button-primary" value="Add Venue" />
@@ -753,7 +884,6 @@ function leanwi_add_venue_page() {
     </div>
 <?php
 }
-
 
 function leanwi_edit_venue_page() {
     global $wpdb;
@@ -860,43 +990,100 @@ function leanwi_edit_venue_page() {
                     echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
                 }
         
-                // Continue updating venue hours regardless of venue update result
-                foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
-                    $open_hour = intval($_POST[$day . '_open_hour']);
-                    $open_minute = intval($_POST[$day . '_open_minute']);
-                    $close_hour = intval($_POST[$day . '_close_hour']);
-                    $close_minute = intval($_POST[$day . '_close_minute']);
-        
-                    // Update the hours in the database
-                    $hours_updated = $wpdb->update(
-                        $hours_table,
-                        array(
-                            'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
-                            'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
-                        ),
-                        array(
-                            'venue_id' => $venue_id,
-                            'day_of_week' => ucfirst($day)
-                        )
-                    );
-        
-                    if ($hours_updated === false) {
-                        $error_message = $wpdb->last_query;
-                        echo '<div class="error"><p>Error updating venue hours: ' . esc_html($error_message) .
-                        ' VenueId: ' . $venue_id . ' DoW: ' . ucfirst($day) . ' Open Time: ' .
-                        sprintf('%02d:%02d:00', $open_hour, $open_minute) . ' Close Time: ' .
-                        sprintf('%02d:%02d:00', $close_hour, $close_minute) . '</p></div>';
-                        exit;  // Stop execution if hours update fails
+                $hours_table = $wpdb->prefix . 'leanwi_booking_venue_hours';
+
+                //Get and Normalize current data and check it's ok
+                function normalize_date($date_str) {
+                    $parts = explode('-', $date_str);
+                    return '2000-' . $parts[1] . '-' . $parts[2];
+                }
+
+                $set_count = count($_POST['hours_label']);
+                $ranges = [];
+
+                for ($i = 0; $i < $set_count; $i++) {
+                    $label = sanitize_text_field($_POST['hours_label'][$i]);
+                    $raw_start = sanitize_text_field($_POST['hours_start_date'][$i]);
+                    $raw_end = sanitize_text_field($_POST['hours_end_date'][$i]);
+                    $start = normalize_date($raw_start);
+                    $end = normalize_date($raw_end);
+
+                    if ($end < $start) {
+                        $ranges[] = [ 'start' => $start, 'end' => '2000-12-31', 'index' => $i ];
+                        $ranges[] = [ 'start' => '2000-01-01', 'end' => $end, 'index' => $i ];
+                    } else {
+                        $ranges[] = [ 'start' => $start, 'end' => $end, 'index' => $i ];
                     }
                 }
-                
-                // Refresh venue details
-                $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id));
-                
+
+                usort($ranges, function ($a, $b) {
+                    return strcmp($a['start'], $b['start']);
+                });
+
+                // Overlap and gap check
+                $last_end = '2000-01-01';
+                $ranges_ok = true;
+                foreach ($ranges as $range) {
+                    if ($range['start'] > $last_end) {
+                        echo '<div class="error"><p>Error: Gap detected between ' . $last_end . ' and ' . $range['start'] . '.</p></div>';
+                        $ranges_ok = false;
+                        break;
+                    }
+                    if ($range['start'] < $last_end) {
+                        echo '<div class="error"><p>Error: Overlapping ranges around ' . $range['start'] . '.</p></div>';
+                        $ranges_ok = false;
+                        break;
+                    }
+                    $last_end = date('Y-m-d', strtotime($range['end'] . ' +1 day'));
+                }
+
+                if ($last_end !== '2001-01-01') {
+                    echo '<div class="error"><p>Error: Date ranges do not cover the full year. Last range ends on ' . $last_end . '.</p></div>';
+                    $ranges_ok = false;
+                }
+
+                if($ranges_ok) {
+                    // Proceed with deleting then re-inserting validated hours
+
+                    // Delete existing hours for this venue
+                    $wpdb->delete($hours_table, ['venue_id' => $venue_id]);
+
+                    // Insert current hours configuration
+                    $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                    for ($i = 0; $i < $set_count; $i++) {
+                        $label = sanitize_text_field($_POST['hours_label'][$i]);
+                        $start_date = sanitize_text_field($_POST['hours_start_date'][$i]);
+                        $end_date = sanitize_text_field($_POST['hours_end_date'][$i]);
+
+                        foreach ($days as $day) {
+                            $open_hour = intval($_POST[$day . '_open_hour'][$i]);
+                            $open_minute = intval($_POST[$day . '_open_minute'][$i]);
+                            $close_hour = intval($_POST[$day . '_close_hour'][$i]);
+                            $close_minute = intval($_POST[$day . '_close_minute'][$i]);
+
+                            $wpdb->insert(
+                                $hours_table,
+                                array(
+                                    'venue_id' => $venue_id,
+                                    'label' => $label,
+                                    'start_date' => $start_date,
+                                    'end_date' => $end_date,
+                                    'day_of_week' => ucfirst($day),
+                                    'open_time' => sprintf('%02d:%02d:00', $open_hour, $open_minute),
+                                    'close_time' => sprintf('%02d:%02d:00', $close_hour, $close_minute),
+                                )
+                            );
+                        }
+                    }
+
+                    echo '<div class="updated"><p>Venue hours updated successfully.</p></div>';
+                }
             } else {
                 // Nonce is invalid; handle the error accordingly.
                 wp_die('Nonce verification failed.');
             }
+            // Refresh venue details
+            $venue = $wpdb->get_row($wpdb->prepare("SELECT * FROM $venue_table WHERE venue_id = %d", $venue_id));
         }        
     }
 
@@ -907,11 +1094,37 @@ function leanwi_edit_venue_page() {
     }
 
     // Fetch existing hours for each day
-    $existing_hours = [];
-    foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
-        $hours = $wpdb->get_row($wpdb->prepare("SELECT open_time, close_time FROM $hours_table WHERE venue_id = %d AND day_of_week = %s", $venue_id, ucfirst($day)));
-        $existing_hours[$day] = $hours ? $hours : (object) ['open_time' => '00:00:00', 'close_time' => '00:00:00'];
+    $raw_results = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT label, start_date, end_date, day_of_week, open_time, close_time 
+             FROM $hours_table 
+             WHERE venue_id = %d 
+             ORDER BY start_date, FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')",
+            $venue_id
+        )
+    );
+    
+    // Reorganize into grouped sets
+    $existing_hours_sets = [];
+    foreach ($raw_results as $row) {
+        $key = $row->label . '|' . $row->start_date . '|' . $row->end_date;
+        if (!isset($existing_hours_sets[$key])) {
+            $existing_hours_sets[$key] = [
+                'label' => $row->label,
+                'start_date' => $row->start_date,
+                'end_date' => $row->end_date,
+                'days' => []
+            ];
+        }
+        $existing_hours_sets[$key]['days'][strtolower($row->day_of_week)] = [
+            'open_time' => $row->open_time,
+            'close_time' => $row->close_time
+        ];
     }
+
+    //error_log('Existing Hours Sets: ' . json_encode($existing_hours_sets, JSON_PRETTY_PRINT));
+
+    
 ?>
     <div class="wrap">
         <h1>Edit Venue</h1>
@@ -1034,54 +1247,193 @@ function leanwi_edit_venue_page() {
             </table>
 
             <h2>Open Hours</h2>
-            <table class="form-table">
-                <?php foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day): ?>
-                    <tr>
-                        <th><label><?php echo ucfirst($day); ?></label></th>
-                        <td>
-                            <select name="<?php echo $day; ?>_open_hour">
-                                <?php 
-                                $open_hour = intval(explode(':', $existing_hours[$day]->open_time)[0]); // Get open hour
-                                for ($hour = 0; $hour < 24; $hour++): ?>
-                                    <option value="<?php echo $hour; ?>" <?php selected($open_hour, $hour); ?>>
-                                        <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endfor; ?>
-                            </select>
-                            :
-                            <select name="<?php echo $day; ?>_open_minute">
-                                <?php 
-                                $open_minute = intval(explode(':', $existing_hours[$day]->open_time)[1]); // Get open minute
-                                foreach ([0, 15, 30, 45] as $minute): ?>
-                                    <option value="<?php echo $minute; ?>" <?php selected($open_minute, $minute); ?>>
-                                        <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
+            <div id="hours-sets-container">
+                <?php if (!empty($existing_hours_sets)): ?>
+                    <?php foreach ($existing_hours_sets as $index => $set): ?>
+                        <div class="hours-set">
+                            <button type="button" class="remove-hours-set button" style="float: right;">Remove This Set of Hours</button>
+                            <table class="form-table">
+                                <tr>
+                                    <th><label>Hours Label</label></th>
+                                    <td>
+                                        <input type="text" name="hours_label[]" style="width: 50%;" value="<?php echo esc_attr($set['label']); ?>" required />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label>Start Date:</label></th>
+                                    <td>
+                                        <input type="date" name="hours_start_date[]" value="<?php echo esc_attr($set['start_date']); ?>" required>
+                                        Please select a start month and day and choose any year (which is ignored)
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label>End Date:</label></th>
+                                    <td>
+                                        <input type="date" name="hours_end_date[]" value="<?php echo esc_attr($set['end_date']); ?>" required>
+                                        Please select an ending month and day and choose any year (which is ignored)
+                                    </td>
+                                </tr>
+                                <?php foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day): ?>
+                                    <?php
+                                        $open_time = isset($set['days'][$day]['open_time']) ? $set['days'][$day]['open_time'] : '00:00:00';
+                                        $close_time = isset($set['days'][$day]['close_time']) ? $set['days'][$day]['close_time'] : '00:00:00';
+                                        
+                                        $open_parts = explode(':', $open_time);
+                                        $close_parts = explode(':', $close_time);
+                                        
+                                        $open_hour = intval($open_parts[0] ?? 0);
+                                        $open_minute = intval($open_parts[1] ?? 0);
+                                        $close_hour = intval($close_parts[0] ?? 0);
+                                        $close_minute = intval($close_parts[1] ?? 0);
+                                        
+                                    ?>
+                                    <tr>
+                                        <th><label><?php echo ucfirst($day); ?></label></th>
+                                        <td>
+                                            <select name="<?php echo $day; ?>_open_hour[]">
+                                                <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                                    <option value="<?php echo $hour; ?>" <?php selected($open_hour, $hour); ?>>
+                                                        <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
+                                                    </option>
+                                                <?php endfor; ?>
+                                            </select>
+                                            :
+                                            <select name="<?php echo $day; ?>_open_minute[]">
+                                                <?php foreach ([0, 15, 30, 45] as $minute): ?>
+                                                    <option value="<?php echo $minute; ?>" <?php selected($open_minute, $minute); ?>>
+                                                        <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            to
+                                            <select name="<?php echo $day; ?>_close_hour[]">
+                                                <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                                    <option value="<?php echo $hour; ?>" <?php selected($close_hour, $hour); ?>>
+                                                        <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
+                                                    </option>
+                                                <?php endfor; ?>
+                                            </select>
+                                            :
+                                            <select name="<?php echo $day; ?>_close_minute[]">
+                                                <?php foreach ([0, 15, 30, 45] as $minute): ?>
+                                                    <option value="<?php echo $minute; ?>" <?php selected($close_minute, $minute); ?>>
+                                                        <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
-                            </select>
-                            to
-                            <select name="<?php echo $day; ?>_close_hour">
-                                <?php 
-                                $close_hour = intval(explode(':', $existing_hours[$day]->close_time)[0]); // Get close hour
-                                for ($hour = 0; $hour < 24; $hour++): ?>
-                                    <option value="<?php echo $hour; ?>" <?php selected($close_hour, $hour); ?>>
-                                        <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endfor; ?>
-                            </select>
-                            :
-                            <select name="<?php echo $day; ?>_close_minute">
-                                <?php 
-                                $close_minute = intval(explode(':', $existing_hours[$day]->close_time)[1]); // Get close minute
-                                foreach ([0, 15, 30, 45] as $minute): ?>
-                                    <option value="<?php echo $minute; ?>" <?php selected($close_minute, $minute); ?>>
-                                        <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
+                            </table>
+                            <hr>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Fallback: display one empty set if no existing sets -->
+                    <table class="form-table">
+                        <?php
+                        $start_of_year = '2000-01-01';
+                        $end_of_year = '2000-12-31';
+                        ?>
+                        <tr>
+                            <th><label>Hours Label</label></th>
+                            <td><input type="text" name="hours_label[]" style="width: 50%;" value="Entire Year" required /></td>
+                        </tr>
+                        <tr>
+                            <th><label>Start Date:</label></th>
+                            <td>
+                                <input type="date" name="hours_start_date[]" value="<?php echo esc_attr($start_of_year); ?>" required>
+                                Please select a start month and day and choose any year (which is ignored)
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>End Date:</label></th>
+                            <td>
+                                <input type="date" name="hours_end_date[]" value="<?php echo esc_attr($end_of_year); ?>" required>
+                                Please select an ending month and day and choose any year (which is ignored)
+                            </td>
+                        </tr>
+                        <?php foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day): ?>
+                            <tr>
+                                <th><label><?php echo ucfirst($day); ?></label></th>
+                                <td>
+                                    <select name="<?php echo $day; ?>_open_hour[]">
+                                        <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                            <option value="<?php echo $hour; ?>">
+                                                <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endfor; ?>
+                                    </select>
+                                    :
+                                    <select name="<?php echo $day; ?>_open_minute[]">
+                                        <?php foreach ([0, 15, 30, 45] as $minute): ?>
+                                            <option value="<?php echo $minute; ?>">
+                                                <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    to
+                                    <select name="<?php echo $day; ?>_close_hour[]">
+                                        <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                            <option value="<?php echo $hour; ?>">
+                                                <?php echo str_pad($hour, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endfor; ?>
+                                    </select>
+                                    :
+                                    <select name="<?php echo $day; ?>_close_minute[]">
+                                        <?php foreach ([0, 15, 30, 45] as $minute): ?>
+                                            <option value="<?php echo $minute; ?>">
+                                                <?php echo str_pad($minute, 2, '0', STR_PAD_LEFT); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </table>
+                    <hr>
+                <?php endif; ?>
+            </div>
+
+            <p><button type="button" id="add-hours-set" class="button">Add Another Set of Hours</button></p>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const container = document.getElementById('hours-sets-container');
+                const addButton = document.getElementById('add-hours-set');
+
+                // Delegate click to remove buttons
+                container.addEventListener('click', function (e) {
+                    if (e.target.classList.contains('remove-hours-set')) {
+                        const set = e.target.closest('.hours-set');
+                        if (set) {
+                            set.remove();
+                        }
+                    }
+                });
+
+                addButton.addEventListener('click', function () {
+                    const sets = container.querySelectorAll('.hours-set');
+                    if (sets.length === 0) return;
+
+                    const clone = sets[0].cloneNode(true);
+
+                    // Clear inputs/selects
+                    clone.querySelectorAll('input, select').forEach(el => {
+                        if (el.tagName === 'INPUT') {
+                            el.value = '';
+                        } else if (el.tagName === 'SELECT') {
+                            el.selectedIndex = 0;
+                        }
+                    });
+
+                    container.appendChild(clone);
+                });
+            });
+            </script>
+
+
             <?php wp_nonce_field('update_venue_action', 'venue_nonce'); ?>
             <p class="submit">
                 <input type="submit" class="button button-primary" value="Update Venue" />
