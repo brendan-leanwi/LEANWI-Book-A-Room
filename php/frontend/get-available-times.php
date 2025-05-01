@@ -31,13 +31,38 @@ $unique_id = isset($_GET['unique_id']) ? sanitize_text_field($_GET['unique_id'])
 $venue_hours_table = $wpdb->prefix . 'leanwi_booking_venue_hours';
 $participant_table = $wpdb->prefix . 'leanwi_booking_participant';
 
-// Fetch venue hours
+// Get formatted inputs
 $day_of_week = date('l', strtotime($selected_date));
+$current_month_day = date('m-d', strtotime($selected_date));
+
+// Prepare the SQL query
+$venue_hours_query = "
+    SELECT vh.open_time, vh.close_time
+    FROM {$venue_hours_table} vh
+    WHERE vh.venue_id = %d
+    AND vh.day_of_week = %s
+    AND (
+        (DATE_FORMAT(vh.start_date, '%%m-%%d') <= DATE_FORMAT(vh.end_date, '%%m-%%d')
+         AND %s BETWEEN DATE_FORMAT(vh.start_date, '%%m-%%d') AND DATE_FORMAT(vh.end_date, '%%m-%%d'))
+        OR
+        (DATE_FORMAT(vh.start_date, '%%m-%%d') > DATE_FORMAT(vh.end_date, '%%m-%%d')
+         AND (
+             %s >= DATE_FORMAT(vh.start_date, '%%m-%%d')
+             OR %s <= DATE_FORMAT(vh.end_date, '%%m-%%d')
+         )
+        )
+    )
+";
+
+// Execute the prepared query
 $hours = $wpdb->get_row(
     $wpdb->prepare(
-        "SELECT open_time, close_time FROM $venue_hours_table WHERE venue_id = %d AND day_of_week = %s",
+        $venue_hours_query,
         $venue_id,
-        $day_of_week
+        $day_of_week,
+        $current_month_day,
+        $current_month_day,
+        $current_month_day
     )
 );
 

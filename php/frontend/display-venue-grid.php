@@ -28,19 +28,36 @@ function display_venue_grid() {
     // Query all venues for the dropdown
     $venues = $wpdb->get_results("SELECT venue_id, name FROM {$wpdb->prefix}leanwi_booking_venue");
 
-    // Query venue hours using the day of the week and selected venue (if any)
+    // Extract the month and day from the selected date (e.g. '04-30')
+    $current_month_day = date('m-d', strtotime($today_date));
+
     $venue_hours_query = "
-        SELECT vh.venue_id, vh.open_time, vh.close_time, v.name, v.use_business_days_only, v.days_before_booking, v.page_url, v.capacity, v.description, v.location
+        SELECT vh.venue_id, vh.open_time, vh.close_time, v.name, v.use_business_days_only, 
+            v.days_before_booking, v.page_url, v.capacity, v.description, v.location
         FROM {$wpdb->prefix}leanwi_booking_venue_hours vh
         JOIN {$wpdb->prefix}leanwi_booking_venue v ON vh.venue_id = v.venue_id
         WHERE vh.day_of_week = %s
+        AND (
+            (DATE_FORMAT(vh.start_date, '%%m-%%d') <= DATE_FORMAT(vh.end_date, '%%m-%%d')
+            AND %s BETWEEN DATE_FORMAT(vh.start_date, '%%m-%%d') AND DATE_FORMAT(vh.end_date, '%%m-%%d'))
+            OR
+            (DATE_FORMAT(vh.start_date, '%%m-%%d') > DATE_FORMAT(vh.end_date, '%%m-%%d')
+            AND (
+                %s >= DATE_FORMAT(vh.start_date, '%%m-%%d')
+                OR %s <= DATE_FORMAT(vh.end_date, '%%m-%%d')
+            )
+            )
+        )
     ";
+
     if(!$is_booking_staff) {
         $venue_hours_query .= " AND v.bookable_by_staff_only = 0";
     }
-
     $venue_hours_query .= $selected_venue_id ? $wpdb->prepare(" AND vh.venue_id = %d", $selected_venue_id) : "";
-    $venue_hours = $wpdb->get_results($wpdb->prepare($venue_hours_query, $day_of_week));
+
+    $venue_hours = $wpdb->get_results(
+        $wpdb->prepare($venue_hours_query, $day_of_week, $current_month_day, $current_month_day, $current_month_day)
+    );
 
     // Query bookings for the selected date and venue (if applicable)
     $bookings_query = "
