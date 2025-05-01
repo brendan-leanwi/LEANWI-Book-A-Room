@@ -44,6 +44,9 @@ function leanwi_create_tables() {
     $sql2 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue_hours (
         hour_id INT AUTO_INCREMENT PRIMARY KEY,
         venue_id INT NOT NULL,
+        label VARCHAR(50) NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
         day_of_week ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
         open_time TIME NOT NULL,
         close_time TIME NOT NULL,
@@ -241,25 +244,28 @@ function leanwi_create_tables() {
     }
 
     // Define the table name
-    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue_hours';
 
-    // Check if the 'physical_address' column exists
+    // Check if the 'label' column exists
     $column_exists = $wpdb->get_results(
         $wpdb->prepare(
             "SHOW COLUMNS FROM $table_name LIKE %s",
-            'updated_by_staff_only'
+            'label'
         )
     );
 
     if (count($column_exists) === 0) {
-        error_log("updated_by_staff_only column does not exist");
-        // Add the 'physical_address' column if it doesn't exist
+        error_log("label column does not exist in $table_name");
+        // Add the label, start_date and end_date columns 
         $result =  $wpdb->query(
-            "ALTER TABLE $table_name ADD updated_by_staff_only TINYINT(1) DEFAULT 0 AFTER bookable_by_staff_only"
+            "ALTER TABLE $table_name 
+             ADD COLUMN label VARCHAR(50) NOT NULL DEFAULT 'Entire Year' AFTER venue_id,
+             ADD COLUMN start_date DATE NOT NULL DEFAULT '2000-01-01' AFTER label,
+             ADD COLUMN end_date DATE NOT NULL DEFAULT '2000-12-31' AFTER start_date"
         );
 
         if ($result === false) {
-            error_log("Failed to add updated_by_staff_only column to $table_name: " . $wpdb->last_error);
+            error_log("Failed to add new columns to $table_name: " . $wpdb->last_error);
         }
     }
 }

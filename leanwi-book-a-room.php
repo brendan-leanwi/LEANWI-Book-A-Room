@@ -168,3 +168,12 @@ function enqueue_custom_styles() {
     }
 }
 add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_custom_styles');
+
+// Test code for create_tables for use on Dev site only
+//function leanwi_test_schema_alter() {
+//    if (current_user_can('manage_options')) {
+//        leanwi_create_tables(); // Safely trigger only for admins
+//    }
+//}
+//add_action('admin_init', __NAMESPACE__ . '\\leanwi_test_schema_alter');
+
