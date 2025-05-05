@@ -15,6 +15,7 @@ function leanwi_create_tables() {
     $sql1 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue (
         venue_id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        display_order INT NOT NULL,
         capacity INT NOT NULL,
         description TEXT,
         location VARCHAR(255),
@@ -266,6 +267,33 @@ function leanwi_create_tables() {
 
         if ($result === false) {
             error_log("Failed to add new columns to $table_name: " . $wpdb->last_error);
+        }
+    }
+
+    // Define the table name
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+
+    // Check if the 'label' column exists
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM $table_name LIKE %s",
+            'display_order'
+        )
+    );
+
+    if (count($column_exists) === 0) {
+        error_log("display_order column does not exist in $table_name");
+        // Add the display_order column 
+        $result =  $wpdb->query(
+            "ALTER TABLE $table_name 
+             ADD COLUMN display_order INT NOT NULL DEFAULT 0 AFTER name"
+        );
+
+        $wpdb->query("UPDATE $table_name SET display_order = venue_id");
+
+
+        if ($result === false) {
+            error_log("Failed to add new column display_order to $table_name: " . $wpdb->last_error);
         }
     }
 }

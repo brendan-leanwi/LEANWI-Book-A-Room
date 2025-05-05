@@ -24,9 +24,14 @@ function display_venue_grid() {
     $today_date = isset($_GET['selected_date']) ? sanitize_text_field($_GET['selected_date']) : date('Y-m-d');
     $selected_venue_id = isset($_GET['venue_id']) ? intval($_GET['venue_id']) : 0; // Get the selected venue ID
     $day_of_week = date('l', strtotime($today_date));
-
+    
     // Query all venues for the dropdown
-    $venues = $wpdb->get_results("SELECT venue_id, name FROM {$wpdb->prefix}leanwi_booking_venue");
+    $query = "SELECT venue_id, name FROM {$wpdb->prefix}leanwi_booking_venue";
+    if(!$is_booking_staff) {
+        $query .= " WHERE bookable_by_staff_only = 0";
+    }
+    $query .= " ORDER BY display_order";
+    $venues = $wpdb->get_results($query);
 
     // Extract the month and day from the selected date (e.g. '04-30')
     $current_month_day = date('m-d', strtotime($today_date));
@@ -53,7 +58,7 @@ function display_venue_grid() {
     if(!$is_booking_staff) {
         $venue_hours_query .= " AND v.bookable_by_staff_only = 0";
     }
-    $venue_hours_query .= $selected_venue_id ? $wpdb->prepare(" AND vh.venue_id = %d", $selected_venue_id) : "";
+    $venue_hours_query .= $selected_venue_id ? $wpdb->prepare(" AND vh.venue_id = %d", $selected_venue_id) : " ORDER BY display_order";
 
     $venue_hours = $wpdb->get_results(
         $wpdb->prepare($venue_hours_query, $day_of_week, $current_month_day, $current_month_day, $current_month_day)
@@ -144,7 +149,7 @@ function display_venue_grid() {
 
     // Display the date and grid header
     $formatted_date = date('F j, Y', strtotime($today_date));
-    $output .= '<p><h2 style="text-align: center;">Bookings for ' . $formatted_date . '</h2></p><p> </p>';
+    $output .= '<p><h2 style="text-align: center;">Bookings for ' . $day_of_week . ' ' . $formatted_date . '</h2></p><p> </p>';
 
     // Output the grid as a table
     $output .= '<table class="booking-grid-table">';

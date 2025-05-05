@@ -321,7 +321,28 @@ function leanwi_main_page() {
 
 // Function to display the list of venues
 function leanwi_venues_page() {
-    
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue';
+
+    // Process display order update if the form is submitted
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_display_order'])) {
+        if (isset($_POST['display_order']) && is_array($_POST['display_order'])) {
+            foreach ($_POST['display_order'] as $venue_id => $display_order) {
+                $venue_id = intval($venue_id);
+                $display_order = intval($display_order);
+
+                $wpdb->update(
+                    $table_name,
+                    ['display_order' => $display_order],
+                    ['venue_id' => $venue_id],
+                    ['%d'],
+                    ['%d']
+                );
+            }
+            echo '<div class="updated notice"><p>Display order updated successfully.</p></div>';
+        }
+    }
+
     // Display venue list
     echo '<div class="wrap">';
     echo '<h1>Venues</h1>';
@@ -329,14 +350,15 @@ function leanwi_venues_page() {
     echo '<a href="' . admin_url('admin.php?page=leanwi-add-venue') . '" class="button button-primary">Add Venue</a>'; // Add this button
     echo '<p> </p>'; //Space below the button before the venue table
 
+    echo '<form method="POST">';
     echo '<table class="wp-list-table widefat striped">';
     echo '<thead>';
     echo '<tr>';
     echo '<th scope="col">Venue ID</th>';
     echo '<th scope="col">Name</th>';
+    echo '<th scope="col">Display Order</th>';
     echo '<th scope="col">Capacity</th>';
     echo '<th scope="col">Location</th>';
-    echo '<th scope="col">Description</th>';
     echo '<th scope="col">Historic</th>';
     echo '<th scope="col">Actions</th>';
     echo '</tr>';
@@ -353,9 +375,9 @@ function leanwi_venues_page() {
             echo '<tr>';
             echo '<td>' . esc_html($venue['venue_id']) . '</td>';
             echo '<td>' . esc_html($venue['name']) . '</td>';
+            echo '<td><input type="number" name="display_order[' . esc_attr($venue['venue_id']) . ']" value="' . esc_attr($venue['display_order']) . '" style="width: 60px;"></td>';
             echo '<td>' . esc_html($venue['capacity']) . '</td>';
             echo '<td>' . esc_html($venue['location']) . '</td>';
-            echo '<td>' . esc_html($venue['description']) . '</td>';
             echo '<td>' . ($venue['historic'] == 0 ? 'False' : 'True') . '</td>';
             echo '<td>';
             echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-venue&venue_id=' . esc_attr($venue['venue_id']))) . '" class="button">Edit</a> ';
@@ -367,10 +389,13 @@ function leanwi_venues_page() {
 
     echo '</tbody>';
     echo '</table>';
+    echo '<p><input type="submit" name="save_display_order" value="Save Display Order" class="button button-primary"></p>';
+    echo '</form>';
     echo '<p> </p>'; //Space below the venue table
     echo 'Please add the following shortcode to your page - [venue_details venue_id="1"]. Where 1 is the Venue ID from the above table';
     echo '</div>';
 }
+
 // Function to get venues
 function fetch_venues() {
     // Construct the URL for get-venues.php
