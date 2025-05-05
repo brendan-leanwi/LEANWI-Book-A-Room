@@ -1011,8 +1011,6 @@ function leanwi_edit_venue_page() {
                 if ($updated === false) {
                     $error_message = $wpdb->last_query;
                     echo '<div class="error"><p>Error updating venue: ' . esc_html($error_message) . '</p></div>';
-                } else {
-                    echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
                 }
         
                 $hours_table = $wpdb->prefix . 'leanwi_booking_venue_hours';
@@ -1101,7 +1099,7 @@ function leanwi_edit_venue_page() {
                         }
                     }
 
-                    echo '<div class="updated"><p>Venue hours updated successfully.</p></div>';
+                    echo '<div class="updated"><p>Venue details updated successfully.</p></div>';
                 }
             } else {
                 // Nonce is invalid; handle the error accordingly.
