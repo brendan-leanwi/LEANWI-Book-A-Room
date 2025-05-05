@@ -521,11 +521,16 @@ function leanwi_add_venue_page() {
             // Ensure the value has 2 decimal places
             $slot_cost = number_format($slot_cost, 2, '.', '');
 
+            // Find the max display_order and increment
+            $max_order = $wpdb->get_var("SELECT MAX(display_order) FROM $venue_table");
+            $new_order = ($max_order !== null) ? $max_order + 1 : 1;
+
             // Insert the new venue into the database
             $inserted = $wpdb->insert(
                 $venue_table,
                 array(
                     'name' => $name,
+                    'display_order' => $new_order,
                     'capacity' => $capacity,
                     'description' => $description,
                     'location' => $location,
