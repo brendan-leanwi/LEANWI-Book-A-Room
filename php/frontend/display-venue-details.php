@@ -85,6 +85,7 @@ function display_venue_details($atts) {
     <p><br></p>
     <h2>Available Days Calendar</h2>
     <p><br></p>
+    <p>Please select desired date to see available times.</p>
     <div id="calendar-navigation">
         <button id="prev-month" aria-label="Previous Month">&larr;</button>
         <h3><span id="current-month"></span></h3>

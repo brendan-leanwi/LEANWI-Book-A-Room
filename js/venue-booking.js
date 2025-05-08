@@ -277,7 +277,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         } else if (dayData && dayData.open_time !== '00:00:00' && dayData.close_time !== '00:00:00') {
                             // Available day: make it clickable
                             dayElement.style.cursor = 'pointer';
-                            dayElement.style.backgroundColor = '#fff';
                             dayElement.classList.add('available');
 
                             dayElement.addEventListener('click', function () {

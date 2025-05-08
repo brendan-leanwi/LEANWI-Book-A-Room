@@ -35,7 +35,7 @@
 
 .calendar-day.unavailable {
     background-color: #f0f0f0;
-    color: #ccc;
+    color: #ccc !important;
     pointer-events: none; /* Make the greyed-out days unclickable */
 }
 
@@ -47,7 +47,8 @@
 }
 
 .calendar-day.available:hover {
-    background-color: #e0e0e0;
+    background-color: var(--highlighted-button-bg) !important;
+    transition: background-color 0.2s ease;
 }
 
 /* Weekday headers */
