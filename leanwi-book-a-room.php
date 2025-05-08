@@ -5,14 +5,14 @@ Plugin Name:  LEANWI Book A Room
 GitHub URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Update URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Description:  Room Booking functionality compatible with LEANWI Divi WordPress websites
-Version:      1.5.4
+Version:      1.5.5
 Author:       Brendan Tuckey
 Author URI:   https://github.com/brendan-leanwi
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain:  leanwi-tutorial
 Domain Path:  /languages
-Tested up to: 6.7.2
+Tested up to: 6.8.1
 */
 
 // Require additional PHP files
@@ -35,7 +35,7 @@ register_uninstall_hook(__FILE__, __NAMESPACE__ . '\\leanwi_drop_tables');
 // Version-based update check
 function leanwi_update_check() {
     $current_version = get_option('leanwi_booking_plugin_version', '1.4.22'); // Default to an old version if not set
-    $new_version = '1.5.4'; // Update this with the new plugin version
+    $new_version = '1.5.5'; // Update this with the new plugin version
 
     if (version_compare($current_version, $new_version, '<')) {
         // Run the table creation logic

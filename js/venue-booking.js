@@ -1039,8 +1039,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const physicalAddressField = document.getElementById('physical_address');
             if (booking.recurrence_id > 0) {
                 physicalAddressField.removeAttribute('required');
-            } else {
-                physicalAddressField.setAttribute('required', 'required');
             }
             
             // Display the booking form container
