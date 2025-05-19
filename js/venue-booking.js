@@ -136,6 +136,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                     }
                                 }
                             });
+                            updateTimeAllowedDisplay();
+                            updateTimeLengthDisplay();
                         } else {
                             alert('No available times for this date.');
                         }
@@ -505,6 +507,33 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.body.style.cursor = 'default'; // Reset cursor after fetch completes
                 });
         }
+
+        function updateTimeLengthDisplay() {
+            const selectedButtons = document.querySelectorAll('.time-button.selected');
+            const totalMinutes = selectedButtons.length * parseInt(bookingSettings.minutesInterval, 10);
+
+            const timeLengthDiv = document.getElementById('time-length');
+            if (selectedButtons.length > 0) {
+                timeLengthDiv.textContent = `Your current booking is for ${totalMinutes} minute${totalMinutes !== 1 ? 's' : ''}.`;
+            } else {
+                timeLengthDiv.textContent = ''; // Clear if nothing is selected
+            }
+        }
+
+        function updateTimeAllowedDisplay() {
+            const timeAllowedDiv = document.getElementById('time-allowed');
+            if (!isBookingStaff) {
+                const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
+                if (maxSlots < 100) {
+                    timeAllowedDiv.textContent = `You can select up to ${maxSlots} timeslot${maxSlots !== 1 ? 's' : ''}.`;
+                } else {
+                    timeAllowedDiv.textContent = ''; // Clear for unlimited booking
+                }
+            } else {
+                timeAllowedDiv.textContent = ''; // Clear for staff
+            }
+        }
+
         
         let contactFormContainer;
 
@@ -564,6 +593,8 @@ document.addEventListener("DOMContentLoaded", function () {
             
             if (showingExistingRecord) {
                 updateTotalCost();
+                updateTimeLengthDisplay();
+                updateTimeAllowedDisplay();
             }
 
             // Hide the "Submit Booking" button if not staff, venue is staff-only updatable, and it's an existing booking
@@ -755,7 +786,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         button.classList.add('selected'); // First selection
                     }
                 }
-            
+                
+                updateTimeAllowedDisplay();
+                updateTimeLengthDisplay();
                 updateTotalCost();
             }
             
@@ -824,9 +857,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function formatTo24Hour(dateString) {
-            // Append a timezone (e.g., "Z" for UTC or "+00:00") to avoid invalid time value error
-            const date = new Date(`${dateString} UTC`); // Create a date object using a fixed date with UTC time zone
-            return date.toISOString().slice(0, 19).replace('T', ' '); // Format as 'YYYY-MM-DD HH:MM:SS'
+            // Expecting: "2025-05-24 11:00 am"
+            const match = dateString.match(/^(\d{4}-\d{2}-\d{2}) (\d{1,2}):(\d{2}) (am|pm)$/i);
+            if (!match) {
+                console.error("Unrecognized date format:", dateString);
+                return '';
+            }
+
+            let [, datePart, hour, minute, period] = match;
+            hour = parseInt(hour, 10);
+            if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+            if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
+
+            const hourStr = hour.toString().padStart(2, '0');
+            return `${datePart} ${hourStr}:${minute}:00`;
         }
 
         document.querySelector('#booking-form').addEventListener('submit', function (event) {
@@ -851,16 +895,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Execute reCAPTCHA if enabled
             if (bookingSettings.enableRecaptcha) {
-                grecaptcha.execute(bookingSettings.recaptchaSiteKey, { action: 'submit' })
-                .then(function(token) {
-                    // Append the reCAPTCHA token to the form
-                    formData.append('g-recaptcha-response', token);
-                    // Call the fetch function after appending the token
-                    submitForm(formData);
-                })
-                .catch(function (error) {
-                    console.error('reCAPTCHA error:', error);
-                    submitButton.disabled = false; // Re-enable the button in case of reCAPTCHA failure
+                grecaptcha.ready(function() {
+                    grecaptcha.execute(bookingSettings.recaptchaSiteKey, { action: 'submit' })
+                    .then(function(token) {
+                        // Append the reCAPTCHA token to the form
+                        formData.append('g-recaptcha-response', token);
+                        // Call the fetch function after appending the token
+                        submitForm(formData);
+                    })
+                    .catch(function (error) {
+                        console.error('reCAPTCHA error:', error);
+                        submitButton.disabled = false; // Re-enable the button in case of reCAPTCHA failure
+                    });
                 });
             } else {
                 // If reCAPTCHA is not enabled, submit the form directly
@@ -908,8 +954,13 @@ document.addEventListener("DOMContentLoaded", function () {
             
                 // Assuming selectedTimes contains time strings in 'h:mm a' format (e.g., '9:00 am')
                 const currentDateFormatted = returnCurrentDate();
+
                 const startTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[0]}`); // Convert start time
                 const endTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}`); // Convert end time
+
+                if(startTime == '' || endTime == ''){
+                    throw new Error(`Incorrect start and or end date.`);
+                }
 
                 formData.append('start_time', startTime);
                 formData.append('end_time', endTime);
@@ -952,10 +1003,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .finally(() => {
                     document.body.style.cursor = 'default'; // Reset cursor after fetch completes
-                    
-                    // Can keep submit button disabled as the page gets refreshed after saving the booking anyway.
-                    // This stops possibility of user being able to click again after 'Ok' click in alert message
-                    //submitButton.disabled = false; 
                 });
                 
             }

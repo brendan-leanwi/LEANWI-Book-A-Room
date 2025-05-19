@@ -117,8 +117,10 @@ function display_venue_details($atts) {
             <input type="hidden" id="day" name="day">
             <input type="hidden" id="recurrence_id" name="recurrence_id">
 
-            <label for="time">Select Time(s):</label>
+            <label for="time">Please select all timeslots required for your reservation:</label>
+            <div id="time-allowed" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
             <div id="time-select" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
+            <div id="time-length" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
 
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
