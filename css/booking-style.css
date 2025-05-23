@@ -4,6 +4,19 @@
     --highlighted-button-text: #000000; /* Default border color */
 }
 
+/*This hides the content visually, but makes it available to screen readers when use the sr-only class*/
+.sr-only {  
+    position: absolute;  
+    width: 1px;  
+    height: 1px;  
+    padding: 0;  
+    margin: -1px;  
+    overflow: hidden;  
+    clip: rect(0, 0, 0, 0);  
+    white-space: nowrap;  
+    border: 0;  
+}
+
 .calendar-day.highlighted {
     background-color: var(--highlighted-button-bg) !important;
     border: 2px solid var(--highlighted-button-border) !important;
@@ -303,7 +316,7 @@
     border: 2px solid #4CAF50 !important;
     border-radius: 5px !important;
     background-color: #eafaf1 !important;
-    color: #2d7a3b !important;
+    color: #0B8935 !important;
     font-family: Arial, sans-serif !important;
     text-align: center !important; /* Centers the text */
     margin: 20px auto !important; /* Centers the box horizontally */
@@ -337,7 +350,7 @@
 #booking-date-selector input[type="submit"] {
     font-weight: bold;
     color: #fff;
-    background-color: #007bff;
+    background-color: #006FE6;
     cursor: pointer;
 }
 #booking-date-selector input[type="submit"]:hover {
@@ -347,12 +360,12 @@
 #booking-date-selector button[type="button"]{
     font-weight: bold;
     color: #fff;
-    background-color: #12be4c;
+    background-color: #0B8935;
     cursor: pointer;
 }
 
 #booking-date-selector button[type="button"]:hover{
-    background-color: #09941b;
+    background-color: #0B8935;
 }
 
 
@@ -392,7 +405,7 @@
 /* Style N/A cells */
 .booking-grid-table .na-cell {
     background-color: #d6d8db; /* Light grey color */
-    color: #6c757d; /* Darker grey text */
+    color: #4A5055; /* Darker grey text */
     font-weight: bold;
 }
 
@@ -479,7 +492,7 @@
 }
 
 #existing-recurrence-container .styled-table thead tr {
-    background-color: #b8babd;
+    background-color: #4A5055;
     color: #ffffff;
     text-align: left;
 }

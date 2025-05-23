@@ -133,7 +133,8 @@ function display_booking_search() {
     // Return the search form and results
     return '
         <form method="get" style="margin-bottom: 20px;">
-            <input type="text" name="booking_search" value="' . esc_attr($search_query) . '" placeholder="Enter your Booking ID" style="padding: 8px; width: 70%;" required>
+            <label class="sr-only" for="booking_search">Booking ID Input field</label>
+            <input type="text" id="booking_search" name="booking_search" value="' . esc_attr($search_query) . '" placeholder="Enter your Booking ID" style="padding: 8px; width: 70%;" required>
             <button type="submit" style="padding: 8px;">Search</button>
         </form>
         ' . $results_html;

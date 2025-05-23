@@ -149,6 +149,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (!bookingId) {
                     console.log("updateCalendar Normal pageload");
                     updateCalendar(venueId);
+                    updateTimeAllowedDisplay();
+                    updateTimeLengthDisplay();
                 }
             }
         })
@@ -276,10 +278,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             dayElement.style.backgroundColor = '#f0f0f0';
                             dayElement.style.color = '#ccc';
                             dayElement.classList.add('unavailable');
+                            dayElement.setAttribute('aria-disabled', 'true');
+                            dayElement.setAttribute('aria-hidden', 'true');
+                            dayElement.setAttribute('tabindex', '-1');
                         } else if (dayData && dayData.open_time !== '00:00:00' && dayData.close_time !== '00:00:00') {
                             // Available day: make it clickable
                             dayElement.style.cursor = 'pointer';
                             dayElement.classList.add('available');
+                            dayElement.setAttribute('tabindex', '0');
+                            dayElement.setAttribute('role', 'button');
+                            dayElement.setAttribute('aria-label', `${dayName}, ${monthName} ${day}, ${year}`);
 
                             dayElement.addEventListener('click', function () {
                                 if (selectedDayElement) {
@@ -288,6 +296,12 @@ document.addEventListener("DOMContentLoaded", function () {
                                 dayElement.classList.add('highlighted'); // Highlight the clicked day
                                 selectedDayElement = dayElement; // Store the selected day
 
+                                // Announce loading to screen readers
+                                const statusRegion = document.getElementById('calendar-status');
+                                if (statusRegion) {
+                                    statusRegion.textContent = 'Loading available times...';
+                                }
+
                                 fetchAvailableTimes(venueId, dateFormatted)
                                     .then(availableTimes => {
                                         // Directly call showContactForm with the available times
@@ -295,11 +309,28 @@ document.addEventListener("DOMContentLoaded", function () {
                                             document.body.style.cursor = 'wait';
                                             showContactForm(availableTimes, dateFormatted);
                                             document.body.style.cursor = 'default';
+
+                                            //Send the screen focus to the times
+                                            setTimeout(() => {
+                                                const skipToTimes = document.getElementById('skip-to-times');
+                                                if (skipToTimes) {
+                                                    skipToTimes.focus();
+                                                }
+                                            }, 0);
                                         } else {
                                             alert('No available times for this date.');
                                         }
                                     });
                             });
+
+                            // Add ability for keyboard users to "click" day buttons also
+                            dayElement.addEventListener('keydown', function (event) {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    dayElement.click(); // Reuse existing click handler (above)
+                                }
+                            });
+
                         } else {
                             // Non-available day: grey it out
                             dayElement.style.backgroundColor = '#f0f0f0';
@@ -1277,4 +1308,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+// Accessibility functionality to announce activity on Booking retreival and deletion
+document.addEventListener('DOMContentLoaded', function () {
+  const retrieveForm = document.getElementById('retrieve-booking');
+  const deleteButton = document.getElementById('delete-booking');
+  const statusRegion = document.getElementById('booking-status');
 
+  if (retrieveForm) {
+    retrieveForm.addEventListener('submit', function () {
+      statusRegion.textContent = 'Retrieving your booking, please wait.';
+    });
+  }
+
+  if (deleteButton) {
+    deleteButton.addEventListener('click', function () {
+      statusRegion.textContent = 'Deleting your booking, please wait.';
+    });
+  }
+});

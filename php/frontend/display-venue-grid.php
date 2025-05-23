@@ -149,7 +149,7 @@ function display_venue_grid() {
 
     // Display the date and grid header
     $formatted_date = date('F j, Y', strtotime($today_date));
-    $output .= '<p><h2 style="text-align: center;">Bookings for ' . $day_of_week . ' ' . $formatted_date . '</h2></p><p> </p>';
+    $output .= '<h2 style="text-align: center; margin: 30px 0;">Bookings for ' . $day_of_week . ' ' . $formatted_date . '</h2>';
 
     // Output the grid as a table
     $output .= '<table class="booking-grid-table">';
@@ -163,9 +163,13 @@ function display_venue_grid() {
             esc_html($vh->location),
             esc_html($vh->description)
         );
-        $output .= '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" class="venue-link" title="' . esc_attr($tooltip) . '">' 
-            . esc_html($vh->name) 
-            . ' <span class="link-icon">↗</span></a></th>';
+        $output .= '<th><a href="' . esc_url($vh->page_url) . '" target="_blank" rel="noopener noreferrer" class="venue-link"'
+            . ' title="' . esc_attr($tooltip) . '"'
+            . ' aria-label="' . esc_attr(
+                $vh->name . '. Capacity: ' . $vh->capacity . '. Location: ' . $vh->location ) . '">'
+            . esc_html($vh->name)
+            . '</a></th>';
+
     }
     $output .= '</tr>';
     $output .= '</thead>';
@@ -256,7 +260,13 @@ function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $booki
     // Return the appropriate cell based on booking status
     return $is_booked
         ? '<td class="booked-cell">' . ($is_booking_staff ? $booking_cell_content : 'Booked') . '</td>'
-        : '<td class="available-cell"><a href="' . esc_url($vh->page_url) . '?selected_date=' . esc_attr($today_date) . '&time_slot=' . urlencode(date('H:i', $slot_time)) . '" target="_blank">Available Slot</a></td>';
+        : '<td class="available-cell">' .
+            '<a href="' . esc_url($vh->page_url) . '?selected_date=' . esc_attr($today_date) . '&time_slot=' . urlencode(date('H:i', $slot_time)) . '"' .
+            ' target="_blank" rel="noopener noreferrer" class="booking-slot"' .
+            ' aria-label="' . esc_attr(date('g:i A', $slot_time) . ' slot available for the ' . $vh->name . '. Clicking takes you to make a booking for this time.') . '">' .
+            'Available Slot</a>' .
+            '</td>';
+
 }
 
 add_shortcode('venue_grid', 'display_venue_grid');

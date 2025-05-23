@@ -40,13 +40,11 @@ function display_venue_details($atts) {
     ?>
     <div id="venue-details" style="display: flex;">
         <div style="flex: 1; padding-right: 20px;">
-            <h1><span id="venue-name"></span></h1>
-            <p></p>
+            <h1 id="venue-name" style="margin-bottom: 1rem;"></h1>
             <p><strong>Capacity:</strong> <span id="venue-capacity"></span></p>
             <p><strong>Description:</strong> <span id="venue-description"></span></p>
             <p><strong>Location:</strong> <span id="venue-location"></span></p>
             <p id="cost-info"><strong>Cost:</strong> $<span id="venue-slot-cost">0.00</span> per <?php echo esc_html($minutes_interval); ?> minute time slot</p>
-            <p></p>
             <p><span id="venue-extra-text"></span></p>
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
             <input type="hidden" id="venue-max-slots" value="100">
@@ -59,9 +57,9 @@ function display_venue_details($atts) {
             <input type="hidden" id="updated_by_staff_only" value="">
 
             <div class="booking-container">
-                <p><h2 id="previous_booking_h2">Looking for a previously placed booking?</h2></p>
-                <p> </p>
+                <h2 id="previous_booking_h2" style="margin-bottom: 1rem;">Looking for a previously placed booking?</h2>
                 <form id="retrieve-booking" method="POST">
+                    <div id="booking-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
                     <!-- Set up nonce verification for the fetch and delete actions -->
                     <?php wp_nonce_field('fetch_booking_action', 'fetch_booking_nonce'); ?>
                     <?php wp_nonce_field('delete_booking_action', 'delete_booking_nonce'); ?>
@@ -71,27 +69,27 @@ function display_venue_details($atts) {
                     
                     <div class="button-container">
                         <button type="submit" class="find-button">Retrieve Booking</button>
-                        <button type="button" id="delete-booking" class="find-button" style="background-color: red; color: white;">Delete Booking</button>
+                        <button type="button" id="delete-booking" class="find-button" style="background-color: #E60000; color: white;">Delete Booking</button>
                     </div>
                 </form>
             </div>    
 
         </div>
         <div style="flex: 1;">
-            <img id="venue-image" src="" alt="Venue Image">
+            <img id="venue-image" src="" alt="Image of the venue supplied by a URL">
         </div>
     </div>
  
-    <p><br></p>
-    <h2>Available Days Calendar</h2>
-    <p><br></p>
+    <h2 style="margin-bottom: 1rem; margin-top: 1rem;">Available Days Calendar</h2>
     <p>Please select desired date to see available times.</p>
     <div id="calendar-navigation">
         <button id="prev-month" aria-label="Previous Month">&larr;</button>
-        <h3><span id="current-month"></span></h3>
+        <h3 id="current-month"></h3>
         <button id="next-month" aria-label="Next Month">&rarr;</button>
     </div>
     <div id="calendar"></div>
+    <div id="calendar-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
     
     <?php
     // Only include reCAPTCHA script if enabled
@@ -108,19 +106,17 @@ function display_venue_details($atts) {
         ?>
         <form id="booking-form" method="POST" style="max-width: 600px; margin: 0 auto;">
             <?php wp_nonce_field('submit_booking_action', 'submit_booking_nonce'); ?>
-            <p><br></p>
-            <p>
-            <h2 id="available-times-heading"></h2>
-            </p>
-            <p><br></p>
+            
+            <h2 id="available-times-heading" style="margin-bottom: 1rem; margin-top: 1rem;"></h2>
+            
             <input type="hidden" id="venue_id" value="<?php echo esc_html($atts['venue_id']); ?>">
             <input type="hidden" id="day" name="day">
             <input type="hidden" id="recurrence_id" name="recurrence_id">
 
-            <label for="time">Please select all timeslots required for your reservation:</label>
-            <div id="time-allowed" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
+            <label for="time" id="skip-to-times" tabindex="0">Please select all timeslots required for your reservation:</label>
+            <div id="time-allowed" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;" tabindex="0"></div>
             <div id="time-select" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
-            <div id="time-length" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
+            <div id="time-length" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;" tabindex="0"></div>
 
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
@@ -153,17 +149,14 @@ function display_venue_details($atts) {
             <select id="audience" name="audience" required style="width: 100%; padding: 8px; margin-bottom: 10px; display: <?php echo ($show_audiences === 'yes' || $is_booking_staff) ? 'block' : 'none'; ?>;"></select>
             <!--<input type="hidden" name="audience" value="1"> Default value for audience -->
 
-            <p><br></p>
-            <div id="affirmations" style="display: none;">
+            <div id="affirmations" style="display: none; margin-bottom: 1rem; margin-top: 1rem;">
             </div>
 
             <div id="conditions-of-use" style="display: none;">
             </div>
 
             <div id="cost-container">
-                <p><br></p>
-                <p id="total-cost-text"><strong>Total Cost:</strong> $<span id="total-cost">0.00</span></p>
-                <p><br></p>
+                <p id="total-cost-text" style="margin-bottom: 1rem; margin-top: 1rem;"><strong>Total Cost:</strong> $<span id="total-cost">0.00</span></p>
             </div>
 
             <button type="submit" class="book-button">Submit Booking</button>

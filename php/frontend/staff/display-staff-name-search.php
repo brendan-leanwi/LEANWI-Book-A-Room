@@ -88,9 +88,12 @@ function display_staff_name_search() {
     // Return the search form and results
     return '<H2>Search by Name</H2> 
         <form method="get" style="margin-bottom: 20px;">
-            <input type="text" name="staff_search" value="' . esc_attr($search_query) . '" placeholder="Search by name or organization" style="padding: 8px; width: 70%;" required>
-            <input type="date" name="start_date" value="' . esc_attr($start_date) . '" style="padding: 8px;">
-            <input type="date" name="end_date" value="' . esc_attr($end_date) . '" style="padding: 8px;">
+            <label class="sr-only" for="staff_search">Enter a name input field</label>
+            <input type="text" id="staff_search" name="staff_search" value="' . esc_attr($search_query) . '" placeholder="Search by name or organization" style="padding: 8px; width: 70%;" required>
+            <label class="sr-only" for="start_date">Date input field for start of booking search</label>
+            <input type="date" id="start_date" name="start_date" value="' . esc_attr($start_date) . '" style="padding: 8px;">
+            <label class="sr-only" for="end_date">Date input field for end of booking search</label>
+            <input type="date" id="end_date" name="end_date" value="' . esc_attr($end_date) . '" style="padding: 8px;">
             <button type="submit" style="padding: 8px;">Search</button>
         </form>
         ' . $results_html;
