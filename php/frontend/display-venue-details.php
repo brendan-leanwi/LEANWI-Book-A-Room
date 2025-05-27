@@ -82,6 +82,8 @@ function display_venue_details($atts) {
  
     <h2 style="margin-bottom: 1rem; margin-top: 1rem;">Available Days Calendar</h2>
     <p>Please select desired date to see available times.</p>
+    <div class="sr-only">Please use the tab button to navigate the previous and next month buttons and to navigate to the next available day in the month that is bookable.
+        Hitting the enter or space key on a day will navigate you to where you can book a time for that day.</div>
     <div id="calendar-navigation">
         <button id="prev-month" aria-label="Previous Month">&larr;</button>
         <h3 id="current-month"></h3>
@@ -105,6 +107,7 @@ function display_venue_details($atts) {
         $is_booking_staff = in_array('booking_staff', (array) $current_user->roles);
         ?>
         <form id="booking-form" method="POST" style="max-width: 600px; margin: 0 auto;">
+            <div id="booking-form-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
             <?php wp_nonce_field('submit_booking_action', 'submit_booking_nonce'); ?>
             
             <h2 id="available-times-heading" style="margin-bottom: 1rem; margin-top: 1rem;"></h2>
@@ -115,13 +118,15 @@ function display_venue_details($atts) {
 
             <label for="time" id="skip-to-times" tabindex="0">Please select all timeslots required for your reservation:</label>
             <div id="time-allowed" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;" tabindex="0"></div>
+            <div id="time-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+            <button id="skip-to-summary" class="sr-only" onclick="focusBookingSummary()">Skip time selection and go to booking summary</button>
             <div id="time-select" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;"></div>
             <div id="time-length" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;" tabindex="0"></div>
 
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
             
-            <label for="name">Organization:</label>
+            <label for="organization">Organization:</label>
             <input type="text" id="organization" name="organization" style="width: 100%; padding: 8px; margin-bottom: 10px;">
 
             <label for="email">Email:</label>

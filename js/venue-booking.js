@@ -232,6 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const month = currentMonth.getMonth();
                     const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     currentMonthDisplay.textContent = monthName;
+                    announceCalendarStatus("Now showing " + monthName);
         
                     // First and last days of the current month
                     const firstDay = new Date(year, month, 1);
@@ -453,7 +454,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (currentMonth > today) {  // Won't go to any month prior to today
                 currentMonth.setMonth(currentMonth.getMonth() - 1); 
                 currentMonth.setDate(1); // Reset to the first day of the month
-                console.log("updateCalendar prev Month click");
+                announceCalendarStatus("Loading previous month");
                 updateCalendar(venueId);
             }
         });
@@ -481,7 +482,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (currentMonth < maxMonthLimit) {
                 currentMonth.setMonth(currentMonth.getMonth() + 1);
                 currentMonth.setDate(1); // Reset to the first day to avoid jump issues
-                console.log("updateCalendar next Month click");
+                announceCalendarStatus("Loading next month");
                 updateCalendar(venueId);
             }
         });
@@ -511,9 +512,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById('next-month').style.visibility = 'visible';
             }
         }
-        
-        //console.log("updateCalendar randomly placed call?");
-        //updateCalendar(venueId);
+
+        function announceCalendarStatus(message) {
+            const statusEl = document.getElementById('calendar-status');
+            if (statusEl) {
+                statusEl.textContent = ''; // Clear first to ensure screen readers pick up the update
+                setTimeout(() => {
+                    statusEl.textContent = message;
+                }, 10); // Short delay allows screen readers to detect change
+            }
+        }
+
         
         function fetchAvailableTimes(venueId, date, uniqueId = null) {
             currentDetailsDate = date;
@@ -540,14 +549,42 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function updateTimeLengthDisplay() {
-            const selectedButtons = document.querySelectorAll('.time-button.selected');
-            const totalMinutes = selectedButtons.length * parseInt(bookingSettings.minutesInterval, 10);
-
+            const selectedButtons = Array.from(document.querySelectorAll('.time-button.selected'));
             const timeLengthDiv = document.getElementById('time-length');
+
             if (selectedButtons.length > 0) {
-                timeLengthDiv.textContent = `Your current booking is for ${totalMinutes} minute${totalMinutes !== 1 ? 's' : ''}.`;
+                const times = selectedButtons
+                    .map(btn => btn.dataset.timeValue)
+                    .sort(); // Assumes time values are in HH:mm or HH:mm:ss
+
+                const startTime = times[0];
+                const lastTime = times[times.length - 1];
+                const minutesPerSlot = parseInt(bookingSettings.minutesInterval, 10);
+                const endTime = calculateEndTime(lastTime, minutesPerSlot);
+
+                const totalMinutes = selectedButtons.length * minutesPerSlot;
+
+                const readableStart = formatTimeTo12Hour(startTime);
+                const readableEnd = formatTimeTo12Hour(endTime);
+
+                const summaryText = `Your current booking is for ${totalMinutes} minute${totalMinutes !== 1 ? 's' : ''} from ${readableStart} until ${readableEnd}.`;
+
+                timeLengthDiv.textContent = summaryText;
+                timeLengthDiv.setAttribute('aria-live', 'polite'); // Ensure it's read when updated
+                timeLengthDiv.setAttribute('aria-atomic', 'true');
             } else {
-                timeLengthDiv.textContent = ''; // Clear if nothing is selected
+                timeLengthDiv.textContent = '';
+                timeLengthDiv.removeAttribute('aria-live');
+                timeLengthDiv.removeAttribute('aria-atomic');
+            }
+        }
+
+        function focusBookingSummary() {
+            const summary = document.getElementById('time-length');
+            if (summary) {
+                summary.focus();
+                summary.setAttribute('aria-live', 'polite');
+                summary.setAttribute('role', 'status');
             }
         }
 
@@ -556,7 +593,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!isBookingStaff) {
                 const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
                 if (maxSlots < 100) {
-                    timeAllowedDiv.textContent = `You can select up to ${maxSlots} timeslot${maxSlots !== 1 ? 's' : ''}.`;
+                    timeAllowedDiv.textContent = `You can select ${maxSlots !== 1 ? ' up to ' : ''} ${maxSlots} ${maxSlots !== 1 ? ' consecutive ' : ''} timeslot${maxSlots !== 1 ? 's' : ''}.`;
                 } else {
                     timeAllowedDiv.textContent = ''; // Clear for unlimited booking
                 }
@@ -616,9 +653,27 @@ document.addEventListener("DOMContentLoaded", function () {
                     button.title = `${formatTimeTo12Hour(time.start)} - ${formatTimeTo12Hour(endTime)}`;
                 });
 
+                button.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' || (event.ctrlKey && event.shiftKey && event.key === 'X')) {
+                        focusBookingSummary();
+                        event.preventDefault();
+                    }
+                });
+
                 button.addEventListener('click', () => handleTimeSelection(button, index));
                 timeSelectDiv.appendChild(button);
             });
+
+            // Construct accessible text
+            let availableCount = availableTimes.filter(t => !(t.booked && !t.is_booked_for_unique_id)).length;
+
+            const timeStatus = document.getElementById('time-status');
+            if (availableCount > 0) {
+                timeStatus.textContent = `${availableCount} time ${availableCount === 1 ? 'slot is' : 'slots are'} available for ${formattedDate}. Use the Tab key to navigate available times. Hit the escape key once you are done selecting your times.`;
+            } else {
+                timeStatus.textContent = `No available time slots for ${formattedDate}.`;
+            }
+
 
             dayInput.value = day;
             
@@ -669,30 +724,30 @@ document.addEventListener("DOMContentLoaded", function () {
                             table.classList.add('affirmations-table');
                         
                             data.forEach(affirmation => {
-                                // Create a new row
                                 const row = document.createElement('tr');
-                        
-                                // Create the checkbox cell
+
+                                // Checkbox cell
                                 const checkboxCell = document.createElement('td');
                                 checkboxCell.style.width = '5%';
                                 const checkbox = document.createElement('input');
                                 checkbox.type = 'checkbox';
                                 checkbox.id = `affirmation-${affirmation.id}`;
                                 checkbox.name = `affirmation-${affirmation.id}`;
-                                checkbox.required = true; // Set as required                               
+                                checkbox.required = true;
                                 checkbox.checked = existingRecord;
                                 checkboxCell.appendChild(checkbox);
-                        
-                                // Create the text cell
+
+                                // Text cell with label
                                 const textCell = document.createElement('td');
-                                textCell.textContent = affirmation.affirmation;
-                                textCell.style.paddingLeft = '10px'; // Add padding for spacing
-                        
-                                // Append cells to the row
+                                const checkboxLabel = document.createElement('label');
+                                checkboxLabel.htmlFor = checkbox.id;
+                                checkboxLabel.innerHTML = affirmation.affirmation;
+                                textCell.appendChild(checkboxLabel);
+                                textCell.style.paddingLeft = '10px';
+
+                                // Append to row and table
                                 row.appendChild(checkboxCell);
                                 row.appendChild(textCell);
-                        
-                                // Append the row to the table
                                 table.appendChild(row);
                             });
                         
@@ -727,14 +782,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Create the text paragraph
                 const textParagraph = document.createElement('p');
-                textParagraph.textContent = "In order to reserve a room, we require that you review and agree to the Meeting Room Conditions of Use, which can be viewed ";
+                textParagraph.textContent = "In order to reserve a room, we require that you review and agree to the Meeting Room Conditions of Use. ";
 
                 // Create the link to the PDF (make "here" the hyperlink)
                 const link = document.createElement('a');
                 link.href = conditionsOfUseUrl;
-                link.textContent = "here"; // Only "here" as the hyperlink
+                link.textContent = "Navigate to the Conditions of Use document."; // hyperlink
                 link.target = "_blank"; // Opens the link in a new tab
-                link.style.fontWeight = 'bold'; // Optional: make the link bold
+                link.style.fontWeight = 'bold'; 
+                link.style.textDecoration = 'underline';
                 textParagraph.appendChild(link); // Append the link to the paragraph
 
                 // Create the table for checkbox and label
@@ -947,11 +1003,15 @@ document.addEventListener("DOMContentLoaded", function () {
             function submitForm(formData) {
                 const contactFormContainer = document.getElementById('contact-form-container');
                 const selectedTimes = contactFormContainer.dataset.selectedTimes ? contactFormContainer.dataset.selectedTimes.split(',') : [];
-                
+
+                const submitButton = document.querySelector('.book-button');
+                const bookingForm = document.getElementById('booking-form');
+                const statusRegion = document.getElementById('booking-form-status');
+
                 // Add the nonce
                 formData.append('submit_booking_nonce', document.querySelector('#submit_booking_nonce').value);
-        
-                // Append required data to formData
+
+                // Append required data
                 formData.append('venue_id', document.getElementById('venue_id').value);
                 formData.append('total_cost', document.getElementById('total-cost').textContent);
                 formData.append('venue_name', document.getElementById('venue-name').textContent);
@@ -960,50 +1020,53 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append('use_business_days_only', document.getElementById('use_business_days_only').value);
                 formData.append('venue_admin_email', document.getElementById('venue_admin_email').value);
                 formData.append('updated_by_staff_only', document.getElementById('updated_by_staff_only').value);
-            
+
                 if (existingRecord) {
                     const uniqueId = document.getElementById('unique_id').value;
                     formData.append('unique_id', uniqueId);
                 }
-            
-                // Ensure at least one time slot is selected
+
                 if (selectedTimes.length === 0) {
                     alert('Please select at least one time slot.');
-                    submitButton.disabled = false; // Re-enable the button
+                    submitButton.disabled = false;
                     return;
                 }
-            
-                // Check against maximum allowed booking slots if not a staff member
-                if(!isBookingStaff) {
+
+                if (!isBookingStaff) {
                     const maxSlots = parseInt(document.getElementById('venue-max-slots').value, 10);
                     if (selectedTimes.length > maxSlots) {
                         alert(`You can book a maximum of ${maxSlots} timeslots per booking.`);
-                        submitButton.disabled = false; // Re-enable the button
+                        submitButton.disabled = false;
                         return;
                     }
                 }
-            
-                // Assuming selectedTimes contains time strings in 'h:mm a' format (e.g., '9:00 am')
+
                 const currentDateFormatted = returnCurrentDate();
+                const startTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[0]}`);
+                const endTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}`);
 
-                const startTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[0]}`); // Convert start time
-                const endTime = formatTo24Hour(`${currentDetailsDate} ${selectedTimes[selectedTimes.length - 1]}`); // Convert end time
-
-                if(startTime == '' || endTime == ''){
-                    throw new Error(`Incorrect start and or end date.`);
+                if (startTime === '' || endTime === '') {
+                    throw new Error(`Incorrect start and/or end date.`);
                 }
 
                 formData.append('start_time', startTime);
                 formData.append('end_time', endTime);
                 formData.append('current_time', currentDateFormatted);
-            
-                // Add plugin settings
+
                 formData.append('minutes_interval', bookingSettings.minutesInterval);
                 formData.append('admin_email_address', bookingSettings.adminEmailAddress);
                 formData.append('send_admin_email', bookingSettings.sendAdminEmail);
                 formData.append('is_booking_staff', isBookingStaff);
 
-                document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+                if (statusRegion) {
+                    statusRegion.textContent = '';
+                    requestAnimationFrame(() => {
+                        statusRegion.textContent = 'Submitting your booking. Please wait.';
+                    });
+                }
+
+                document.body.style.cursor = 'wait';
+
                 fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
                     method: 'POST',
                     body: formData
@@ -1017,25 +1080,29 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(data => {
                     if (data.success) {
                         const message = data.message + (data.unique_id ? `\n\nBooking Reference: ${data.unique_id}` : '');
-                        alert(message); // Show the message in an alert box
-
-                        // Refresh the page after the user clicks "OK" without any parameters
+                        if (statusRegion) {
+                            statusRegion.textContent = 'Booking submitted successfully. ' + (data.unique_id ? `Reference: ${data.unique_id}.` : '');
+                        }
+                        alert(message);
                         location.href = location.pathname;
-
                     } else {
-                        console.error('Submit Error:', data.message);
+                        if (statusRegion) {
+                            statusRegion.textContent = 'There was an issue submitting your booking. ' + data.message;
+                        }
                         alert(data.message);
-                        submitButton.disabled = false;
                     }
                 })
                 .catch(error => {
                     console.error('Error submitting booking:', error.message);
+                    if (statusRegion) {
+                        statusRegion.textContent = 'An error occurred while submitting your booking.';
+                    }
                     alert('An error occurred while submitting your booking: ' + error.message);
                 })
                 .finally(() => {
-                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                    document.body.style.cursor = 'default';
+                    submitButton.disabled = false;
                 });
-                
             }
         });   
         
@@ -1310,19 +1377,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Accessibility functionality to announce activity on Booking retreival and deletion
 document.addEventListener('DOMContentLoaded', function () {
-  const retrieveForm = document.getElementById('retrieve-booking');
-  const deleteButton = document.getElementById('delete-booking');
-  const statusRegion = document.getElementById('booking-status');
+    const retrieveForm = document.getElementById('retrieve-booking');
+    const deleteButton = document.getElementById('delete-booking');
+    const statusRegion = document.getElementById('booking-status');
 
-  if (retrieveForm) {
-    retrieveForm.addEventListener('submit', function () {
-      statusRegion.textContent = 'Retrieving your booking, please wait.';
-    });
-  }
+    if (retrieveForm) {
+        retrieveForm.addEventListener('submit', function () {
+        statusRegion.textContent = 'Retrieving your booking, please wait.';
+        });
+    }
 
-  if (deleteButton) {
-    deleteButton.addEventListener('click', function () {
-      statusRegion.textContent = 'Deleting your booking, please wait.';
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function () {
+        statusRegion.textContent = 'Deleting your booking, please wait.';
+        });
+    }
+
+
+    const timeSelectDiv = document.getElementById('time-select');
+
+    // Add listener to each button *after they are created*
+    timeSelectDiv.addEventListener('keydown', function (event) {
+        const isButton = event.target.classList.contains('time-button');
+        if (!isButton) return;
+
+        if (event.key === 'Escape') {
+            focusBookingSummary();
+            event.preventDefault();
+        }
     });
-  }
+        
 });
