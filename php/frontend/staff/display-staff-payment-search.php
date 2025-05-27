@@ -116,9 +116,9 @@ function display_payment_name_search() {
             <th style="border: 1px solid #ddd; padding: 8px;">Total Cost</th>
             <th style="border: 1px solid #ddd; padding: 8px;">Has Paid?</th>
             <th style="border: 1px solid #ddd; padding: 8px;">Feedback Request Sent?</th>
-            <th style="border: 1px solid #ddd; padding: 8px;"> </th>
-            <th style="border: 1px solid #ddd; padding: 8px;"> </th>
-            <th style="border: 1px solid #ddd; padding: 8px;"> </th>
+            <th style="border: 1px solid #ddd; padding: 8px;"><div class="sr-only">View the booking</div> </th>
+            <th style="border: 1px solid #ddd; padding: 8px;"><div class="sr-only">Mark the booking as paid</div> </th>
+            <th style="border: 1px solid #ddd; padding: 8px;"><div class="sr-only">Send a feedback request</div> </th>
         </tr></thead><tbody>';
 
         foreach ($results as $row) {
@@ -148,12 +148,14 @@ function display_payment_name_search() {
                            data-booking-id="%s" 
                            data-new-status="%s" 
                            data-nonce="%s"
+                           role="button"
                            style="color: blue; text-decoration: underline;">%s</a>
                     </td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                         <a href="#" class="send-feedback-request-link" 
                            data-booking-id="%s" 
                            data-nonce="%s"
+                           role="button"
                            style="color: blue; text-decoration: underline;">Send Feedback Request</a>
                     </td>
                 </tr>',
@@ -182,9 +184,12 @@ function display_payment_name_search() {
     // Return the search form and results
     return '<H2>Search by Name</H2> 
     <form method="get" style="margin-bottom: 20px;">
-        <input type="text" name="name_search" value="' . esc_attr($search_query) . '" placeholder="Search by name or organization" style="padding: 8px; width: 50%;">
-        <input type="date" name="start_date" value="' . esc_attr($start_date) . '" style="padding: 8px;">
-        <input type="date" name="end_date" value="' . esc_attr($end_date) . '" style="padding: 8px;">
+        <label class="sr-only" for="name_search">Enter a name input field</label>
+        <input type="text" id="name_search" name="name_search" value="' . esc_attr($search_query) . '" placeholder="Search by name or organization" style="padding: 8px; width: 50%;">
+        <label class="sr-only" for="start_date">Date input field for start of booking search</label>
+        <input type="date" id="start_date" name="start_date" value="' . esc_attr($start_date) . '" style="padding: 8px;">
+        <label class="sr-only" for="end_date">Date input field for end of booking search</label>
+        <input type="date" id="end_date" name="end_date" value="' . esc_attr($end_date) . '" style="padding: 8px;">
 
         <!-- Hidden field to send "0" when checkbox is not checked -->
         <input type="hidden" name="unpaid_only" value="0">

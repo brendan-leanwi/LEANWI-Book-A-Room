@@ -36,8 +36,7 @@ function display_recurring_bookings() {
     ob_start();
     ?>
     <div class="recurring-choices-container" id="recurring-choices-container" style="display: block">
-        <p><h2 id="recurring_choices_heading" style="text-align: center;">Make a new recurrent booking or find an existing one</h2></p>
-        <p> </p>
+        <h2 id="recurring_choices_heading" style="text-align: center; margin-bottom: 1rem; margin-top: 1rem;">Make a new recurrent booking or find an existing one</h2>
         <form id="recurring-choices" method="POST">
             <div class="button-container">
                 <button type="submit" class="find-button">Add a recurrent Booking</button>
@@ -75,12 +74,11 @@ function display_recurring_bookings() {
         <?php
     }
     ?>
-    <div class="recurrence-details-container" id="recurrence-details-container" style="display: none">
+    <div class="recurrence-details-container" id="recurrence-details-container" style="display: none; margin-bottom: 1rem; margin-top: 1rem;">
         <form id="recurrence-details-form" method="POST" style="max-width: 600px; margin: 0 auto;">
             <?php wp_nonce_field('submit_recurrence_action', 'submit_recurrence_nonce'); ?>
             <?php wp_nonce_field('delete_recurrence_action', 'delete_recurrence_nonce'); ?>
             
-            <p><br></p>
             <input type="hidden" id="recurrence_id" name="recurrence_id" value="0">
 
 
