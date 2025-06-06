@@ -60,8 +60,8 @@ function plugin_update_info($res, $action, $args) {
         'author'          => '<a href="https://github.com/brendan-leanwi">Brendan Tuckey</a>',
         'homepage'        => 'https://github.com/' . GITHUB_REPO,
         'download_link'   => $release->zipball_url,
-        'requires'        => '5.0',
-        'tested'          => '6.5',
+        'requires'        => '6.7',
+        'tested'          => '6.8.1',
         'sections'        => [
             'description' => 'Room Booking functionality compatible with LEANWI Divi WordPress websites.',
         ],
