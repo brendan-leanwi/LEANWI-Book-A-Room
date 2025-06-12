@@ -981,7 +981,7 @@ document.addEventListener("DOMContentLoaded", function () {
             submitButton.disabled = true; // Disable the button immediately to prevent further clicks
 
             // Execute reCAPTCHA if enabled
-            if (bookingSettings.enableRecaptcha) {
+            if (bookingSettings.enableRecaptcha === 'yes') {
                 grecaptcha.ready(function() {
                     grecaptcha.execute(bookingSettings.recaptchaSiteKey, { action: 'submit' })
                     .then(function(token) {
