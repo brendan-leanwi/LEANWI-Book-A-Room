@@ -371,7 +371,7 @@ function leanwi_venues_page() {
         echo '<tr><td colspan="6">' . esc_html($venues['error']) . '</td></tr>';
     } else {
         // Display each venue in a row
-        foreach ($venues['venues'] as $venue) {
+        foreach ($venues as $venue) {
             echo '<tr>';
             echo '<td>' . esc_html($venue['venue_id']) . '</td>';
             echo '<td>' . esc_html($venue['name']) . '</td>';
@@ -398,31 +398,31 @@ function leanwi_venues_page() {
 
 // Function to get venues
 function fetch_venues() {
-    // Construct the URL for get-venues.php
-    $url = plugins_url('LEANWI-Book-A-Room/php/plugin/get-venues.php');
-    // Log the URL to the debug.log file
-    error_log('Fetching venues from URL: ' . $url); // Log the URL
+    global $wpdb;
 
-    // Use wp_remote_get to fetch the data with SSL verification disabled
-    $response = wp_remote_get($url, [
-        'sslverify' => false, // Disable SSL verification
-        'timeout' => 15, // Increase the timeout to 15 seconds
-    ]);
+    $venue_table = $wpdb->prefix . 'leanwi_booking_venue';
 
-    // Check for errors
-    if (is_wp_error($response)) {
-        // Handle error
-        error_log('Error fetching venues: ' . $response->get_error_message());
-        return ['error' => 'Unable to fetch venues.'];
+    // Make sure table exists
+    if ($wpdb->get_var("SHOW TABLES LIKE '$venue_table'") !== $venue_table) {
+        return ['error' => "Table $venue_table does not exist"];
     }
 
-    // Get the body of the response
-    $body = wp_remote_retrieve_body($response);
+    $venues = $wpdb->get_results("SELECT venue_id, name, display_order, capacity, location, historic FROM $venue_table ORDER BY display_order", ARRAY_A);
 
-    // Decode the JSON response
-    $venues = json_decode($body, true);
+    if ($venues === null) {
+        return ['error' => 'Query failed', 'last_error' => $wpdb->last_error];
+    }
 
-    return $venues; // Return the venues array
+    return array_map(function ($venue) {
+        return [
+            'venue_id' => intval($venue['venue_id']),
+            'name' => esc_html($venue['name']),
+            'display_order' => intval($venue['display_order']),
+            'capacity' => intval($venue['capacity']),
+            'location' => esc_html($venue['location']),
+            'historic' => intval($venue['historic']),
+        ];
+    }, $venues);
 }
 
 // Function to handle deletion
@@ -2007,15 +2007,12 @@ function leanwi_edit_affirmation_page() {
 function leanwi_reports_page() {
     // Fetch venue data from the database
     // Fetch venues
-    $venues_response = fetch_venues();
-    if (isset($venues_response['error'])) {
-        echo '<tr><td colspan="6">' . esc_html($venues_response['error']) . '</td></tr>';
-        return; // Exit early if there's an error
+    $venues = fetch_venues();
+    if (isset($venues['error'])) {
+        echo '<tr><td colspan="6">' . esc_html($venues['error']) . '</td></tr>';
+        return;
     }
-
-    // Ensure venues is set and is an array
-    $venues = isset($venues_response['venues']) ? $venues_response['venues'] : [];
-
+    
     // Define the directory path for reports
     $upload_dir = wp_upload_dir();
     $reports_dir = $upload_dir['basedir'] . '/leanwi_booking_reports/';
