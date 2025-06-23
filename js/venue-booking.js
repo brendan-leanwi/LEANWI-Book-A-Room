@@ -987,21 +987,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function formatTo24Hour(dateString) {
-            // Expecting: "2025-05-24 11:00 am"
-            const match = dateString.match(/^(\d{4}-\d{2}-\d{2}) (\d{1,2}):(\d{2}) (am|pm)$/i);
-            if (!match) {
-                console.error("Unrecognized date format:", dateString);
-                return '';
+            // Try 12-hour format first
+            let match = dateString.match(/^(\d{4}-\d{2}-\d{2}) (\d{1,2}):(\d{2}) (am|pm)$/i);
+            if (match) {
+                let [, datePart, hour, minute, period] = match;
+                hour = parseInt(hour, 10);
+                if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+                if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
+                const hourStr = hour.toString().padStart(2, '0');
+                return `${datePart} ${hourStr}:${minute}:00`;
             }
 
-            let [, datePart, hour, minute, period] = match;
-            hour = parseInt(hour, 10);
-            if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
-            if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
+            // Try 24-hour format
+            match = dateString.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2})$/);
+            if (match) {
+                const [, datePart, hour, minute] = match;
+                return `${datePart} ${hour}:${minute}:00`;
+            }
 
-            const hourStr = hour.toString().padStart(2, '0');
-            return `${datePart} ${hourStr}:${minute}:00`;
+            console.error("Unrecognized date format:", dateString);
+            return '';
         }
+
 
         document.querySelector('#booking-form').addEventListener('submit', function (event) {
             event.preventDefault();
