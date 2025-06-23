@@ -50,15 +50,22 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentDetailsDate = new Date();
 
     document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-    fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-venue-details.php?venue_id=${venueId}`)
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_get_venue_details&venue_id=${venueId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
-        .then(venue => {
+        .then(fetched_venue_data => {
+            console.log("Venue fetched:", fetched_venue_data);
 
+            if (!fetched_venue_data.success) {
+                console.error("Venue error:", fetched_venue_data.data?.message || "Unknown error");
+                return;
+            }
+
+            const venue = fetched_venue_data.data;
             // Check if the venue is restricted to staff-only booking.
             // Should only need this if someone is misdirected somehow.
             if (!isBookingStaff && venue.bookable_by_staff_only == 1) {
@@ -161,17 +168,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         //Fetch categories even if we're not showing them to users as we might need to save their current value
         document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-        fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories.php')
+        fetch(`${bookingSettings.ajax_url}?action=leanwi_get_categories`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 return response.json();
             })
-            .then(data => {
+            .then(fetched_category_data => {
+
+                if (!fetched_category_data.success) {
+                    console.error("Categories error:", fetched_category_data.data?.message || "Unknown error");
+                    return;
+                }
+
+                const categories = fetched_category_data.data;
+
                 // Populate Category dropdown
                 const categorySelect = document.getElementById('category');
-                data.forEach(category => {
+                categories.forEach(category => {
                     let option = document.createElement('option');
                     option.value = category.category_id;
                     option.textContent = category.category_name;
@@ -184,18 +199,25 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
         //Fetch audiences even if we're not showing them to users as we might need to save their current value
-        document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-        fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-audiences.php')
+        fetch(`${bookingSettings.ajax_url}?action=leanwi_get_audiences`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 return response.json();
             })
-            .then(data => {
+            .then(fetched_audience_data => {
+
+                if (!fetched_audience_data.success) {
+                    console.error("Audiences error:", fetched_audience_data.data?.message || "Unknown error");
+                    return;
+                }
+
+                const audiences = fetched_audience_data.data;
+
                 // Populate Audience dropdown
                 const audienceSelect = document.getElementById('audience');
-                data.forEach(audience => {
+                audiences.forEach(audience => {
                     let option = document.createElement('option');
                     option.value = audience.audience_id;
                     option.textContent = audience.audience_name;
@@ -211,14 +233,21 @@ document.addEventListener("DOMContentLoaded", function () {
         function updateCalendar(venueId, callback) {
             document.body.style.cursor = 'wait';
             // Fetch the available days for the venue
-            fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-days.php?venue_id=${encodeURIComponent(venueId)}`)
+            fetch(`${bookingSettings.ajax_url}?action=leanwi_get_available_days&venue_id=${venueId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     return response.json();
                 })
-                .then(availableDays => {
+                .then(fetched_available_days_data => {
+
+                    if (!fetched_available_days_data.success) {
+                        console.error("Available Days error:", fetched_available_days_data.data?.message || "Unknown error");
+                        return;
+                    }
+
+                    const availableDays = fetched_available_days_data.data;
                     const calendar = document.getElementById('calendar');
                     const currentMonthDisplay = document.getElementById('current-month');
                     const today = new Date(); // Get today's date
@@ -529,9 +558,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const params = new URLSearchParams({ venue_id: venueId, date: date });
             if (uniqueId) params.append('unique_id', uniqueId);
-            const finalUrl = `/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-available-times.php?${params}`;
 
-            document.body.style.cursor = 'wait'; // Set cursor before fetch starts
+            const finalUrl = `${bookingSettings.ajax_url}?action=leanwi_get_available_times&${params.toString()}`;
+
+            document.body.style.cursor = 'wait';
             return fetch(finalUrl)
                 .then(response => {
                     if (!response.ok) {
@@ -539,12 +569,19 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     return response.json();
                 })
+                .then(result => {
+                    if (!result.success) {
+                        console.error("Server error:", result.data?.message || "Unknown error");
+                        return [];
+                    }
+                    return result.data; // return the array of slot objects
+                })
                 .catch(error => {
                     console.error('Error fetching available times:', error);
-                    return []; // Return an empty array on error
+                    return [];
                 })
                 .finally(() => {
-                    document.body.style.cursor = 'default'; // Reset cursor after fetch completes
+                    document.body.style.cursor = 'default';
                 });
         }
 
@@ -697,18 +734,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if(showAffirmations === 1) {
                 document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-                fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-affirmations.php')
+                fetch(`${bookingSettings.ajax_url}?action=leanwi_get_affirmations`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error! Status: ${response.status}`);
                         }
                         return response.json();
                     })
-                    .then(data => {
+                    .then(fetched_affirmations_data => {
+                        if (!fetched_affirmations_data.success) {
+                            console.error("Affirmations error:", fetched_affirmations_data.data?.message || "Unknown error");
+                            return;
+                        }
+
+                        const affirmations = fetched_affirmations_data.data;
                         // Reference to the affirmations div
                         const affirmationsDiv = document.getElementById('affirmations');
             
-                        if (data.length > 0) {
+                        if (affirmations.length > 0) {
                             // Clear previous content
                             affirmationsDiv.innerHTML = '';
 
@@ -723,7 +766,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             const table = document.createElement('table');
                             table.classList.add('affirmations-table');
                         
-                            data.forEach(affirmation => {
+                            affirmations.forEach(affirmation => {
                                 const row = document.createElement('tr');
 
                                 // Checkbox cell
@@ -1067,7 +1110,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 document.body.style.cursor = 'wait';
 
-                fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/submit-booking.php', {
+                fetch(`${bookingSettings.ajax_url}?action=leanwi_submit_booking`, {
                     method: 'POST',
                     body: formData
                 })
@@ -1077,8 +1120,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     return response.json();
                 })
-                .then(data => {
-                    if (data.success) {
+                .then(submit_data => {
+                    const data = submit_data.data; 
+
+                    if (submit_data.success) {
                         const message = data.message + (data.unique_id ? `\n\nBooking Reference: ${data.unique_id}` : '');
                         if (statusRegion) {
                             statusRegion.textContent = 'Booking submitted successfully. ' + (data.unique_id ? `Reference: ${data.unique_id}.` : '');
@@ -1128,7 +1173,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.style.cursor = 'wait';
             findButton.disabled = true;
             findButton.style.cursor = 'wait';
-            fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/fetch-booking.php', {
+            fetch(`${bookingSettings.ajax_url}?action=leanwi_fetch_booking`, {
                 method: 'POST',
                 body: formData
             })
@@ -1138,9 +1183,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 return response.json();
             })
-            .then(data => {
-                if (data.success) {
-                    const booking = data.data[0]; // Assuming single booking for now
+            .then(fetch_data => {
+                const data = fetch_data.data;
+                if (fetch_data.success) {
+                    const booking = data[0]; // Assuming single booking for now
 
                     // Populate form fields and display booking information
                     populateBookingFormFields(booking);
@@ -1307,10 +1353,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Update cursor and button state to "wait"
                 setLoadingState(true);
                 // Make a fetch call to delete the booking
-                fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/delete-booking.php`, {
+                fetch(`${bookingSettings.ajax_url}?action=leanwi_delete_booking`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ 
                         venue_id: document.getElementById('venue_id').value,
@@ -1329,12 +1375,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     return response.json();
                 })
-                .then(data => {
-                    if (data.success) {
-                        alert('Booking deleted successfully.');
-                    } else {
-                        alert('Failed to delete booking: ' + data.message);
-                    }
+                .then(delete_data => {
+                    alert(delete_data.data.message);
                     // Refresh the page without parameters
                     location.href = location.pathname;
                 })

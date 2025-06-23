@@ -49,15 +49,15 @@ function display_recurring_bookings() {
         <table id="recurrenceTable" class="styled-table">
             <thead>
                 <tr>
-                    <th>Venue Name</th>
-                    <th>Recurrence Type</th>
-                    <th>Interval</th>
-                    <th>End Date</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Organization</th>
-                    <th>Name</th>
-                    <th>Action</th>
+                    <th style="color: #ffffff">Venue Name</th>
+                    <th style="color: #ffffff">Recurrence Type</th>
+                    <th style="color: #ffffff">Interval</th>
+                    <th style="color: #ffffff">End Date</th>
+                    <th style="color: #ffffff">Start Time</th>
+                    <th style="color: #ffffff">End Time</th>
+                    <th style="color: #ffffff">Organization</th>
+                    <th style="color: #ffffff">Name</th>
+                    <th style="color: #ffffff">Action</th>
                 </tr>
             </thead>
             <tbody id="recurrenceTableBody">

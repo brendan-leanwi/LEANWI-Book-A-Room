@@ -5,7 +5,7 @@ Plugin Name:  LEANWI Book A Room
 GitHub URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Update URI:   https://github.com/brendan-leanwi/LEANWI-Book-A-Room
 Description:  Room Booking functionality compatible with LEANWI Divi WordPress websites
-Version:      1.5.8
+Version:      1.6.0
 Author:       Brendan Tuckey
 Author URI:   https://github.com/brendan-leanwi
 License:      GPL2
@@ -15,12 +15,17 @@ Domain Path:  /languages
 Tested up to: 6.8.1
 */
 
-// Require additional PHP files
-require_once plugin_dir_path(__FILE__) . 'php/plugin/menu-functions.php';  // Menu Functions File
-require_once plugin_dir_path(__FILE__) . 'php/plugin/schema.php'; //File containing table create and drop statements
-require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-details.php'; // Contains the page and shortcode for the venue_details shortcode
+// File to declare all of my AJAX functionality files
+require_once plugin_dir_path(__FILE__) . 'php/ajax/ajax-functions.php';
+
+// plugin functionality php files
+require_once plugin_dir_path(__FILE__) . 'php/plugin/menu-functions.php';  
+require_once plugin_dir_path(__FILE__) . 'php/plugin/schema.php'; 
 require_once plugin_dir_path(__FILE__) . 'php/plugin/plugin-updater.php';
-require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-grid.php'; // Contains the page and shortcode for the venue_grid shortcode
+
+// Shortcode php files
+require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-details.php'; 
+require_once plugin_dir_path(__FILE__) . 'php/frontend/display-venue-grid.php'; 
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-name-search.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/staff/display-staff-payment-search.php';
 require_once plugin_dir_path(__FILE__) . 'php/frontend/display-booking-search.php';
@@ -34,8 +39,8 @@ register_uninstall_hook(__FILE__, __NAMESPACE__ . '\\leanwi_drop_tables');
 
 // Version-based update check
 function leanwi_update_check() {
-    $current_version = get_option('leanwi_booking_plugin_version', '1.4.22'); // Default to an old version if not set
-    $new_version = '1.5.8'; // Update this with the new plugin version
+    $current_version = get_option('leanwi_booking_plugin_version', '1.5.8'); // Default to an old version if not set
+    $new_version = '1.6.0'; // Update this with the new plugin version
 
     if (version_compare($current_version, $new_version, '<')) {
         // Run the table creation logic
@@ -60,6 +65,7 @@ function leanwi_enqueue_scripts() {
 
         // Localize the maximum booking slots setting and maxMonths
         wp_localize_script('venue-booking-js', 'bookingSettings', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
             'maxMonths' => intval(get_option('leanwi_booking_months', 2)), // Default to 2 months if not set
             'minutesInterval' => intval(get_option('leanwi_minutes_interval', 30)), // Default to 30 minutes if not set
             'showZeroCost' => get_option('leanwi_show_zero_cost', 'no'), // Default to No
@@ -72,7 +78,9 @@ function leanwi_enqueue_scripts() {
             'showCategories' => get_option('leanwi_show_categories', 'no'),
             'showAudiences' => get_option('leanwi_show_audiences', 'no'),
             'enableRecaptcha' => get_option('leanwi_enable_recaptcha', 'no'),
-            'recaptchaSiteKey' => get_option('leanwi_recaptcha_site_key', '')
+            'recaptchaSiteKey' => get_option('leanwi_recaptcha_site_key', ''),
+            'plugin_url' => plugin_dir_url(__FILE__)
+
         ));
 
         wp_enqueue_script('venue-booking-js');
@@ -88,7 +96,9 @@ function leanwi_enqueue_scripts() {
         );
 
         wp_localize_script('venue-grid-js', 'bookingSettings', array(
-            'maxMonths' => intval(get_option('leanwi_booking_months', 2))
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'maxMonths' => intval(get_option('leanwi_booking_months', 2)),
+            'plugin_url' => plugin_dir_url(__FILE__)
         ));
 
         wp_enqueue_script('venue-grid-js');
@@ -114,6 +124,11 @@ function leanwi_enqueue_scripts() {
             filemtime(plugin_dir_path(__FILE__) . 'js/staff-payment-search.js'), 
             true
         );
+
+        wp_localize_script('staff-payment-search-js', 'bookingSettings', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'plugin_url' => plugin_dir_url(__FILE__) . 'php/frontend/'
+        ));
 
         wp_enqueue_script('staff-payment-search-js');
     }
@@ -141,12 +156,14 @@ function leanwi_enqueue_scripts() {
 
         // Localize the maximum booking slots setting and maxMonths
         wp_localize_script('staff-recurring-bookings-js', 'bookingSettings', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
             'minutesInterval' => intval(get_option('leanwi_minutes_interval', 30)), // Default to 30 minutes if not set
             'highlightedButtonBgColor' => get_option('leanwi_highlighted_button_bg_color', '#ffe0b3'), // Highlighted button Background color
             'highlightedButtonBorderColor' => get_option('leanwi_highlighted_button_border_color', '#ff9800'), // Highlighted button Border color
             'highlightedButtonTextColor' => get_option('leanwi_highlighted_button_text_color', '#000000'), // Highlighted button Text color
             'enableRecaptcha' => get_option('leanwi_enable_recaptcha', 'no'),
-            'recaptchaSiteKey' => get_option('leanwi_recaptcha_site_key', '')
+            'recaptchaSiteKey' => get_option('leanwi_recaptcha_site_key', ''),
+            'plugin_url' => plugin_dir_url(__FILE__)
         ));
 
         wp_enqueue_script('staff-recurring-bookings-js');

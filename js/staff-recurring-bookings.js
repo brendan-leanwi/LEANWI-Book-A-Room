@@ -11,17 +11,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
     //Fetch categories even if we're not showing them to users as we might need to save their current value
     document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-    fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-categories.php')
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_get_categories`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
-        .then(data => {
+        .then(fetched_category_data => {
+
+            if (!fetched_category_data.success) {
+                console.error("Categories error:", fetched_category_data.data?.message || "Unknown error");
+                return;
+            }
+
+            const categories = fetched_category_data.data;
+
             // Populate Category dropdown
             const categorySelect = document.getElementById('category');
-            data.forEach(category => {
+            categories.forEach(category => {
                 let option = document.createElement('option');
                 option.value = category.category_id;
                 option.textContent = category.category_name;
@@ -34,18 +42,25 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     //Fetch audiences even if we're not showing them to users as we might need to save their current value
-    document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-    fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/get-audiences.php')
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_get_audiences`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
-        .then(data => {
+        .then(fetched_audience_data => {
+
+            if (!fetched_audience_data.success) {
+                console.error("Audiences error:", fetched_audience_data.data?.message || "Unknown error");
+                return;
+            }
+
+            const audiences = fetched_audience_data.data;
+
             // Populate Audience dropdown
             const audienceSelect = document.getElementById('audience');
-            data.forEach(audience => {
+            audiences.forEach(audience => {
                 let option = document.createElement('option');
                 option.value = audience.audience_id;
                 option.textContent = audience.audience_name;
@@ -92,7 +107,7 @@ document.getElementById('delete_booking').addEventListener('click', function () 
     } 
 });
 
-function deleteRecurrenceAndBookings(recurrenceId) {
+function deleteRecurrenceAndBookings(recurrenceId, suppressFeedback = false) {
     
     if (!recurrenceId) {
         alert('Invalid recurrence ID');
@@ -101,8 +116,8 @@ function deleteRecurrenceAndBookings(recurrenceId) {
 
     const nonce = document.querySelector('#delete_recurrence_nonce').value;
     console.log("Delete JSON:", JSON.stringify({ recurrence_id: recurrenceId, delete_recurrence_nonce: nonce }));
-
-    fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/delete-recurrence.php', {
+    
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_delete_recurrence`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -110,12 +125,14 @@ function deleteRecurrenceAndBookings(recurrenceId) {
         body: JSON.stringify({ recurrence_id: recurrenceId, delete_recurrence_nonce: nonce }),
     })
         .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Recurrence and bookings successfully deleted.');
-                // Optionally, refresh the page or update the UI
+        .then(delete_recurrence_data => {
+            if (delete_recurrence_data.success) {
+                if (!suppressFeedback) {
+                    alert('Recurrence and bookings successfully deleted.');
+                    location.reload();
+                }
             } else {
-                alert('Error: ' + data.error);
+                alert('Error: ' + delete_recurrence_data.data.message);
             }
         })
         .catch(error => {
@@ -132,14 +149,15 @@ document.getElementById('retrieve-recurrence').addEventListener('click', functio
     event.preventDefault();
     
     document.body.style.cursor = 'wait';
-    fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/get-recurrences.php')
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_get_recurrences`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
-        .then(recurrences => {
+        .then(fetch_data => {
+            recurrences = fetch_data.data
             const tableBody = document.getElementById('recurrenceTableBody');
             tableBody.innerHTML = ''; // Clear existing rows
 
@@ -196,14 +214,15 @@ function handleViewAction(recurrenceId) {
     document.body.style.cursor = 'wait';
 
     // Fetch recurrence details
-    fetch(`/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/get-recurrence-details.php?recurrence_id=${recurrenceId}`)
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_get_recurrence_details&recurrence_id=${recurrenceId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`Error fetching recurrence details: ${response.status}`);
             }
             return response.json();
         })
-        .then(recurrence => {
+        .then(recurrence_details_data => {
+            const recurrence = recurrence_details_data.data;
             // Get the form element
             const form = document.getElementById('recurrence-details-form');
         
@@ -265,7 +284,7 @@ function handleViewAction(recurrenceId) {
 /*********************************************************************************************
  * Save a recurring booking functionality
  *********************************************************************************************/
-document.querySelector('#recurrence-details-form').addEventListener('submit', function (event) {
+document.querySelector('#recurrence-details-form').addEventListener('submit', async function (event) {
     event.preventDefault();
     const formData = new FormData(this);
 
@@ -276,11 +295,11 @@ document.querySelector('#recurrence-details-form').addEventListener('submit', fu
     // If we have a recurrence Id we are updating so delete the old recurrence before adding the latest one.
     const recurrenceId = document.getElementById('recurrence_id').value;
     if (recurrenceId > 0) {
-        deleteRecurrenceAndBookings(recurrenceId);
+        deleteRecurrenceAndBookings(recurrenceId, true); //true = suppress output from the delete function
     }
 
     // Execute reCAPTCHA if enabled
-    if (bookingSettings.enableRecaptcha) {
+    if (bookingSettings.enableRecaptcha === 'yes') {
         grecaptcha.execute(bookingSettings.recaptchaSiteKey, { action: 'submit' })
         .then(function(token) {
             // Append the reCAPTCHA token to the form
@@ -394,7 +413,7 @@ function submitForm(formData) {
     formData.append('minutes_interval', bookingSettings.minutesInterval);
 
     document.body.style.cursor = 'wait'; // Set cursor before fetch starts
-    fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/add-recurring-bookings.php', {
+    fetch(`${bookingSettings.ajax_url}?action=leanwi_add_recurring_bookings`, {
         method: 'POST',
         body: formData
     })
@@ -404,12 +423,15 @@ function submitForm(formData) {
         }
         return response.json();
     })
-    .then(data => {
-        if (data.success) {
+    .then(fetch_data => {
+        const data = fetch_data.data;
+        if (fetch_data.success) {
             const messageContainer = document.getElementById('booking-message');
             messageContainer.textContent = data.message;
             messageContainer.style.display = 'block'; // Show the message div
-            recurrenceFormContainer.style.display = 'none';
+
+            //Reload the page on success to reset everything for safety
+            location.reload();
         } else {
             console.error('Submit Error:', data.message);
             alert(data.message);

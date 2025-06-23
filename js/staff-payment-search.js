@@ -26,7 +26,8 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.style.cursor = 'wait';
 
             // Make an AJAX request to the PHP file
-            fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/staff-mark-payment.php', {
+            
+            fetch(`${bookingSettings.ajax_url}?action=leanwi_staff_mark_payment`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,8 +39,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }),
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(staff_mark_payment_data => {
+                const data = staff_mark_payment_data.data;
+                if (staff_mark_payment_data.success) {
                     // Refresh the page
                     location.reload();
                 } else {
@@ -66,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.style.cursor = 'wait';
 
             // Make an AJAX request to the PHP file
-            fetch('/wp-content/plugins/LEANWI-Book-A-Room/php/frontend/staff/staff-send-feedback-request-email.php', {
+            fetch(`${bookingSettings.ajax_url}?action=leanwi_staff_send_feedback_request_email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,8 +79,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }),
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(request_data => {
+                const data = request_data.data;
+                if (request_data.success) {
                     // Refresh the page
                     location.reload();
                 } else {
