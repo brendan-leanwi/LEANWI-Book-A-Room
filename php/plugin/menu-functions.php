@@ -165,6 +165,36 @@ function leanwi_add_admin_menu() {
         __NAMESPACE__ . '\\leanwi_edit_affirmation_page'      // Callback function to display the edit venue form
     );
 
+    // Sub-menu: "Closings"
+    add_submenu_page(
+        'leanwi-book-a-room-main',    // Parent slug
+        'Venue Closings',                   // Page title
+        'Closings',                   // Menu title
+        'manage_options',             // Capability
+        'leanwi-booking-closings',// Menu slug
+        __NAMESPACE__ . '\\leanwi_booking_venue_closings_page'        // Callback function to display venue closings table
+    );
+
+    // Sub-menu: "Add Venue Closure"
+    add_submenu_page(
+        'leanwi-book-a-room-main',
+        'Add Venue Closure',
+        'Add Venue Closure',
+        'manage_options',
+        'leanwi-add-venue-closure',
+        __NAMESPACE__ . '\\leanwi_add_venue_closure_page'
+    );
+
+    // Sub-menu: "Edit Venue Closure"
+    add_submenu_page(
+        'leanwi-book-a-room-main',
+        'Edit Venue Closure',
+        'Edit Venue Closure',
+        'manage_options',
+        'leanwi-edit-venue-closure',
+        __NAMESPACE__ . '\\leanwi_edit_venue_closure_page'
+    );
+
     // Sub-menu: "Reports"
     add_submenu_page(
         'leanwi-book-a-room-main',    // Parent slug
@@ -233,6 +263,12 @@ function leanwi_hide_add_edit_submenus_css() {
         #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-affirmation"] {
             display: none !important;
         }
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-venue-closure"] {
+            display: none !important;
+        }
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-venue-closure"] {
+            display: none !important;
+        }
     </style>';
 }
 add_action('admin_head', __NAMESPACE__ . '\\leanwi_hide_add_edit_submenus_css');
@@ -273,42 +309,6 @@ function leanwi_main_page() {
         var content = <?php echo json_encode($content); ?>;
         document.getElementById("documentation-content").innerHTML = content;
 
-        // Attach event listeners to the dynamically rendered links
-        /*
-        function attachLinkEvents() {
-            document.getElementById('documentation-content').addEventListener('click', function (e) {
-                let target = e.target.closest('a'); 
-                
-                let pageMap = {
-                  //  'Back to Main Documentation Page': 'documentation.html',
-                  //  'Initial setup (Settings)': 'initial-setup-settings.html',
-                  //  'Initial setup (Staff)': 'initial-setup-staff.html',
-                  //  'Initial setup (Affirmations)': 'initial-setup-affirmations.html',
-                  //  'Initial setup (Categories and Audiences)': 'initial-setup-categories-audiences.html',
-                  //  'Setting up your first Venue': 'first-venue-setup.html',
-                  //  'Setting up Pages Using Shortcodes': 'shortcodes-use.html',
-                  //  'How to use the Recurring Bookings page': 'recurring-bookings-use.html',
-                  //  'Adding a mail client': 'mail-client-setup.html',
-                   // '(Rooms Example Page)': 'example_pages/rooms-landing-page-example.html',
-                   // '(Venue Example Page)': 'example_pages/venue-page-example.html',
-                   // '(Recurring Bookings Example Page)': 'example_pages/recurring-bookings-page-example.html',
-                   // '(Payments and Feedback Example Page)': 'example_pages/payments-feedback-page-example.html',
-                   // '(Room Availability Example Page)': 'example_pages/check-availability-page-example.html',
-                   // 'venue': 'first-venue-setup.html',
-                   // 'Recurring Bookings page': 'shortcodes-use.html'
-                };
-
-                let page = pageMap[target.innerText.trim()]; // Use innerText and trim for better matching
-                if (page) {
-                    loadHtmlPage(page); // Load new content
-                    setTimeout(() => window.scrollTo(0, 0), 50); // Scroll to top AFTER content loads
-                }
-            });
-        }
-
-        // Attach events after the initial content is loaded
-        attachLinkEvents();
-        */
     </script>
 
     <?php
@@ -1996,6 +1996,273 @@ function leanwi_edit_affirmation_page() {
         // Display a message if no ID is provided
         echo '<div class="notice notice-error"><p>No ID provided.</p></div>';
     }
+}
+
+/**************************************************************************************************
+ * VENUE CLOSINGS
+ **************************************************************************************************/
+
+// Function to display the list of venue closings
+function leanwi_booking_venue_closings_page() {
+
+    // Display venue closings list
+    echo '<div class="wrap">';
+    echo '<h1>Venue Closings</h1>';
+
+    echo '<a href="' . admin_url('admin.php?page=leanwi-add-venue-closure') . '" class="button button-primary">Add Venue Closure</a>';
+    echo '<p> </p>'; // Space below the button before the affirmation table
+
+    echo '<table class="wp-list-table widefat striped">';
+    echo '<thead>';
+    echo '<tr>';
+    echo '<th scope="col">Start</th>';
+    echo '<th scope="col">End</th>';
+    echo '<th scope="col">Description</th>';
+    echo '<th scope="col">Venue(s)</th>';
+    echo '<th scope="col" style="text-align: right; padding-right: 40px;">Actions</th>';
+    echo '</tr>';
+    echo '</thead>';
+    echo '<tbody>';
+
+    // Fetch venue closures
+    $closures = fetch_venue_closings();
+    if (empty($closures)) {
+        echo '<tr><td colspan="5">No closures found.</td></tr>';
+    } else {
+        // Display each closure in a row
+        foreach ($closures as $closure) {
+            // Format start date and time
+            $start_dt = \DateTime::createFromFormat('Y-m-d H:i:s', $closure['start_date'] . ' ' . $closure['start_time']);
+            $start_formatted = $start_dt ? $start_dt->format('F j, Y \a\t g:i a') : 'Invalid date';
+
+            // Format end date and time
+            $end_dt = \DateTime::createFromFormat('Y-m-d H:i:s', $closure['end_date'] . ' ' . $closure['end_time']);
+            $end_formatted = $end_dt ? $end_dt->format('F j, Y \a\t g:i a') : 'Invalid date';
+
+            echo '<tr>';
+            echo '<td>' . esc_html($start_formatted) . '</td>';
+            echo '<td>' . esc_html($end_formatted) . '</td>';
+            echo '<td>' . esc_html($closure['description']) . '</td>';
+            echo '<td>' . esc_html($closure['venue']) . '</td>';
+            echo '<td style="text-align: right;">';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-edit-venue-closure&id=' . esc_attr($closure['id']))) . '" class="button">Edit</a> ';
+            echo '<a href="' . esc_url(admin_url('admin.php?page=leanwi-delete-venue-closure&id=' . esc_attr($closure['id']))) . '" class="button" onclick="return confirm(\'Are you sure you want to delete this venue closure?\');">Delete</a>';
+            echo '</td>';
+            echo '</tr>';
+        }
+    }
+
+    echo '</tbody>';
+    echo '</table>';
+    echo '</div>';
+}
+
+// Function to get venue_closings
+function fetch_venue_closings() {
+    global $wpdb;
+    $closings_table = $wpdb->prefix . 'leanwi_booking_venue_closings';
+    $venue_table = $wpdb->prefix . 'leanwi_booking_venue';
+
+    $sql = "
+        SELECT 
+            c.id,
+            c.description,
+            c.start_date,
+            c.end_date,
+            c.start_time,
+            c.end_time,
+            c.venue_id,
+            CASE 
+                WHEN c.venue_id < 0 THEN 'All'
+                ELSE v.name
+            END AS venue
+        FROM $closings_table c
+        LEFT JOIN $venue_table v ON c.venue_id = v.venue_id
+        ORDER BY c.start_date, c.start_time
+    ";
+
+    $closures = $wpdb->get_results($sql, ARRAY_A);
+
+    if ($wpdb->last_error) {
+        return ['error' => $wpdb->last_error];
+    }
+
+    return $closures ?: [];
+}
+
+function leanwi_add_venue_closure_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue_closings';
+    $venues_table = $wpdb->prefix . 'leanwi_booking_venue';
+
+    // Handle form submission
+    if (isset($_POST['add_venue_closure'])) {
+        $description = sanitize_textarea_field($_POST['description']);
+        $venue_id = intval($_POST['venue_id']);
+        $start_date = sanitize_text_field($_POST['start_date']);
+        $end_date = sanitize_text_field($_POST['end_date']);
+        $start_time = sanitize_text_field($_POST['start_time']);
+        $end_time = sanitize_text_field($_POST['end_time']);
+
+        $wpdb->insert(
+            $table_name,
+            [
+                'description' => $description,
+                'venue_id' => $venue_id,
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'start_time' => $start_time,
+                'end_time' => $end_time,
+            ],
+            ['%s', '%d', '%s', '%s', '%s', '%s']
+        );
+
+        echo '<div class="updated"><p>Venue closure added successfully.</p></div>';
+    }
+
+    // Get venues for dropdown
+    $venues = $wpdb->get_results("SELECT venue_id, name FROM $venues_table WHERE historic = 0 ORDER BY name ASC");
+
+    // Display the form
+    echo '<div class="wrap">';
+    echo '<h1>Add Venue Closure</h1>';
+    echo '<form method="POST">';
+
+    // Venue dropdown
+    echo '<p><label for="venue_id">Venue:</label><br>';
+    echo '<select name="venue_id" required>';
+    echo '<option value="-1">All Venues</option>';
+    foreach ($venues as $venue) {
+        echo '<option value="' . esc_attr($venue->venue_id) . '">' . esc_html($venue->name) . '</option>';
+    }
+    echo '</select></p>';
+
+    // Date/time and description fields
+    echo '<p><label for="start_date">Start Date:</label><br>';
+    echo '<input type="date" name="start_date" required></p>';
+
+    echo '<p><label for="start_time">Start Time:</label><br>';
+    echo '<input type="time" name="start_time" value="00:00" required></p>';
+
+    echo '<p><label for="end_date">End Date:</label><br>';
+    echo '<input type="date" name="end_date" required></p>';
+
+    echo '<p><label for="end_time">End Time:</label><br>';
+    echo '<input type="time" name="end_time" value="23:59" required></p>';
+
+    echo '<p><label for="description">Description:</label><br>';
+    echo '<textarea name="description" rows="4" cols="50" required></textarea></p>';
+
+    echo '<p><input type="submit" name="add_venue_closure" value="Add Venue Closure" class="button button-primary"></p>';
+
+    echo '</form>';
+    echo '</div>';
+}
+
+function leanwi_edit_venue_closure_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue_closings';
+    $venues_table = $wpdb->prefix . 'leanwi_booking_venue';
+
+    $is_edit = isset($_GET['id']) && is_numeric($_GET['id']);
+    $closure_id = $is_edit ? intval($_GET['id']) : 0;
+    $existing = null;
+
+    if ($is_edit) {
+        $existing = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $closure_id),
+            ARRAY_A
+        );
+        if (!$existing) {
+            echo '<div class="notice notice-error"><p>Venue closure not found.</p></div>';
+            return;
+        }
+    }
+
+    // Handle form submission
+    if (isset($_POST['save_venue_closure'])) {
+        $description = sanitize_textarea_field($_POST['description']);
+        $venue_id = intval($_POST['venue_id']);
+        $start_date = sanitize_text_field($_POST['start_date']);
+        $end_date = sanitize_text_field($_POST['end_date']);
+        $start_time = sanitize_text_field($_POST['start_time']);
+        $end_time = sanitize_text_field($_POST['end_time']);
+
+        $data = [
+            'description' => $description,
+            'venue_id' => $venue_id,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+        ];
+
+        if ($is_edit) {
+            $wpdb->update(
+                $table_name,
+                $data,
+                ['id' => $closure_id],
+                ['%s', '%d', '%s', '%s', '%s', '%s'],
+                ['%d']
+            );
+            echo '<div class="updated"><p>Venue closure updated successfully.</p></div>';
+        } else {
+            $wpdb->insert(
+                $table_name,
+                $data,
+                ['%s', '%d', '%s', '%s', '%s', '%s']
+            );
+            echo '<div class="updated"><p>Venue closure added successfully.</p></div>';
+        }
+
+        // Refresh existing values if in edit mode
+        if ($is_edit) {
+            $existing = array_merge($existing, $data);
+        }
+    }
+
+    // Get venues for dropdown
+    $venues = $wpdb->get_results("SELECT venue_id, name FROM $venues_table WHERE historic = 0 ORDER BY name ASC");
+
+    // Set default values
+    $venue_id = $existing['venue_id'] ?? -1;
+    $start_date = $existing['start_date'] ?? '';
+    $end_date = $existing['end_date'] ?? '';
+    $start_time = $existing['start_time'] ?? '00:00';
+    $end_time = $existing['end_time'] ?? '23:59';
+    $description = $existing['description'] ?? '';
+
+    // Display the form
+    echo '<div class="wrap">';
+    echo '<h1>' . ($is_edit ? 'Edit Venue Closure' : 'Add Venue Closure') . '</h1>';
+    echo '<form method="POST">';
+
+    echo '<p><label for="venue_id">Venue:</label><br>';
+    echo '<select name="venue_id" required>';
+    echo '<option value="-1"' . selected($venue_id, -1, false) . '>All Venues</option>';
+    foreach ($venues as $venue) {
+        echo '<option value="' . esc_attr($venue->venue_id) . '"' . selected($venue_id, $venue->venue_id, false) . '>' . esc_html($venue->name) . '</option>';
+    }
+    echo '</select></p>';
+
+    echo '<p><label for="start_date">Start Date:</label><br>';
+    echo '<input type="date" name="start_date" value="' . esc_attr($start_date) . '" required></p>';
+
+    echo '<p><label for="start_time">Start Time:</label><br>';
+    echo '<input type="time" name="start_time" value="' . esc_attr($start_time) . '" required></p>';
+
+    echo '<p><label for="end_date">End Date:</label><br>';
+    echo '<input type="date" name="end_date" value="' . esc_attr($end_date) . '" required></p>';
+
+    echo '<p><label for="end_time">End Time:</label><br>';
+    echo '<input type="time" name="end_time" value="' . esc_attr($end_time) . '" required></p>';
+
+    echo '<p><label for="description">Description:</label><br>';
+    echo '<textarea name="description" rows="4" cols="50" required>' . esc_textarea($description) . '</textarea></p>';
+
+    echo '<p><input type="submit" name="save_venue_closure" value="' . ($is_edit ? 'Update' : 'Add') . ' Venue Closure" class="button button-primary"></p>';
+    echo '</form>';
+    echo '</div>';
 }
 
 

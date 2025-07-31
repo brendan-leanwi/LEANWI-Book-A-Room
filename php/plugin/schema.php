@@ -120,6 +120,17 @@ function leanwi_create_tables() {
         affirmation TEXT NOT NULL
     ) $engine $charset_collate;";
 
+    // SQL for creating leanwi_booking_venue_closings table
+    $sql8 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}leanwi_booking_venue_closings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        description TEXT,
+        venue_id INT NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL
+    ) $engine $charset_collate;";
+
 
     // Execute the SQL queries
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -196,7 +207,17 @@ function leanwi_create_tables() {
         }
     } catch (Exception $e) {
         error_log($e->getMessage());
-    }    
+    }
+    
+    try {
+        dbDelta($sql8);
+        // Debug logging to track SQL execution
+        if ($wpdb->last_error) {
+            error_log('DB Error8: ' . $wpdb->last_error); // Logs the error to wp-content/debug.log
+        }
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+    }
 
     // Check if the category_id = 1 already exists
     $category_exists = $wpdb->get_var(
@@ -309,6 +330,7 @@ function leanwi_drop_tables() {
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_category");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_audience");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_affirmation");
+    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_venue_closings");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_venue");
     $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}leanwi_booking_recurrence");
 }
