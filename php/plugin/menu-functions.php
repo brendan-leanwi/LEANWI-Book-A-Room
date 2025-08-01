@@ -171,7 +171,7 @@ function leanwi_add_admin_menu() {
         'Venue Closings',                   // Page title
         'Closings',                   // Menu title
         'manage_options',             // Capability
-        'leanwi-booking-closings',// Menu slug
+        'leanwi-venue-closings',// Menu slug
         __NAMESPACE__ . '\\leanwi_booking_venue_closings_page'        // Callback function to display venue closings table
     );
 
@@ -193,6 +193,16 @@ function leanwi_add_admin_menu() {
         'manage_options',
         'leanwi-edit-venue-closure',
         __NAMESPACE__ . '\\leanwi_edit_venue_closure_page'
+    );
+
+    // Sub-menu: "Delete Venue Closure"
+    add_submenu_page(
+        'leanwi-book-a-room-main',
+        'Delete Venue Closure',
+        'Delete Venue Closure',
+        'manage_options',
+        'leanwi-delete-venue-closure',
+        __NAMESPACE__ . '\\leanwi_delete_venue_closure_page'
     );
 
     // Sub-menu: "Reports"
@@ -230,43 +240,24 @@ function leanwi_add_admin_menu() {
 // Hook to create the admin menu
 add_action('admin_menu', __NAMESPACE__ . '\\leanwi_add_admin_menu');
 
+
 // Hide the Add and Edit pages submenus from the left-hand navigation menu using CSS
+// Why not just put null as the parent slug? Because then my submenu disappears from the left nav when I go into the edit/add/delete pages.
 function leanwi_hide_add_edit_submenus_css() {
     echo '<style>
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-venue"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-venue"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-venue"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-category"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-category"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-audience"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-audience"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-affirmation"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-affirmation"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-affirmation"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-venue-closure"] {
-            display: none !important;
-        }
-        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-venue-closure"] {
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-venue"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-venue"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-venue"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-category"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-category"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-audience"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-audience"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-affirmation"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-affirmation"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-affirmation"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-add-venue-closure"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-edit-venue-closure"],
+        #toplevel_page_leanwi-book-a-room-main .wp-submenu a[href="admin.php?page=leanwi-delete-venue-closure"] {
             display: none !important;
         }
     </style>';
@@ -455,6 +446,8 @@ function leanwi_delete_venue_page() {
         // Handle the case where no ID is provided
         echo '<div class="error"><p>No Venue ID provided for deletion.</p></div>';
     }
+
+    echo '<p><a href="' . esc_url(admin_url('admin.php?page=leanwi-book-a-room-venues')) . '" class="button">Back to Venues</a></p>';
 }
 
 function leanwi_add_venue_page() {
@@ -1921,6 +1914,8 @@ function leanwi_delete_affirmation_page() {
         // Handle the case where no ID is provided
         echo '<div class="error"><p>No affirmation ID provided for deletion.</p></div>';
     }
+
+    echo '<p><a href="' . esc_url(admin_url('admin.php?page=leanwi-book-a-room-affirmations')) . '" class="button">Back to Affirmations</a></p>';
 }
 
 function leanwi_add_affirmation_page() {
@@ -2265,6 +2260,43 @@ function leanwi_edit_venue_closure_page() {
     echo '</div>';
 }
 
+function leanwi_delete_venue_closure_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'leanwi_booking_venue_closings';
+
+    // Get and validate ID
+    $closure_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+    if (!$closure_id) {
+        echo '<div class="notice notice-error"><p>Invalid closure ID.</p></div>';
+        return;
+    }
+
+    // Check if closure exists
+    $closure = $wpdb->get_row(
+        $wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $closure_id)
+    );
+
+    if (!$closure) {
+        echo '<div class="notice notice-error"><p>Venue closure not found.</p></div>';
+        return;
+    }
+
+    // Perform the delete
+    $deleted = $wpdb->delete(
+        $table_name,
+        ['id' => $closure_id],
+        ['%d']
+    );
+
+    if ($deleted) {
+        echo '<div class="notice notice-success"><p>Venue closure deleted successfully.</p></div>';
+    } else {
+        echo '<div class="notice notice-error"><p>Failed to delete venue closure.</p></div>';
+    }
+
+    echo '<p><a href="' . esc_url(admin_url('admin.php?page=leanwi-venue-closings')) . '" class="button">Back to Venue Closures</a></p>';
+}
 
 /**************************************************************************************************
  * Reporting
