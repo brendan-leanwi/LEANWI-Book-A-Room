@@ -247,7 +247,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         return;
                     }
 
-                    const availableDays = fetched_available_days_data.data;
+                    const { available_days: availableDays, closure_dates: closureDates } = fetched_available_days_data.data;
+
                     const calendar = document.getElementById('calendar');
                     const currentMonthDisplay = document.getElementById('current-month');
                     const today = new Date(); // Get today's date
@@ -301,9 +302,16 @@ document.addEventListener("DOMContentLoaded", function () {
                         // Find the corresponding available day data by matching the day name
                         const dayData = availableDays.find(day => day.day_of_week === dayName);
 
-                        // If the day is in the past, grey it out (compare only dates)
-                        //if (!isBookingStaff && currentDateMidnight < todayMidnight && year === today.getFullYear() && month === today.getMonth()) {
-                        if (!isBookingStaff && currentDateMidnight < cutoffDate) {
+                        if (closureDates.includes(dateFormatted)) {
+                            // Fully closed day: grey it out, no interaction
+                            dayElement.style.backgroundColor = '#f0f0f0'; // Light red background
+                            dayElement.style.color = '#999';
+                            dayElement.classList.add('unavailable', 'closed-day');
+                            dayElement.setAttribute('title', 'Venue is closed on this day.');
+                            dayElement.setAttribute('aria-disabled', 'true');
+                            dayElement.setAttribute('aria-hidden', 'true');
+                            dayElement.setAttribute('tabindex', '-1');
+                        } else if (!isBookingStaff && currentDateMidnight < cutoffDate) { // If the day is in the past, grey it out (compare only dates)
                         // Grey out past days in the current month
                             dayElement.style.backgroundColor = '#f0f0f0';
                             dayElement.style.color = '#ccc';

@@ -55,6 +55,12 @@ function display_venue_grid() {
         )
     ";
 
+    $venue_closings = $wpdb->get_results($wpdb->prepare("
+        SELECT * FROM {$wpdb->prefix}leanwi_booking_venue_closings
+        WHERE %s BETWEEN start_date AND end_date
+    ", $today_date));
+
+
     if(!$is_booking_staff) {
         $venue_hours_query .= " AND v.bookable_by_staff_only = 0";
     }
@@ -103,7 +109,7 @@ function display_venue_grid() {
     foreach ($venue_hours as $vh) {
         foreach ($time_slots as $slot) {
             $slot_time = strtotime($today_date . ' ' . $slot);
-            $grid[$vh->venue_id][$slot] = build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings);
+            $grid[$vh->venue_id][$slot] = build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings, $venue_closings);
         }
     }
 
@@ -199,10 +205,23 @@ function subtractBusinessDays(DateTime $date, int $days): DateTime {
     return $date;
 }
 
-function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings) {
+function build_grid_cell($vh, $slot_time, $is_booking_staff, $today_date, $bookings, $venue_closings) {
     // Check if the slot time is within the venue's open and close times
     if ($slot_time < strtotime($today_date . ' ' . $vh->open_time) || $slot_time >= strtotime($today_date . ' ' . $vh->close_time)) {
         return '<td class="na-cell" title="The room is not bookable at this time of day.">N/A</td>';
+    }
+
+    // Check for closures for this venue and time
+    foreach ($venue_closings as $closure) {
+        if ($closure->venue_id >= 0 && $closure->venue_id != $vh->venue_id) continue;
+
+        $slot_datetime = $today_date . ' ' . date('H:i:s', $slot_time);
+        $closure_start = $closure->start_date . ' ' . $closure->start_time;
+        $closure_end = $closure->end_date . ' ' . $closure->end_time;
+
+        if ($slot_datetime >= $closure_start && $slot_datetime < $closure_end) {
+            return '<td class="na-cell na-closure" title="' . $closure->description . '">Closed</td>';
+        }
     }
 
     $is_booked = false;
